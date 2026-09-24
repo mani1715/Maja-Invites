@@ -1,0 +1,138 @@
+/**
+ * PHASE 22: Premium Background Design CSS Styles
+ * 
+ * This file contains CSS for the premium background designs
+ * Supports CSS, image, and hybrid rendering types
+ */
+
+/* Base event background container */
+.event-background-container {
+  position: relative;
+  width: 100%;
+  min-height: 100px;
+}
+
+/* Smooth transitions for background changes */
+.event-background-container.transition-all {
+  transition: background 0.5s ease-in-out, background-image 0.5s ease-in-out;
+}
+
+/* Design 1: Royal Temple Gold */
+.royal-temple-gold {
+  background: linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(139,0,0,0.1) 50%, rgba(212,175,55,0.15) 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 20s ease infinite;
+  position: relative;
+}
+
+/* Design 2: Vibrant Haldi */
+.vibrant-haldi {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Design 3: Mehendi Green */
+.mehendi-green {
+  background: linear-gradient(135deg, rgba(34,139,34,0.2) 0%, rgba(60,179,113,0.15) 50%, rgba(144,238,144,0.2) 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 22s ease infinite;
+  position: relative;
+}
+
+/* Design 5: Pastel Pink Romance */
+.pastel-pink-romance {
+  background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 50%, #FF69B4 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 20s ease infinite;
+}
+
+/* Design 6: Deep Royal Blue */
+.deep-royal-blue {
+  background: linear-gradient(135deg, rgba(0,0,128,0.25) 0%, rgba(65,105,225,0.2) 50%, rgba(30,144,255,0.25) 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 25s ease infinite;
+  position: relative;
+}
+
+/* Design 7: Sunset Orange */
+.sunset-orange {
+  background: linear-gradient(135deg, #FF4500 0%, #FF8C00 50%, #FFD700 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 18s ease infinite;
+}
+
+/* Design 8: Emerald Green Elegance */
+.emerald-elegance {
+  background: linear-gradient(135deg, rgba(4,99,7,0.2) 0%, rgba(80,200,120,0.15) 50%, rgba(46,125,50,0.2) 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 28s ease infinite;
+  position: relative;
+}
+
+/* Ensure content is above background layers */
+.event-background-container > div {
+  position: relative;
+  z-index: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .event-background-container {
+    min-height: 80px;
+  }
+}
+
+/* Color variable support */
+:root {
+  --design-primary-color: #D4AF37;
+  --design-secondary-color: #8B0000;
+  --design-accent-color: #FFD700;
+}
+
+/* Apply color variables to elements */
+.event-background-container [data-use-design-colors="true"] {
+  color: var(--design-primary-color);
+}
+
+.event-background-container .accent-color {
+  color: var(--design-accent-color);
+}
+
+.event-background-container .secondary-color {
+  color: var(--design-secondary-color);
+}
+
+/* Pattern overlays */
+.pattern-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Fallback for browsers that don't support animations */
+@supports not (animation: gradientShift 15s ease infinite) {
+  .royal-temple-gold,
+  .mehendi-green,
+  .deep-royal-blue,
+  .emerald-elegance {
+    background-size: 100% 100%;
+  }
+}
+
+/* Print styles */
+@media print {
+  .event-background-container {
+    background: white !important;
+  }
+}

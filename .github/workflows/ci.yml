@@ -1,0 +1,154 @@
+name: CI
+
+# Security + quality gate. Runs on every PR and push to main so a broken build
+# or a leaked secret can't reach production. (Before this, deploys were manual
+# and ungated — see SECURITY_AUDIT.md §16.)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-tests:
+    name: Backend test gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install backend deps
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          # Both files: requirements.txt is runtime-only now (it is what the
+          # production image installs), and the test tooling lives in
+          # requirements-dev.txt.
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: Run event/security test suite
+        working-directory: backend
+        env:
+          # In-memory FakeDB tests — no Postgres needed. The insecure JWT default
+          # is explicitly allowed ONLY in this test context.
+          ALLOW_INSECURE_JWT: '1'
+          JWT_SECRET_KEY: test
+          PYTHONIOENCODING: utf-8
+          PYTHONPATH: .
+        run: python -m tests.run_event_suite
+
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan working tree for secrets
+        run: |
+          VER=8.18.4
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz" | tar -xz gitleaks
+          # --no-git scans files on disk (the current checkout), so it catches any
+          # committed secret NOW and fails the build. History is scanned/purged
+          # separately (see SECURITY_ROTATION.md) so this gate isn't permanently
+          # red on the already-known legacy leak.
+          ./gitleaks detect --no-git --source . --redact --exit-code 1
+
+      # Second, narrower gate: the same rules the pre-commit/pre-push hooks run
+      # locally (scripts/scan_secrets.py --install-hooks). Two scanners because
+      # they fail differently — gitleaks has broad generic entropy rules, this
+      # one knows THIS repo's placeholders and so can be strict about the
+      # patterns that actually matter here without drowning in false positives.
+      - name: Scan with the repo's own rules
+        run: python scripts/scan_secrets.py --tree
+
+      # A different class of silent bug, same reason for automating it: four
+      # handlers read .get() off the admin-id STRING that get_current_admin
+      # returns, which is a 500 on every call that a bare `except Exception`
+      # turns into a plausible error message. One of them saved a profile theme
+      # and THEN 500'd. Nothing about that fails a build on its own.
+      - name: Check no handler treats the admin id as a dict
+        run: python scripts/find_dict_admin_deref.py
+
+      # scripts/check_seo_routes.py needs a running server, so it is NOT here —
+      # run it against staging after a deploy:
+      #     API=https://staging.example python scripts/check_seo_routes.py
+      # It catches the failure mode nothing else does: a path the Caddyfile
+      # hands to the backend for crawlers with no backend route behind it, which
+      # 404s for Googlebot while rendering perfectly for a human.
+
+  # THE DEPLOYED UI. deploy/docker-compose.yml mounts frontend-v2/dist as the
+  # only web root, so this is the build that must be green before a release.
+  # (Until 2026-08 this job did not exist and CI only built the legacy CRA app
+  # below, which is not served anywhere — a broken frontend-v2 shipped green.)
+  frontend-v2-build:
+    name: frontend-v2 build (deployed UI)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: yarn
+          cache-dependency-path: frontend-v2/yarn.lock
+      - name: Install
+        working-directory: frontend-v2
+        run: yarn install --frozen-lockfile || yarn install
+      - name: Build
+        working-directory: frontend-v2
+        env:
+          # Matches docs/DEPLOYMENT.md: production builds emit no .js.map
+          # (Caddy 404s them anyway; this stops them being produced at all).
+          GENERATE_SOURCEMAP: 'false'
+        run: yarn build
+      - name: Assert dist/ was produced
+        working-directory: frontend-v2
+        run: test -f dist/index.html || { echo "::error::frontend-v2 build produced no dist/index.html"; exit 1; }
+
+  frontend-legacy-build:
+    name: Legacy CRA build (not deployed)
+    runs-on: ubuntu-latest
+    # Advisory: the legacy frontend/ tree is retained for reference but is not
+    # served by deploy/. Keep it compiling, do not block a release on it.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - name: Install
+        working-directory: frontend
+        # Prefer the locked install for reproducibility; fall back to a normal
+        # install so a not-yet-committed lockfile update doesn't red the build.
+        run: yarn install --frozen-lockfile || yarn install
+      - name: Lint
+        working-directory: frontend
+        # The production build does NOT lint (see SESSION_CONTEXT.md), so run it here.
+        run: yarn lint || echo "::warning::lint reported issues"
+      - name: Build
+        working-directory: frontend
+        env:
+          CI: 'false'   # CRA treats warnings as errors when CI=true; we gate on build success, not warnings
+        run: yarn build
+
+  dependency-audit:
+    name: Dependency CVE audit (advisory)
+    runs-on: ubuntu-latest
+    # Advisory only — informs on vulnerable deps without blocking a deploy on a
+    # transitive CVE that can't be fixed immediately. Review its output.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: pip-audit (backend)
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          pip-audit -r backend/requirements.txt || true

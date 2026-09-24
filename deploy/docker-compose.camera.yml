@@ -1,0 +1,63 @@
+# OPTIONAL overlay — the camera SFTP ingestion daemon.
+#
+# NOT part of the default stack. It adds ONE service (camera-sftp) that runs
+# backend/camera_sftp_server.py and publishes a single SFTP port. Everything
+# else in deploy/docker-compose.yml is untouched.
+#
+# Bring it up ALONGSIDE the main stack (does not restart the other services):
+#
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.camera.yml up -d camera-sftp
+#
+# Requires: DNS ftp.majainvites.com -> VM IP, a GCP firewall rule opening TCP
+# 2222, and the CAMERA_SFTP_* keys in deploy/.env (see docs/CAMERA_SFTP.md §7).
+services:
+  camera-sftp:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile      # reuse the backend image (has paramiko + modules)
+    command: python camera_sftp_server.py
+    working_dir: /app/backend
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      # Port INSIDE the container; published as 2222 on the host below. The
+      # port the PHOTOGRAPHER types (CAMERA_SFTP_PORT) is set in deploy/.env and
+      # only affects what the UI displays — it should match the published port.
+      CAMERA_SFTP_BIND_PORT: "22"
+      # Persisted host key -> stable fingerprint the photographer verifies. Lives
+      # in the bind-mounted repo (backend/.camera_sftp_host_key, gitignored).
+      CAMERA_SFTP_HOST_KEY: /app/backend/.camera_sftp_host_key
+      REDIS_URL: redis://redis:6379/0     # so FACE_INDEX is queued, not run inline
+    ports:
+      - "2222:22"                          # SFTP control port
+    volumes:
+      - ..:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # FTPES (FTP-over-TLS) daemon — the protocol the Sony a7 IV speaks (it has no
+  # SFTP). Control port 21 + a passive-port range. CAMERA_FTPS_MASQUERADE_ADDRESS
+  # in deploy/.env MUST be the VM's PUBLIC ip (passive data connections use it).
+  # Firewall: open tcp:21 AND tcp:30000-30009.
+  camera-ftps:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    command: python camera_ftps_server.py
+    working_dir: /app/backend
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      CAMERA_FTPS_BIND_PORT: "21"
+      CAMERA_FTPS_PASV_MIN: "30000"
+      CAMERA_FTPS_PASV_MAX: "30009"
+      REDIS_URL: redis://redis:6379/0     # queue FACE_INDEX instead of inline
+    ports:
+      - "21:21"                            # FTPES control
+      - "30000-30009:30000-30009"          # FTPES passive data range
+    volumes:
+      - ..:/app
+    depends_on:
+      postgres:
+        condition: service_healthy

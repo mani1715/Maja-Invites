@@ -1,0 +1,15 @@
+# Build context for the BACKEND image (context = repo root). The backend image
+# only needs backend/requirements.txt — everything else is bind-mounted at
+# runtime, so keep the context tiny and fast. (Does NOT affect runtime mounts.)
+.git
+**/__pycache__
+**/*.pyc
+**/node_modules
+frontend
+docs
+uploads
+*.zip
+*.tar.gz
+*.md
+.env
+backend/.env

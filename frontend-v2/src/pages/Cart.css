@@ -1,0 +1,84 @@
+/* Cart.jsx — ported from "MAJA Cart.dc.html". Breakpoints/paddings mirror the
+   DC prototype's renderVals() exactly, as media queries instead of a resize
+   listener (same visual result, no JS layout thrash). */
+.cart-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 18px 88px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+@media (min-width: 640px) { .cart-body { padding: 44px 28px 104px; } }
+@media (min-width: 860px) { .cart-body { padding: 64px 24px 120px; grid-template-columns: 1.25fr 1fr; gap: 28px; } }
+@media (min-width: 1200px) { .cart-body { grid-template-columns: 1.4fr 1fr; gap: 40px; } }
+
+.cart-empty-wrap { max-width: 520px; margin: 0 auto; padding: 64px 18px; }
+@media (min-width: 640px) { .cart-empty-wrap { padding: 96px 24px; } }
+@media (min-width: 860px) { .cart-empty-wrap { padding: 120px 24px; } }
+.cart-empty-card {
+  text-align: center;
+  padding: 44px 28px;
+  animation-name: mjScaleIn;
+}
+.cart-empty-copy {
+  font-family: var(--mj-font-display);
+  font-size: clamp(20px, 5vw, 22px);
+  color: var(--mj-muted);
+  margin: 0 0 28px;
+}
+.cart-empty-cta { display: inline-flex; padding: 14px 30px; }
+
+.cart-item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.cart-item-name { font-family: var(--mj-font-display); font-weight: 500; font-size: 19px; margin: 0; }
+.cart-remove-btn { width: auto; padding: 0 16px; margin-bottom: 0; }
+
+.cart-included { margin-bottom: 18px; }
+.cart-included-grid { display: grid; grid-template-columns: 1fr; gap: 4px; }
+@media (min-width: 480px) { .cart-included-grid { grid-template-columns: 1fr 1fr; } }
+.cart-included-item { font-size: 12.5px; color: var(--mj-success); }
+
+.cart-feature-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.cart-feature-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--mj-ink);
+  min-height: 44px;
+  padding: 0 8px;
+  margin: 0 -8px;
+  border-radius: var(--mj-radius-card-inner);
+  cursor: pointer;
+}
+.cart-feature-check { width: 18px; height: 18px; flex: none; accent-color: var(--mj-primary); cursor: pointer; }
+.cart-feature-price { color: var(--mj-muted); }
+
+.cart-lang-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 620px) { .cart-lang-grid { grid-template-columns: 1fr 1fr; } }
+.cart-extra-langs { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; align-items: center; }
+.cart-lang-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: var(--mj-radius-pill);
+  font-size: 12.5px;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1.5px solid var(--mj-border);
+  background: #ffffff;
+  color: var(--mj-muted);
+  transition: border-color .2s, background .2s, color .2s;
+}
+.cart-lang-pill.is-on { border-color: var(--mj-primary); background: var(--mj-section); color: var(--mj-primary); font-weight: 600; }
+.cart-lang-pill-price { opacity: .8; }
+
+.cart-retry { border: none; background: none; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; padding: 0; }
+
+.cart-summary { border-radius: var(--mj-radius-card); padding: 20px 18px; box-shadow: var(--mj-shadow-card-rest), var(--mj-shadow-glass); position: sticky; top: 96px; animation: mjRise .8s var(--mj-easing-hero) .24s both; }
+@media (min-width: 640px) { .cart-summary { padding: 24px; } }
+.cart-summary-title { font-family: var(--mj-font-display); font-weight: 500; font-size: 18px; margin: 0 0 20px; }
+.cart-total-row { font-size: 16px; font-weight: 600; color: var(--mj-ink); border-top: 1px solid var(--mj-border); padding-top: 14px; margin-bottom: 24px; }
+.cart-checkout-cta { width: 100%; margin-bottom: 14px; }

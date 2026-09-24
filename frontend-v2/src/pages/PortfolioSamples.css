@@ -1,0 +1,91 @@
+/* /portfolio-samples — the ten portfolio designs, in public. See the .jsx. */
+
+.pfs-page { background: var(--mj-bg); min-height: 100vh; }
+
+.pfs-hero { padding: clamp(56px, 9vw, 104px) clamp(18px, 5vw, 40px) clamp(32px, 5vw, 56px); position: relative; }
+.pfs-hero-inner { max-width: 780px; margin: 0 auto; text-align: center; }
+.pfs-eyebrow { margin: 0 0 14px; font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--mj-primary); font-weight: 600; }
+.pfs-h1 { margin: 0 0 18px; font-family: var(--mj-font-display); font-weight: 400; font-size: clamp(30px, 5.4vw, 50px); line-height: 1.14; color: var(--mj-ink); }
+.pfs-accent { color: var(--mj-primary); font-style: italic; }
+.pfs-lead { margin: 0; font-size: clamp(15px, 1.7vw, 17px); line-height: 1.75; color: var(--mj-muted); }
+
+.pfs-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 0 18px 34px; }
+.pfs-filters button {
+  padding: 9px 20px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13px;
+  border: 1px solid var(--mj-border); background: var(--mj-bg); color: var(--mj-muted);
+  transition: color .2s, background .2s, border-color .2s;
+}
+.pfs-filters button:hover { color: var(--mj-ink); border-color: var(--mj-primary); }
+.pfs-filters button.is-on { background: var(--mj-primary); border-color: var(--mj-primary); color: #fff; font-weight: 600; }
+
+.pfs-body { max-width: 1180px; margin: 0 auto; padding: 0 clamp(18px, 4vw, 32px) clamp(56px, 8vw, 96px); }
+.pfs-grid { display: grid; gap: 26px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+
+.pfs-card {
+  display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+  border: 1px solid var(--mj-border); border-radius: 18px; background: var(--mj-bg);
+  box-shadow: var(--mj-shadow-card-rest);
+  transition: transform .25s var(--mj-easing), box-shadow .25s;
+}
+.pfs-card:hover { transform: translateY(-4px); box-shadow: var(--mj-shadow-card-hover); }
+
+/* The design, in the design. Every colour and face here is inline from the
+   design's own tokens — this stylesheet only lays them out. */
+.pfs-stage {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 30px 22px 26px; text-align: center; min-height: 250px;
+  border-bottom: 1px solid var(--mj-border);
+}
+.pfs-stage-name { margin: 0; font-size: 21px; letter-spacing: .01em; }
+.pfs-stage-sub { margin: 0; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+.pfs-stage-rule { width: 42px; height: 2px; border-radius: 2px; margin: 4px 0 2px; }
+.pfs-stage-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin-top: 4px; }
+.pfs-stage-grid span { display: block; aspect-ratio: 3 / 4; border-radius: 4px; border: 1px solid; }
+.pfs-stage-chip {
+  margin-top: 12px; padding: 7px 18px; border-radius: 999px;
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+}
+
+.pfs-meta { display: flex; flex-direction: column; gap: 9px; padding: 18px 20px 22px; }
+.pfs-meta-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pfs-name { margin: 0; font-family: var(--mj-font-display); font-weight: 500; font-size: 18px; color: var(--mj-ink); min-width: 0; }
+.pfs-tier {
+  flex: none; font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px; font-weight: 600;
+  border: 1px solid var(--mj-border); color: var(--mj-muted);
+}
+.pfs-tier--free { color: #3f6212; border-color: #a3c76d; background: rgba(163,199,109,.14); }
+.pfs-tier--basic { color: #4b5563; border-color: #9ca3af; background: rgba(156,163,175,.14); }
+.pfs-tier--premium { color: var(--mj-primary); border-color: var(--mj-primary); background: rgba(109,40,217,.10); }
+
+.pfs-vibe { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--mj-muted); }
+.pfs-note { margin: 0; font-size: 12px; line-height: 1.6; color: var(--mj-faint); }
+
+.pfs-tokens { display: flex; flex-wrap: wrap; gap: 14px 22px; margin: 4px 0 0; }
+.pfs-tokens > div { min-width: 0; }
+.pfs-tokens dt { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--mj-faint); margin-bottom: 5px; }
+.pfs-tokens dd { margin: 0; font-size: 12.5px; color: var(--mj-muted); text-transform: capitalize; }
+.pfs-swatches { display: inline-flex; }
+.pfs-swatches span { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--mj-border); margin-left: -4px; }
+.pfs-swatches span:first-child { margin-left: 0; }
+
+.pfs-fineprint { margin: 30px 0 0; font-size: 12.5px; line-height: 1.7; color: var(--mj-faint); max-width: 64ch; }
+
+.pfs-cta {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 20px; margin-top: 48px; padding: clamp(24px, 4vw, 36px);
+  border: 1px solid var(--mj-border); border-radius: 18px; background: var(--mj-section);
+}
+.pfs-cta h2 { margin: 0 0 6px; font-family: var(--mj-font-display); font-weight: 500; font-size: 21px; color: var(--mj-ink); }
+.pfs-cta p { margin: 0; font-size: 14px; color: var(--mj-muted); }
+.pfs-cta-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.pfs-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 12px 24px; border-radius: 999px; text-decoration: none; font-size: 14px;
+  border: 1px solid var(--mj-border); color: var(--mj-ink); background: var(--mj-bg);
+}
+.pfs-btn:hover { background: var(--mj-section-deep); }
+.pfs-btn--primary { background: var(--mj-primary); border-color: var(--mj-primary); color: #fff; font-weight: 600; }
+.pfs-btn--primary:hover { background: var(--mj-primary-hover); border-color: var(--mj-primary-hover); }
+
+@media (prefers-reduced-motion: reduce) { .pfs-card { transition: none; } }

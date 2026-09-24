@@ -1,0 +1,194 @@
+# deploy/docker-compose.yml — THE single production stack for one GCP
+# e2-standard-4 VM. Six services: caddy, core (the monolith), worker
+# (background jobs), postgres, redis, backup (nightly encrypted pg_dump —
+# see the `backup` service below). No gateway, no microservice stubs — the
+# ../microservices/ tree (gateway + 5 stub services) is NOT part of this
+# deploy; core serves /api directly. See ../docs/DEPLOYMENT.md for the runbook.
+#
+#   cd deploy && cp .env.example .env   # fill in EVERY value — see .env.example
+#   docker compose up -d --build
+#
+# Topology: caddy (80/443, auto-TLS) -> core:8200 (uvicorn, 4 workers)
+#                                    -> worker (background jobs, no public port)
+#           core + worker           -> postgres:5432 (in-stack, was external
+#                                       self-hosted Supabase in the old
+#                                       microservices/ stack — now runs here)
+#                                    -> redis:6379 (persistent — holds the
+#                                       face-match queue + OTP/rate-limit state)
+#
+# Postgres init: microservices/db/schema.sql only runs on a FRESH volume (the
+# entrypoint applies /docker-entrypoint-initdb.d/* once, on first init). An
+# existing pgdata volume needs a manual `ALTER TABLE`/psql run instead.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    # 4 core workers x DB_POOL_MAX=10 = 40, worker adds a few more, well under
+    # 200. See recon-backend-core.md §7 for the connection-budget math.
+    command: postgres -c max_connections=200
+    environment:
+      POSTGRES_USER: maja
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+      POSTGRES_DB: maja
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../microservices/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maja -d maja"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    expose: ["5432"]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Persistence ON (AOF). The old microservices/docker-compose.yml ran
+    # `--save "" --appendonly no` because nothing durable lived in Redis then.
+    # That assumption no longer holds: the face-match queue and buffered view
+    # counters now need to survive a container restart, not just a worker crash.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    expose: ["6379"]
+
+  # Legacy monolith (backend/server.py), run as "core". Repo bind-mounted to
+  # /app so existing /app/... paths + uploads resolve, matching
+  # microservices/docker-compose.yml's proven pattern.
+  core:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    # $$ (double $) defers expansion to the CONTAINER shell so it reads the
+    # `environment:` value below, not the host/compose env (see
+    # microservices/docker-compose.yml for why a single $ silently breaks this).
+    command: sh -c "uvicorn server:app --host 0.0.0.0 --port 8200 --workers $${WEB_CONCURRENCY:-4} --forwarded-allow-ips '*'"
+    working_dir: /app/backend
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      WEB_CONCURRENCY: "4"
+      DB_POOL_MAX: "10"
+      REDIS_URL: redis://redis:6379/0
+      # SUPER_ADMIN_* are only read when init_super_admin.py is run manually
+      # (see docs/DEPLOYMENT.md "first deploy") — core's request path never
+      # touches them. Guarded here anyway so `docker compose up`/`config`
+      # fails fast on a missing value instead of the seed script silently
+      # falling back to its hardcoded defaults (the legacy ChangeMe@123 bug).
+      SUPER_ADMIN_USERNAME: ${SUPER_ADMIN_USERNAME:?set SUPER_ADMIN_USERNAME in deploy/.env}
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:?set SUPER_ADMIN_EMAIL in deploy/.env}
+      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD:?set SUPER_ADMIN_PASSWORD in deploy/.env — no ChangeMe default}
+      # AWS_PROFILE needs no entry here: env_file: [.env] above already passes
+      # it through automatically once set in deploy/.env (see .env.example).
+      # Deliberately NOT adding `AWS_PROFILE: ${AWS_PROFILE:-}` here — tested
+      # locally against botocore: an env var present-but-empty is read as a
+      # request for a profile literally named "", which raises
+      # `ProfileNotFound: The config profile () could not be found` and would
+      # break every deploy that hasn't opted into a mounted profile.
+    volumes:
+      - ..:/app
+      # OPTIONAL preferred credential path (keeps AWS_ACCESS_KEY_ID/SECRET out
+      # of .env entirely): mount the host's ~/.aws read-only and select a
+      # profile via AWS_PROFILE in deploy/.env. Commented out rather than
+      # defaulted to `${AWS_SHARED_CREDENTIALS_DIR:-/dev/null}:/root/.aws:ro`
+      # — that default was considered and rejected: binding a non-directory
+      # source (/dev/null is a char device) onto /root/.aws, a path the base
+      # image doesn't already have as a directory, is storage-driver-
+      # dependent and unverifiable here (no docker available in this
+      # environment to test it). Set AWS_SHARED_CREDENTIALS_DIR on the HOST
+      # (e.g. /home/deploy/.aws, containing `credentials`/`config`) and
+      # uncomment:
+      # - ${AWS_SHARED_CREDENTIALS_DIR}:/root/.aws:ro
+    expose: ["8200"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # Background jobs: the face-match queue consumer (backend/worker.py —
+  # consumes maja:jobs:face via BRPOP: FACE_INDEX / FACE_SEARCH / REINDEX,
+  # exponential retry, graceful SIGTERM). Split out of core's request-serving
+  # workers so a slow Rekognition job can't starve API latency. Same
+  # image/build as core. Requires REDIS_URL (set below) and the same
+  # SUPABASE_DB_URL/AWS_* vars from .env as core.
+  worker:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    command: python worker.py
+    working_dir: /app/backend
+    restart: always
+    env_file: [.env]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      # AWS_PROFILE: see the identical comment on the core service above —
+      # already passed through via env_file, deliberately not redefined here.
+    volumes:
+      - ..:/app
+      # OPTIONAL preferred credential path — see the identical, fully
+      # commented block on the core service above for why this isn't a live
+      # default. Set AWS_SHARED_CREDENTIALS_DIR in deploy/.env and uncomment:
+      # - ${AWS_SHARED_CREDENTIALS_DIR}:/root/.aws:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # Nightly encrypted Postgres backup (SECURITY_AUDIT.md §14 — automates the
+  # cron line deploy/backup.sh's own header comment otherwise expects a host
+  # crontab to provide). Talks to `postgres` directly over the compose
+  # network (no docker socket needed) — see backup-cron-entrypoint.sh for the
+  # dump -> gzip -> AES-256-CBC/pbkdf2 (openssl, BACKUP_PASSPHRASE) -> prune
+  # sequence, same approach as deploy/backup.sh. Refuses to start (logs +
+  # exits, see the script) if BACKUP_PASSPHRASE/POSTGRES_PASSWORD are unset —
+  # scoped to this container only, so a missing passphrase doesn't block the
+  # rest of the stack from coming up. deploy/backup.sh + ops/restore_db.sh
+  # remain the manual/on-demand path; this just automates the nightly run.
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    entrypoint: ["sh", "/backup-cron-entrypoint.sh"]
+    env_file: [.env]
+    environment:
+      PGHOST: postgres
+      PGUSER: maja
+      PGDATABASE: maja
+      BACKUP_DIR: /backups
+    volumes:
+      - ./backup-cron-entrypoint.sh:/backup-cron-entrypoint.sh:ro
+      - backupdata:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in deploy/.env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # PRIMARY UI = frontend-v2 (the M12 design built from the .dc.html specs).
+      # Build first: cd frontend-v2 && yarn install && yarn build  (outputs dist/).
+      # The legacy CRA app (frontend/build) remains available for surfaces not
+      # yet ported (super-admin consoles, full studio suite) — serve it on a
+      # second hostname if needed; see docs/DEPLOYMENT.md "Legacy surfaces".
+      - ../frontend-v2/dist:/srv:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      core:
+        condition: service_started
+
+volumes:
+  pgdata:
+  redisdata:
+  caddydata:
+  caddyconfig:
+  backupdata:

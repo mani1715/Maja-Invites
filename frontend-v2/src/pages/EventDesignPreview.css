@@ -1,0 +1,136 @@
+/* Public preview for one approved event invitation design. */
+
+.edp-page {
+  min-height: 100vh;
+  background: var(--mj-bg, #fdfcff);
+  color: var(--mj-ink, #1f2937);
+}
+
+.edp-body {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 40px 20px 88px;
+}
+
+.edp-eyebrow {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mj-primary, #6d28d9);
+}
+
+.edp-h1 {
+  margin: 0 0 8px;
+  font-family: var(--mj-font-display, 'Spectral', serif);
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.edp-h2 {
+  margin: 0 0 18px;
+  font-family: var(--mj-font-display, 'Spectral', serif);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.edp-lead {
+  margin: 0 0 28px;
+  font-size: 16px;
+  color: var(--mj-muted, #6b7280);
+}
+
+.edp-skel {
+  height: 420px;
+  border-radius: 14px;
+  background: var(--mj-section, #f4f1f8);
+}
+
+.edp-stage {
+  display: flex;
+  gap: 36px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 56px;
+}
+
+.edp-stage-card {
+  width: min(340px, 100%);
+  flex: 0 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 18px 44px rgba(24, 12, 48, 0.18);
+}
+
+.edp-stage-side {
+  flex: 1 1 260px;
+  min-width: 240px;
+}
+
+.edp-note {
+  margin: 0 0 18px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--mj-muted, #6b7280);
+}
+
+.edp-btn {
+  display: inline-block;
+  padding: 11px 22px;
+  border-radius: 999px;
+  background: var(--mj-primary, #6d28d9);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.edp-btn:hover { filter: brightness(1.08); }
+.edp-btn:focus-visible { outline: 2px solid var(--mj-primary, #6d28d9); outline-offset: 3px; }
+
+.edp-fine {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--mj-muted, #6b7280);
+}
+
+.edp-more { margin-top: 12px; }
+
+.edp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  gap: 22px;
+}
+
+.edp-tile {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 130ms ease;
+}
+
+.edp-tile:hover { transform: translateY(-3px); }
+.edp-tile:focus-visible { outline: 2px solid var(--mj-primary, #6d28d9); outline-offset: 4px; }
+
+.edp-tile-name {
+  margin-top: 9px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.edp-tile-palette {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--mj-muted, #6b7280);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edp-tile { transition: none; }
+  .edp-tile:hover { transform: none; }
+}

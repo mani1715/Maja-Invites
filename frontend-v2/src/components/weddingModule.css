@@ -1,0 +1,343 @@
+/* Shared styling for the per-wedding management modules. Same shell language
+   as StudioDashboard/StudioWeddingDetail; --mj-* tokens only. */
+
+.wmod-root { font-family: var(--mj-font-body); }
+
+.wmod-shell {
+  background:
+    radial-gradient(68% 42% at 10% -5%, rgba(124, 58, 237, .13), transparent 62%),
+    radial-gradient(52% 38% at 97% 3%, rgba(167, 139, 250, .14), transparent 66%),
+    var(--mj-bg);
+  color: var(--mj-ink);
+  min-height: 100dvh;
+  display: grid;
+}
+.wmod-main { min-width: 0; }
+
+/* ----------------------------------------------------------------- panel */
+.wmod-panel {
+  background: var(--mj-card);
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-card);
+  box-shadow: var(--mj-shadow-card-rest);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.wmod-panel--error { border-color: #fecaca; text-align: center; }
+.wmod-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--mj-border);
+}
+.wmod-panel-headtext { min-width: 0; }
+.wmod-panel-title {
+  font-family: var(--mj-font-display);
+  font-weight: 500;
+  font-size: 18px;
+  margin: 0 0 3px;
+}
+.wmod-panel-sub { font-size: 13px; color: var(--mj-muted); margin: 0; max-width: 62ch; line-height: 1.55; }
+.wmod-panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.wmod-panel-body { padding: 20px 22px; }
+.wmod-panel--error .wmod-panel-body { padding: 48px 24px; }
+.wmod-error-body { font-size: 13.5px; color: var(--mj-error-text); margin: 0 0 18px; }
+.wmod-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* ----------------------------------------------------------------- stats */
+.wmod-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.wmod-stat {
+  background: var(--mj-section);
+  border: 1px solid var(--mj-border-accent);
+  border-top: 3px solid var(--mj-accent-soft);
+  border-radius: var(--mj-radius-card);
+  padding: 18px 20px;
+}
+.wmod-stat-label {
+  font-size: 11.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--mj-primary);
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.wmod-stat-value {
+  font-family: var(--mj-font-display);
+  font-size: clamp(22px, 5vw, 27px);
+  line-height: 1;
+  margin: 0;
+  color: var(--mj-ink-deep);
+}
+.wmod-stat-hint { font-size: 12.5px; color: var(--mj-muted); margin: 6px 0 0; }
+
+/* ------------------------------------------------------------- segmented */
+.wmod-seg {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--mj-border-accent);
+  border-radius: var(--mj-radius-card);
+  box-shadow: var(--mj-shadow-card-rest);
+  overflow-x: auto;
+  margin-bottom: 20px;
+  background: var(--mj-card);
+}
+.wmod-seg-btn {
+  flex: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--mj-radius-button);
+  background: transparent;
+  color: var(--mj-muted);
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 400;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.wmod-seg-btn--on {
+  background: var(--mj-accent-soft);
+  color: var(--mj-ink-deep);
+  font-weight: 600;
+  box-shadow: var(--mj-shadow-button-rest);
+}
+.wmod-seg-count {
+  font-size: 11.5px;
+  padding: 2px 8px;
+  border-radius: var(--mj-radius-pill);
+  background: rgba(255, 255, 255, .7);
+  color: inherit;
+}
+
+/* ----------------------------------------------------------------- table */
+.wmod-tablewrap { overflow-x: auto; }
+.wmod-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+.wmod-table th {
+  text-align: left;
+  font-size: 11.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mj-muted);
+  font-weight: 600;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--mj-border);
+  white-space: nowrap;
+}
+.wmod-table td { padding: 13px 14px; border-bottom: 1px solid var(--mj-border); vertical-align: top; }
+.wmod-table tr:last-child td { border-bottom: none; }
+.wmod-td-muted { color: var(--mj-muted); }
+.wmod-td-actions { white-space: nowrap; text-align: right; }
+
+.wmod-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--mj-radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wmod-pill--yes { background: #d1fae5; color: #065f46; }
+.wmod-pill--no { background: #fee2e2; color: #991b1b; }
+.wmod-pill--maybe { background: #fef3c7; color: #92400e; }
+.wmod-pill--neutral { background: var(--mj-section); color: var(--mj-muted); }
+.wmod-pill--vip { background: var(--mj-border-accent); color: var(--mj-ink-deep); }
+
+/* ---------------------------------------------------------------- fields */
+.wmod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 18px;
+}
+.wmod-field { display: flex; flex-direction: column; min-width: 0; }
+.wmod-field--wide { grid-column: 1 / -1; }
+.wmod-label { font-size: 13px; font-weight: 600; margin-bottom: 7px; }
+.wmod-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 14px;
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-control);
+  background: var(--mj-card);
+  color: var(--mj-ink);
+  font-family: inherit;
+  font-size: 14px;
+}
+textarea.wmod-input { min-height: 90px; resize: vertical; line-height: 1.6; }
+.wmod-hint { font-size: 12px; color: var(--mj-faint); margin: 6px 0 0; }
+.wmod-err { font-size: 12px; color: var(--mj-error-text); margin: 6px 0 0; font-weight: 500; }
+
+.wmod-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.wmod-check input { width: 18px; height: 18px; accent-color: var(--mj-primary); }
+
+/* --------------------------------------------------------------- buttons */
+.wmod-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: var(--mj-radius-button);
+  border: 1px solid transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.wmod-btn:disabled { opacity: .55; cursor: default; }
+.wmod-btn--primary { background: var(--mj-primary); color: #fff; box-shadow: var(--mj-shadow-button-rest); }
+.wmod-btn--ghost { background: var(--mj-card); color: var(--mj-muted); border-color: var(--mj-border); }
+.wmod-btn--danger { background: var(--mj-card); color: var(--mj-error-text); border-color: #fecaca; }
+.wmod-btn--sm { min-height: 36px; padding: 0 12px; font-size: 12.5px; }
+
+/* ----------------------------------------------------------------- empty */
+.wmod-empty {
+  text-align: center;
+  padding: 52px 24px;
+}
+.wmod-empty-title { font-family: var(--mj-font-display); font-size: 18px; margin: 0 0 8px; }
+.wmod-empty-body {
+  font-size: 13.5px;
+  color: var(--mj-muted);
+  margin: 0 auto 18px;
+  max-width: 54ch;
+  line-height: 1.65;
+}
+
+/* ---------------------------------------------------------------- toasts */
+.wmod-toastwrap {
+  position: fixed;
+  left: 0; right: 0; bottom: 26px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 80;
+}
+.wmod-toast {
+  background: var(--mj-ink-deep);
+  color: #fff;
+  font-size: 13px;
+  padding: 12px 20px;
+  border-radius: var(--mj-radius-button);
+  box-shadow: var(--mj-shadow-button-hover);
+}
+.wmod-inline-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--mj-error-text);
+  font-size: 13.5px;
+  padding: 12px 16px;
+  border-radius: var(--mj-radius-control);
+  margin-bottom: 16px;
+}
+
+/* ------------------------------------------------------------- skeletons */
+@keyframes wmodShimmer { from { background-position: 200% 50%; } to { background-position: -200% 50%; } }
+.wmod-skel {
+  border-radius: var(--mj-radius-card);
+  background: linear-gradient(90deg, var(--mj-section) 25%, var(--mj-section-deep) 37%, var(--mj-section) 63%);
+  background-size: 200% 100%;
+  animation: wmodShimmer 1.4s linear infinite;
+}
+
+/* ------------------------------------------------------------- bar chart */
+.wmod-bars { display: flex; align-items: flex-end; gap: 4px; height: 160px; padding-top: 8px; }
+.wmod-bar-col { flex: 1 1 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; min-width: 0; }
+.wmod-bar {
+  width: 100%;
+  max-width: 34px;
+  min-height: 2px;
+  border-radius: 5px 5px 0 0;
+  background: linear-gradient(180deg, var(--mj-accent-soft), var(--mj-primary));
+}
+.wmod-bar-label {
+  font-size: 10px;
+  color: var(--mj-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------- record list
+   Several console screens (investigation, feature wishes, sessions) show
+   the same shape: a titled row with a meta value on the right and an
+   optional detail line under it. Hand-rolling that inline four times was
+   how the earlier screens drifted apart. */
+.wmod-list { list-style: none; margin: 0; padding: 0; }
+.wmod-item { padding: 13px 0; border-bottom: 1px solid var(--mj-border); }
+.wmod-item:first-child { padding-top: 0; }
+.wmod-item:last-child { border-bottom: none; padding-bottom: 0; }
+.wmod-item-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px; flex-wrap: wrap;
+}
+.wmod-item-title { font-size: 14px; font-weight: 600; color: var(--mj-ink); min-width: 0; overflow-wrap: anywhere; }
+.wmod-item-meta { font-size: 12.5px; color: var(--mj-muted); white-space: nowrap; }
+.wmod-item-body {
+  font-size: 13px; color: var(--mj-muted); line-height: 1.6;
+  margin: 5px 0 0; overflow-wrap: anywhere;
+}
+.wmod-item-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ---------------------------------------------------- media grid (album) */
+.wmod-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+.wmod-gallery-item {
+  margin: 0;
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-card-inner);
+  overflow: hidden;
+  background: var(--mj-card);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.wmod-gallery-item img,
+.wmod-gallery-item video {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  background: var(--mj-section-deep);
+}
+.wmod-gallery-item figcaption {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--mj-muted);
+  min-width: 0;
+}
+.wmod-gallery-item figcaption > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

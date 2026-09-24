@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "MajaBackendObjectTagging",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObjectTagging",
+        "s3:GetObjectTagging"
+      ],
+      "Resource": [
+        "arn:aws:s3:::maja-event-media-2026/*",
+        "arn:aws:s3:::maja-portfolio-media-2026/*",
+        "arn:aws:s3:::maja-invitations-media-2026/*",
+        "arn:aws:s3:::maja-face-private-2026/*"
+      ]
+    }
+  ]
+}

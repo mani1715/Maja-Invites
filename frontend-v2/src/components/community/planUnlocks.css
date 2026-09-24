@@ -1,0 +1,94 @@
+/* Plan → community capability table. Tokens from styles/global.css only. */
+
+.punlock {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 56px 20px 8px;
+}
+.punlock-title {
+  font-family: var(--mj-font-display), serif;
+  font-weight: 500;
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.18;
+  margin: 0;
+  color: var(--mj-ink);
+}
+.punlock-sub {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--mj-muted);
+  max-width: 60ch;
+  margin: 12px 0 28px;
+}
+
+.punlock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px;
+}
+.punlock-col {
+  border: 1px solid var(--mj-border);
+  border-radius: 18px;
+  padding: 20px 20px 22px;
+  background: var(--mj-bg);
+  display: flex;
+  flex-direction: column;
+}
+/* The tier you are being asked to buy gets the emphasis. */
+.punlock-col--premium { border-color: var(--mj-primary); }
+
+.punlock-tier {
+  font-family: var(--mj-font-display), serif;
+  font-size: 19px;
+  margin: 0;
+  color: var(--mj-ink);
+}
+.punlock-note {
+  font-size: 12px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--mj-muted);
+  margin: 4px 0 14px;
+}
+.punlock-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.punlock-list li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--mj-ink);
+}
+.punlock-list li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: .5em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mj-primary);
+}
+.punlock-plus {
+  margin: 16px 0 0;
+  font-size: 12.5px;
+  color: var(--mj-muted);
+  font-style: italic;
+}
+
+.punlock-flag {
+  margin: 22px 0 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--mj-section);
+  border: 1px solid var(--mj-border);
+  font-size: 13px;
+  color: var(--mj-muted);
+  line-height: 1.6;
+}

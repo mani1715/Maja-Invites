@@ -1,0 +1,58 @@
+/* Ported from "MAJA Guest Arrival.dc.html" helmet <style>. Scoped with a
+   ga- prefix (same px-night/px-glass-d/px-card-d shapes as CoupleAccess.css,
+   kept file-local rather than shared since each page's exact rgba stack is
+   ported verbatim from its own DC source). */
+.ga-page { background: #190f33; color: #f2eefb; }
+.ga-page a { color: #c4b5fd; }
+.ga-page a:hover { color: #ddd6fe; }
+.ga-page input, .ga-page button { font-family: 'Inter', system-ui, sans-serif; }
+.ga-page input:focus {
+  outline: none; border-color: #6d28d9 !important;
+  box-shadow: 0 0 0 4px rgba(109, 40, 217, .14);
+}
+
+@keyframes gaAurora {
+  0%, 100% { background-position: 0% 40%, 100% 60%, 50% 100%, 0 0; }
+  50% { background-position: 60% 60%, 30% 40%, 45% 85%, 0 0; }
+}
+.ga-night {
+  position: relative; overflow: hidden; isolation: isolate;
+  background:
+    radial-gradient(70% 90% at 18% 8%, rgba(124, 58, 237, .55), transparent 60%),
+    radial-gradient(55% 75% at 82% 22%, rgba(167, 139, 250, .30), transparent 62%),
+    radial-gradient(45% 60% at 55% 100%, rgba(229, 169, 60, .13), transparent 70%),
+    linear-gradient(165deg, #190f33, #241448 55%, #190f33);
+  background-size: 180% 180%, 180% 180%, 160% 160%, 100% 100%;
+  animation: gaAurora 32s ease-in-out infinite;
+}
+.ga-glass {
+  background: rgba(25, 15, 51, .62);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(196, 181, 253, .22);
+  box-shadow: 0 20px 50px rgba(124, 58, 237, .22);
+}
+.ga-card {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(196, 181, 253, .18);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, .10);
+}
+.ga-lift { transition: transform .25s cubic-bezier(.22, .61, .36, 1), box-shadow .25s cubic-bezier(.22, .61, .36, 1); }
+.ga-lift:hover { transform: translateY(-4px); box-shadow: 0 24px 56px rgba(124, 58, 237, .22); }
+
+.ga-btn { transition: transform .15s cubic-bezier(.22, .61, .36, 1), box-shadow .3s, background .3s, border-color .3s; }
+.ga-btn:active:not(:disabled) { transform: scale(.97); }
+.ga-btn-outline { border: 1px solid rgba(196, 181, 253, .28); background: transparent; color: #f2eefb; }
+.ga-btn-outline:hover:not(:disabled) { border-color: #a78bfa; transform: translateY(-2px); box-shadow: 0 10px 26px rgba(109, 40, 217, .24); }
+.ga-btn-solid { border: none; background: #6d28d9; color: #ffffff; box-shadow: 0 10px 26px rgba(109, 40, 217, .24); }
+.ga-btn-solid:hover:not(:disabled) { background: #5b21b6; transform: translateY(-2px); box-shadow: 0 18px 40px rgba(109, 40, 217, .30); }
+.ga-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.ga-error { font-size: 13px; color: #fca5a5; background: rgba(239, 68, 68, .14); border: 1px solid rgba(239, 68, 68, .34); border-radius: 14px; padding: 12px 16px; margin: 14px 0 0; animation: mjPop .4s cubic-bezier(.22, .61, .36, 1) both; }
+
+.ga-nav { display: flex; gap: 6px; overflow-x: auto; flex: none; position: sticky; top: 0; z-index: 50; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ga-night { animation-duration: .01ms !important; }
+}

@@ -1,0 +1,14 @@
+# Shell scripts and container config MUST keep LF in the working tree, not just
+# in the index. This repo is developed on Windows and deployed on Linux; with
+# core.autocrlf on, a checkout rewrites these to CRLF and the shebang line
+# becomes `#!/usr/bin/env bash\r`, which Linux reports as
+# "bad interpreter: /usr/bin/env bash^M" — a deploy that fails on the VM and
+# nowhere else.
+deployed.out    text eol=lf
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+Caddyfile       text eol=lf
+Caddyfile.*     text eol=lf
+
+# Executable bits do not survive a Windows checkout either; the deploy script
+# is run as `./deployed.out`, so record the bit in the index.

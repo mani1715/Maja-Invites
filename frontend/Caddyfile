@@ -1,0 +1,33 @@
+# Caddy serves the React SPA and reverse-proxies the API to the backend.
+# DOMAIN + ACME_EMAIL come from the environment (docker-compose .env).
+# Using a real domain as the site address makes Caddy fetch a Let's Encrypt
+# certificate automatically (HTTP-01) and auto-renew it.
+
+{$DOMAIN} {
+	encode gzip zstd
+
+	# API → backend container.
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# Everything else → the SPA (client-side routing fallback).
+	handle {
+		root * /srv
+
+		# Content-hashed build assets are immutable — cache them forever.
+		@immutable path /static/*
+		header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+		# Never cache the HTML shell: after a redeploy the bundle hashes change,
+		# so a stale index.html points at deleted JS → a blank page on reload.
+		@html not path /static/*
+		header @html Cache-Control "no-cache"
+
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Account email for Let's Encrypt (set ACME_EMAIL in .env).
+	tls {$ACME_EMAIL}
+}

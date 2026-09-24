@@ -1,0 +1,332 @@
+/* ============================================================
+   LUXURY GLOBAL OVERRIDES — Applied when body has .luxe class
+   Auto-transforms older pages (gray theme) to luxury aesthetic
+   without rewriting every component.
+   ============================================================ */
+
+/* Force dark cinematic background on every legacy page */
+/* (The cinematic gradient itself is painted by .luxe::after — we just need
+   these wrappers to be transparent enough that the gradient/canvas show
+   through. Solid fallback colour is still set so there's never a white
+   flash before .luxe::after paints.) */
+.luxe.min-h-screen,
+.luxe > .min-h-screen,
+.luxe .min-h-screen {
+  background: transparent !important;
+  color: var(--lux-ivory) !important;
+}
+
+/* shadcn ui cards use bg-card token. Override globally inside .luxe 
+   MOBILE OPTIMIZED: Reduced blur for performance */
+.luxe .bg-card,
+.luxe [class*="bg-card"] {
+  background: rgba(255, 255, 255, 0.035) !important;
+  border-color: var(--lux-border) !important;
+  color: var(--lux-ivory) !important;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+.luxe .text-card-foreground { color: var(--lux-ivory) !important; }
+
+/* Mobile optimization - reduce expensive filters */
+@media (max-width: 768px) {
+  .luxe .bg-card,
+  .luxe [class*="bg-card"] {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+}
+
+/* Replace gray/white backgrounds with luxury surfaces */
+.luxe .bg-gray-50,
+.luxe .bg-gray-100,
+.luxe .bg-slate-50,
+.luxe .bg-slate-100,
+.luxe .bg-neutral-50,
+.luxe .bg-neutral-100,
+.luxe .bg-stone-50,
+.luxe .bg-stone-100 {
+  background: transparent !important;
+  color: var(--lux-ivory) !important;
+}
+
+.luxe .bg-white {
+  background: rgba(255, 255, 255, 0.035) !important;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--lux-border);
+  color: var(--lux-ivory) !important;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .luxe .bg-white {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+}
+
+/* Cards inherit glass appearance */
+.luxe [class*="rounded-lg"].bg-white,
+.luxe [class*="rounded-xl"].bg-white,
+.luxe [class*="rounded-2xl"].bg-white,
+.luxe [class*="rounded"][class*="bg-white"] {
+  border-radius: 18px !important;
+  border-color: var(--lux-border) !important;
+}
+
+/* Text — dark grays become ivory; mid grays become ivory soft */
+.luxe .text-gray-900,
+.luxe .text-gray-800,
+.luxe .text-slate-900,
+.luxe .text-slate-800,
+.luxe .text-neutral-900,
+.luxe .text-neutral-800,
+.luxe .text-zinc-900,
+.luxe .text-zinc-800,
+.luxe .text-black { color: var(--lux-ivory) !important; }
+
+.luxe .text-gray-700,
+.luxe .text-gray-600,
+.luxe .text-slate-700,
+.luxe .text-slate-600,
+.luxe .text-neutral-700,
+.luxe .text-neutral-600,
+.luxe .text-zinc-700,
+.luxe .text-zinc-600 { color: rgba(255, 248, 220, 0.78) !important; }
+
+.luxe .text-gray-500,
+.luxe .text-gray-400,
+.luxe .text-slate-500,
+.luxe .text-slate-400,
+.luxe .text-neutral-500,
+.luxe .text-zinc-500 { color: rgba(255, 248, 220, 0.55) !important; }
+
+.luxe .text-gray-300,
+.luxe .text-gray-200,
+.luxe .text-slate-300 { color: rgba(255, 248, 220, 0.42) !important; }
+
+/* Brand-accent rose/pink → champagne gold */
+.luxe .bg-rose-50,
+.luxe .bg-rose-100,
+.luxe .bg-pink-50,
+.luxe .bg-pink-100 { background: rgba(212, 175, 55, 0.08) !important; color: var(--lux-ivory) !important; }
+
+.luxe .bg-rose-500,
+.luxe .bg-rose-600,
+.luxe .bg-rose-700,
+.luxe .bg-pink-500,
+.luxe .bg-pink-600 {
+  background: linear-gradient(135deg, #B8902B 0%, #D4AF37 50%, #E8C766 100%) !important;
+  color: var(--lux-onyx) !important;
+  border: none !important;
+}
+.luxe .hover\:bg-rose-700:hover,
+.luxe .hover\:bg-rose-600:hover { background: linear-gradient(135deg, #E8C766 0%, #D4AF37 100%) !important; }
+
+.luxe .text-rose-600,
+.luxe .text-rose-700,
+.luxe .text-pink-600 { color: var(--lux-gold) !important; }
+.luxe .text-rose-500 { color: var(--lux-gold) !important; }
+
+/* Status accent colors made cinematic */
+.luxe .bg-green-50,
+.luxe .bg-emerald-50 { background: rgba(60, 179, 113, 0.08) !important; color: var(--lux-ivory) !important; }
+.luxe .text-green-600,
+.luxe .text-green-700,
+.luxe .text-emerald-600 { color: #6FCF97 !important; }
+
+.luxe .bg-red-50 { background: rgba(139, 0, 0, 0.15) !important; color: var(--lux-ivory) !important; }
+.luxe .text-red-600,
+.luxe .text-red-700 { color: #F08585 !important; }
+
+.luxe .bg-yellow-50,
+.luxe .bg-amber-50 { background: rgba(212, 175, 55, 0.1) !important; color: var(--lux-ivory) !important; }
+.luxe .text-yellow-600,
+.luxe .text-amber-600 { color: var(--lux-gold) !important; }
+
+.luxe .bg-blue-50,
+.luxe .bg-sky-50,
+.luxe .bg-indigo-50 { background: rgba(74, 14, 42, 0.18) !important; color: var(--lux-ivory) !important; }
+.luxe .text-blue-600,
+.luxe .text-indigo-600,
+.luxe .text-sky-600 { color: var(--lux-blush) !important; }
+
+.luxe .bg-purple-50 { background: rgba(123, 94, 167, 0.15) !important; color: var(--lux-ivory) !important; }
+.luxe .text-purple-600,
+.luxe .text-purple-700 { color: #C3A3E3 !important; }
+
+/* Borders */
+.luxe .border,
+.luxe .border-gray-200,
+.luxe .border-gray-100,
+.luxe .border-gray-300,
+.luxe .border-slate-200,
+.luxe .border-neutral-200 { border-color: var(--lux-border) !important; }
+
+.luxe .divide-y > * + *,
+.luxe .divide-gray-200 > * + *,
+.luxe .divide-gray-100 > * + * { border-color: var(--lux-border) !important; }
+
+/* Hover row backgrounds */
+.luxe .hover\:bg-gray-50:hover,
+.luxe .hover\:bg-gray-100:hover { background: rgba(212, 175, 55, 0.05) !important; }
+
+/* Tables — make legible on dark bg */
+.luxe table thead,
+.luxe table thead.bg-gray-50,
+.luxe table thead.bg-gray-100 { background: rgba(212, 175, 55, 0.04) !important; }
+.luxe table th { color: var(--lux-gold) !important; font-family: var(--font-body); letter-spacing: 0.18em; text-transform: uppercase; }
+.luxe table td { color: rgba(255, 248, 220, 0.85) !important; }
+
+/* Inputs / textareas / selects */
+.luxe input[type="text"],
+.luxe input[type="email"],
+.luxe input[type="password"],
+.luxe input[type="number"],
+.luxe input[type="search"],
+.luxe input[type="tel"],
+.luxe input[type="url"],
+.luxe input[type="date"],
+.luxe input[type="time"],
+.luxe input[type="datetime-local"],
+.luxe textarea,
+.luxe select {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--lux-border) !important;
+  color: var(--lux-ivory) !important;
+  border-radius: 10px !important;
+  transition: border-color 0.4s ease, background 0.4s ease;
+}
+.luxe input:focus,
+.luxe textarea:focus,
+.luxe select:focus {
+  outline: none !important;
+  border-color: var(--lux-gold) !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15) !important;
+}
+.luxe input::placeholder,
+.luxe textarea::placeholder { color: rgba(255, 248, 220, 0.35) !important; }
+.luxe select option { background: var(--lux-onyx) !important; color: var(--lux-ivory) !important; }
+
+/* Headings — give serifs everywhere */
+.luxe h1, .luxe h2, .luxe h3 { font-family: var(--font-display); letter-spacing: -0.005em; color: var(--lux-ivory); }
+.luxe h4, .luxe h5, .luxe h6 { font-family: var(--font-heading); color: var(--lux-ivory); }
+
+/* shadcn Button overrides for legacy pages */
+.luxe button[class*="bg-rose"],
+.luxe a[class*="bg-rose"] {
+  background: linear-gradient(135deg, #B8902B 0%, #D4AF37 60%, #E8C766 100%) !important;
+  color: var(--lux-onyx) !important;
+  border: none !important;
+}
+
+/* Container neutralization */
+.luxe .shadow,
+.luxe .shadow-sm,
+.luxe .shadow-md,
+.luxe .shadow-lg,
+.luxe .shadow-xl { box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4) !important; }
+
+/* Link hover */
+.luxe a:not(.lux-btn):not(.lux-btn-ghost):hover { color: var(--lux-gold); transition: color 0.3s ease; }
+
+/* Hero strip for legacy section headers */
+.luxe-hero-strip {
+  position: relative;
+  padding: 3rem 0 2rem;
+  border-bottom: 1px solid var(--lux-border);
+  margin-bottom: 2rem;
+}
+.luxe-hero-strip::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: radial-gradient(800px 200px at 20% 0%, rgba(212,175,55,0.08), transparent 70%);
+  pointer-events: none;
+}
+
+/* Accent decorative diamond */
+.luxe-diamond {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  background: var(--lux-gold);
+  transform: rotate(45deg);
+  margin: 0 0.7rem;
+  opacity: 0.85;
+}
+
+/* Sparkle dot list */
+.luxe ul:not([class*="flex"]) li::marker { color: var(--lux-gold); }
+
+/* Card class — generic luxury card wrapper */
+.luxe-card {
+  background: var(--lux-surface);
+  border: 1px solid var(--lux-border);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-radius: 18px;
+  padding: 1.75rem;
+  transition: border-color 0.6s var(--ease-cinema), transform 0.6s var(--ease-cinema), background 0.6s var(--ease-cinema);
+}
+.luxe-card:hover { border-color: var(--lux-border-strong); transform: translateY(-2px); }
+
+/* Stat tile */
+.luxe-stat-tile {
+  background: var(--lux-surface);
+  border: 1px solid var(--lux-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+.luxe-stat-tile::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, var(--lux-gold), transparent);
+  opacity: 0.6;
+}
+.luxe-stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+  background: linear-gradient(180deg, #F0D67E 0%, #D4AF37 50%, #8C6A1A 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+.luxe-stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: rgba(255, 248, 220, 0.55);
+}
+
+/* Pill badge */
+.luxe-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid var(--lux-border);
+  color: var(--lux-gold);
+}
+
+/* Floating ornament */
+.luxe-petal {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,196,184,0.5), transparent 65%);
+  filter: blur(8px);
+  pointer-events: none;
+}

@@ -1,0 +1,45 @@
+/* ============================================================
+   RESPONSIVE HARDENING (loaded after mobile-fixes.css)
+   Fixes the remaining "alignment / doesn't fit the screen" cases
+   that the earlier mobile pass didn't cover. Deliberately narrow
+   and low-risk — no layout rewrites, only overflow/width guards.
+   ============================================================ */
+
+/* Long unbroken strings (emails, URLs, hashes, file names) must wrap
+   instead of forcing the whole row wider than the screen. */
+p, span, h1, h2, h3, h4, h5, h6, a, li, label, dd, dt, figcaption {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Code / preformatted blocks (e.g. the Cloud Backup folder tree) scroll
+   inside their own box rather than stretching the page. */
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Tables (billing jobs, history, admin lists) never overflow the viewport;
+   on phones they scroll horizontally inside their container. */
+table { max-width: 100%; }
+@media (max-width: 640px) {
+  .lux-glass table,
+  table.responsive-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Fixed-width utility elements (search boxes, inputs sized with w-56/64/72)
+   must never be wider than their column on small screens. */
+@media (max-width: 640px) {
+  .w-56, .w-64, .w-72, .w-80, .w-96 { width: 100% !important; }
+  .lux-input { max-width: 100%; }
+  input, select, textarea { max-width: 100%; }
+}
+
+/* Prevent a stray wide child from creating a 1–2px horizontal scroll on
+   the whole document (belt-and-braces with the html/body overflow guards). */
+#root { max-width: 100%; }

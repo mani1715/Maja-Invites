@@ -1,0 +1,119 @@
+/* ============================================================
+   PERFORMANCE CSS — scroll, paint containment, motion gating.
+   Loaded after the main index.css so these rules win specificity
+   without re-declaring application styles.
+   ============================================================ */
+
+/* Smooth, momentum scrolling everywhere. */
+html, body {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Inner scroll areas shouldn't chain to the page when they hit the edge. */
+[data-scroll-container],
+.scroll-area,
+.modal-body,
+.lux-modal,
+.luxe-modal {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Card grids paint independently — huge win when re-rendering parents. */
+.theme-grid,
+.designs-grid,
+.cards-grid,
+[data-perf-cards],
+.shadcn-card-grid {
+  contain: layout style paint;
+}
+
+/* Reduced-motion / low-power user: skip every Framer Motion animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Shimmer for SmartImage placeholders (used when no blur thumbnail is given). */
+.smart-image__placeholder {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      110deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.18) 45%,
+      rgba(255, 255, 255, 0.06) 90%
+    );
+  background-size: 200% 100%;
+  animation: smartShimmer 1.6s linear infinite;
+}
+
+.smart-image.is-loaded .smart-image__placeholder {
+  display: none;
+}
+
+@keyframes smartShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Hint the compositor that animated elements move on the GPU. Apply via class
+   only — global `will-change` causes excessive memory use. */
+.gpu-layer {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ------------------------------------------------------------------
+   Off-screen rendering skip — content-visibility: auto lets the browser
+   skip layout/paint/script for sections that are scrolled out of view.
+   Wedding invitation pages and the landing-page theme grid stack many
+   identical heavy cards; this single rule reclaims most scroll FPS.
+   ------------------------------------------------------------------ */
+.cv-auto,
+[data-cv="auto"] {
+  content-visibility: auto;
+  contain-intrinsic-size: 600px 800px; /* approximate card box; prevents jumps */
+}
+
+/* Theme preview cards on the landing page — each card embeds a full
+   `UniversalDesignRenderer` with overlays. Gate paint to viewport. */
+[data-testid^="theme-card-"] {
+  content-visibility: auto;
+  contain-intrinsic-size: 540px 720px;
+}
+
+/* Event sections in the public invitation share the same heavy renderer. */
+[data-testid^="event-hero-"] {
+  content-visibility: auto;
+  contain-intrinsic-size: 100vw 78vh;
+}
+
+/* Mobile: drop animation cost further on low-power devices. */
+@media (max-width: 768px) {
+  /* Pause infinite SVG / CSS animations on cards that are off-screen.
+     Modern browsers honour `content-visibility: auto` for animations too. */
+  [data-testid^="theme-card-"] .mandala-svg,
+  [data-testid^="theme-card-"] .gold-dust {
+    animation-play-state: paused;
+  }
+
+  /* Trim the hero mandala stack from 3 spinning SVGs to 1. */
+  .hero-mandala-3d .mandala-stack > :nth-child(n + 2) {
+    display: none;
+  }
+
+  /* Cut hero dust particle count by half on mobile via opacity. */
+  .hero-mandala-3d .gold-dust-container .gold-dust:nth-child(even) {
+    display: none;
+  }
+}

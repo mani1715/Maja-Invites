@@ -1,0 +1,50 @@
+/* Super-admin Pricing Hub — light main column against the dark AdminNav rail. */
+.admpr-card { background: var(--mj-card); border: 1px solid var(--mj-border); border-radius: var(--mj-radius-card); box-shadow: var(--mj-shadow-card-rest); }
+.admpr-hl { color: var(--mj-primary); font-style: italic; }
+.admpr-main { animation: admprRise .55s cubic-bezier(.22,.61,.36,1) both; min-width: 0; }
+@keyframes admprRise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+
+.admpr-tab {
+  flex-shrink: 0; min-height: 42px; padding: 0 18px; border-radius: var(--mj-radius-pill);
+  border: 1px solid var(--mj-border-accent); background: var(--mj-section); color: var(--mj-muted);
+  font-size: 13px; font-weight: 600; font-family: inherit; white-space: nowrap; cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s, transform .15s;
+}
+.admpr-tab:hover { transform: translateY(-1px); border-color: var(--mj-accent-tint); }
+.admpr-tab-active { background: var(--mj-accent-soft); color: var(--mj-ink-deep); border-color: var(--mj-accent-soft); }
+
+.admpr-section-title { font-family: var(--mj-font-display); font-weight: 500; font-size: 16px; margin: 0 0 12px; color: var(--mj-ink); }
+
+.admpr-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: center; }
+
+.admpr-field {
+  min-height: 44px; padding: 0 14px; border: 1px solid var(--mj-border); border-radius: var(--mj-radius-control);
+  font-size: 13.5px; background: var(--mj-section); font-family: inherit; color: var(--mj-ink); width: 100%;
+}
+.admpr-field:focus { outline: none; border-color: var(--mj-primary); box-shadow: var(--mj-shadow-focus-ring); }
+
+.admpr-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mj-ink); white-space: nowrap; }
+
+.admpr-btn {
+  min-height: 44px; padding: 0 20px; border-radius: var(--mj-radius-button); border: none;
+  background: var(--mj-primary); color: #fff; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  font-family: inherit; box-shadow: var(--mj-shadow-button-rest); transition: background .2s, transform .15s;
+}
+.admpr-btn:hover:not(:disabled) { background: var(--mj-primary-hover); transform: translateY(-1px); }
+.admpr-btn:disabled { opacity: .6; cursor: default; }
+
+.admpr-link-btn { background: none; border: none; color: var(--mj-primary); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 0; font-family: inherit; }
+.admpr-link-btn:hover { text-decoration: underline; }
+.admpr-link-danger { color: var(--mj-error-text); }
+
+.admpr-error {
+  background: rgba(239,68,68,.08); border: 1px solid var(--mj-error); color: var(--mj-error-text);
+  border-radius: var(--mj-radius-card-inner); padding: 12px 16px; font-size: 13px; margin-bottom: 16px;
+}
+
+.admpr-warning {
+  background: rgba(245,158,11,.10); border: 1px solid var(--mj-warning); color: #92400e;
+  border-radius: var(--mj-radius-card-inner); padding: 14px 18px; font-size: 13px; line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) { .admpr-main { animation: none !important; } }

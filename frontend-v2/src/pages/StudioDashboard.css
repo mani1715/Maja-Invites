@@ -1,0 +1,44 @@
+/* Ported from "MAJA Studio Dashboard.dc.html". Keep selectors/values EXACT. */
+.stdash-tile, .stdash-card { transition: transform .25s cubic-bezier(.22,.61,.36,1), box-shadow .25s; box-shadow: 0 8px 24px rgba(124,58,237,.10); }
+.stdash-tile:hover, .stdash-card:hover { transform: translateY(-3px); box-shadow: 0 24px 56px rgba(124,58,237,.22); }
+.stdash-card:hover { border-color: #ddd6fe; }
+.stdash-glass { background: rgba(255,255,255,.60); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); border: 1px solid rgba(255,255,255,.72); }
+@supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))) { .stdash-glass { background: rgba(255,255,255,.94); } }
+.stdash-btn { transition: transform .3s cubic-bezier(.22,.61,.36,1), box-shadow .3s, background .3s, border-color .3s; }
+.stdash-btn:hover:not(:disabled) { background: #5b21b6; transform: translateY(-1px); box-shadow: 0 18px 40px rgba(109,40,217,.30); }
+.stdash-btn:active:not(:disabled) { transform: scale(.97); }
+.stdash-btn:disabled { opacity: .5; cursor: not-allowed; }
+.stdash-filter { transition: transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .2s; }
+.stdash-filter:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(109,40,217,.24); }
+.stdash-filter:active { transform: scale(.97); }
+.stdash-hl { color: #6d28d9; font-style: italic; }
+.stdash-skel { background: linear-gradient(90deg,#f5f3ff 25%,#ede9fe 37%,#f5f3ff 63%); background-size: 400% 100%; animation: stdashShimmer 1.4s ease infinite; }
+@keyframes stdashShimmer { 0%{background-position:100% 50%} 100%{background-position:0 50%} }
+.stdash-pager button { transition: background .2s, color .2s, opacity .2s; }
+.stdash-pager button:disabled { opacity: .4; cursor: not-allowed; }
+@keyframes stdashRise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+@keyframes stdashScaleIn { from{opacity:0;transform:scale(.96)} to{opacity:1;transform:none} }
+.stdash-main { animation: stdashRise .55s cubic-bezier(.22,.61,.36,1) both; }
+.stdash-tile { animation: stdashScaleIn .5s cubic-bezier(.22,.61,.36,1) backwards; }
+a:focus-visible, button:focus-visible { outline: 2px solid #6d28d9; outline-offset: 2px; }
+@media (hover:none) { .stdash-card:hover, .stdash-tile:hover { transform: none; box-shadow: 0 8px 24px rgba(124,58,237,.10); } }
+@media (prefers-reduced-motion:reduce) { .stdash-main, .stdash-tile, .stdash-skel { animation: none !important; } }
+
+/* "Finish your invitation order" banner — docs/PRICING_REDESIGN_2026.md §9.8 */
+.stdash-suite-banner {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px;
+  padding: 12px 16px; margin-bottom: 22px; border-radius: var(--mj-radius-card-inner);
+  background: var(--mj-section); border: 1px solid var(--mj-border-accent);
+}
+.stdash-suite-banner-text { font-size: 13px; color: var(--mj-ink-deep); min-width: 0; }
+.stdash-suite-banner-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.stdash-suite-banner-cta {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: var(--mj-radius-button);
+  background: var(--mj-primary); color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
+}
+.stdash-suite-banner-dismiss {
+  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: var(--mj-radius-control); color: var(--mj-muted);
+  font-size: 18px; line-height: 1; cursor: pointer;
+}
+.stdash-suite-banner-dismiss:hover { background: var(--mj-section-deep); }

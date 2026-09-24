@@ -1,0 +1,71 @@
+/* Discount code entry. Tokens from styles/global.css only. */
+
+.dcode {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border: 1px dashed var(--mj-border);
+  border-radius: 14px;
+}
+.dcode--on {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-style: solid;
+  border-color: var(--mj-primary);
+  background: var(--mj-accent-soft);
+}
+.dcode-label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--mj-muted);
+  margin-bottom: 8px;
+}
+.dcode-row { display: flex; gap: 8px; }
+.dcode-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--mj-border);
+  border-radius: 10px;
+  background: var(--mj-bg);
+  color: var(--mj-ink);
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.dcode-btn {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--mj-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+}
+.dcode-btn:disabled { opacity: .5; cursor: default; }
+.dcode-error { margin: 8px 0 0; font-size: 13px; color: var(--mj-error); }
+.dcode-code {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  color: var(--mj-primary);
+}
+.dcode-saving { margin: 2px 0 0; font-size: 13px; color: var(--mj-ink); }
+.dcode-remove {
+  border: 0;
+  background: none;
+  color: var(--mj-muted);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  flex: none;
+}

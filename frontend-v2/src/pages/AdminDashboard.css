@@ -1,0 +1,10 @@
+/* Platform console — light main column against the dark AdminNav rail (intended). */
+.admdash-card { background: var(--mj-card); border: 1px solid var(--mj-border); border-radius: var(--mj-radius-card); box-shadow: var(--mj-shadow-card-rest); }
+.admdash-tile { transition: transform .25s cubic-bezier(.22,.61,.36,1), box-shadow .25s; }
+.admdash-tile:hover { transform: translateY(-3px); box-shadow: var(--mj-shadow-card-hover); }
+.admdash-hl { color: var(--mj-primary); font-style: italic; }
+.admdash-skel { background: linear-gradient(90deg,#f5f3ff 25%,#ede9fe 37%,#f5f3ff 63%); background-size: 400% 100%; animation: admdashShimmer 1.4s ease infinite; }
+@keyframes admdashShimmer { 0%{background-position:100% 50%} 100%{background-position:0 50%} }
+@keyframes admdashRise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+.admdash-main { animation: admdashRise .55s cubic-bezier(.22,.61,.36,1) both; min-width: 0; }
+@media (prefers-reduced-motion:reduce) { .admdash-main, .admdash-tile, .admdash-skel { animation: none !important; } }

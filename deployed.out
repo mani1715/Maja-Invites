@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# deployed.out — preserved for compatibility with existing bookmarks and
+# runbooks that still invoke this filename. All deployment logic now lives
+# in deploy/deploy.sh; this file only forwards to it.
+set -Eeuo pipefail
+exec "$(dirname "$0")/deploy/deploy.sh" "$@"

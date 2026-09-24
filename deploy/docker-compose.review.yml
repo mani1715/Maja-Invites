@@ -1,0 +1,25 @@
+# deploy/docker-compose.review.yml — OPT-IN overlay for reviewing the site on
+# the VM's bare IP, before DNS/TLS exists for the real domain.
+#
+#     ./deployed.out --review
+#
+# Why an overlay instead of editing the Caddyfile: the production config is a
+# single `{$DOMAIN}` site with automatic HTTPS. Adding a `:80` catch-all to
+# that file changes how Caddy handles the domain's own HTTP→HTTPS redirect, so
+# the plain-HTTP lane lives here and is only ever loaded when explicitly asked
+# for. `docker compose -f docker-compose.yml up -d` alone can never turn it on.
+#
+# What it does: swaps Caddy's config for Caddyfile.review, which keeps the
+# domain block exactly as it is and adds a second site that answers on port 80
+# for any OTHER host — i.e. the raw IP.
+#
+# This is for review only. Plain HTTP means no HSTS and no transport
+# encryption: do not sign in as super-admin over it, and take it off before a
+# public launch by redeploying without --review.
+services:
+  caddy:
+    volumes:
+      - ./Caddyfile.review:/etc/caddy/Caddyfile:ro
+      - ../frontend-v2/dist:/srv:ro
+      - caddydata:/data
+      - caddyconfig:/config

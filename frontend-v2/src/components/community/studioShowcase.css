@@ -1,0 +1,186 @@
+/* Studio highlights + packages. Sits inside PhotographerPublic, which drives a
+   per-studio palette through --pf-* custom properties; inherit those so the
+   section matches whichever portfolio design the studio picked, and fall back
+   to the app tokens when rendered anywhere else. */
+
+.sshow {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 44px 20px 0;
+}
+.sshow-title {
+  font-family: var(--pf-heading, var(--mj-font-display)), serif;
+  font-weight: 500;
+  font-size: clamp(20px, 2.6vw, 26px);
+  color: var(--pf-ink, var(--mj-ink));
+  margin: 0 0 18px;
+}
+
+/* ---- highlights ---- */
+.sshow-rail {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.sshow-hl {
+  flex: 0 0 auto;
+  width: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.sshow-hl-art {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--pf-accent, var(--mj-primary));
+  background: var(--pf-surface, var(--mj-section));
+  display: grid;
+  place-items: center;
+}
+.sshow-hl-art img { width: 100%; height: 100%; object-fit: cover; }
+.sshow-hl-blank {
+  width: 100%;
+  height: 100%;
+  background: var(--pf-line, var(--mj-border));
+}
+.sshow-hl-name {
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--pf-ink-soft, var(--mj-muted));
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- packages ---- */
+.sshow-pkgs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+.sshow-pkg {
+  border: 1px solid var(--pf-line, var(--mj-border));
+  border-radius: 16px;
+  padding: 20px;
+  background: var(--pf-surface, var(--mj-bg));
+}
+.sshow-pkg-name {
+  font-family: var(--pf-heading, var(--mj-font-display)), serif;
+  font-weight: 500;
+  font-size: 18px;
+  margin: 0 0 8px;
+  color: var(--pf-ink, var(--mj-ink));
+}
+.sshow-pkg-price {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--pf-accent, var(--mj-primary));
+}
+.sshow-pkg-unit { font-size: 13px; font-weight: 400; color: var(--pf-ink-soft, var(--mj-muted)); }
+.sshow-pkg-desc {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--pf-ink-soft, var(--mj-muted));
+}
+.sshow-pkg-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sshow-pkg-list li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--pf-ink, var(--mj-ink));
+}
+.sshow-pkg-list li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: .55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--pf-accent, var(--mj-primary));
+}
+
+/* ---- highlight viewer ---- */
+.sshow-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(10, 8, 16, .92);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.sshow-stage {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  background: #111827;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+.sshow-vhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.sshow-vcount { margin-left: auto; font-weight: 400; opacity: .7; font-size: 12.5px; }
+.sshow-vhead button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+.sshow-vbody {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 16px 12px;
+}
+.sshow-vbody img, .sshow-vbody video { max-width: 100%; max-height: 62vh; border-radius: 10px; }
+.sshow-vtext { font-size: 17px; line-height: 1.5; text-align: center; padding: 30px; }
+.sshow-vnav { display: flex; gap: 10px; padding: 0 16px 16px; }
+.sshow-vnav button {
+  flex: 1;
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.sshow-vnav button:disabled { opacity: .3; cursor: default; }
+.sshow-pkg-tier {
+  margin: -4px 0 8px;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--pf-ink-soft, var(--mj-muted));
+}

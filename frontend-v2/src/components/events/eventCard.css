@@ -1,0 +1,135 @@
+/* Event invitation card — artwork plus the configured text zone.
+   Geometry is driven entirely by CSS custom properties that
+   EventInvitationCard.jsx sets from `template.layout`. Nothing here assumes a
+   particular event type or a particular artwork. */
+
+.evc {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--evc-ratio, 0.5628);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--mj-section, #f4f1f8);
+  /* Makes 1cqw == 1% of THIS card's width, so every font size below scales
+     with the card rather than the viewport. The layout percentages from the
+     backend are percentages of the card, so this is the unit that matches. */
+  container-type: inline-size;
+}
+
+.evc-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+}
+
+/* The empty centre the artwork was composed around. */
+.evc-zone {
+  position: absolute;
+  top: var(--evc-top, 33%);
+  left: var(--evc-left, 50%);
+  width: var(--evc-width, 76%);
+  height: var(--evc-height, 46%);
+  transform: translateX(-50%);
+  padding: var(--evc-pad, 1.5%);
+  display: flex;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.evc-zone[data-valign='top']    { align-items: flex-start; }
+.evc-zone[data-valign='middle'] { align-items: center; }
+.evc-zone[data-valign='bottom'] { align-items: flex-end; }
+
+.evc-zone[data-align='center'] { justify-content: center; text-align: center; }
+.evc-zone[data-align='left']   { justify-content: flex-start; text-align: left; }
+.evc-zone[data-align='right']  { justify-content: flex-end; text-align: right; }
+
+.evc-text {
+  width: 100%;
+  /* font_scale from the config x the measured shrink-to-fit factor. */
+  --evc-f: calc(var(--evc-scale, 1) * var(--evc-shrink, 1));
+  line-height: var(--evc-lh, 1.16);
+  color: var(--evc-text, #3a2a18);
+  /* Artwork centres are light cream; a hairline light shadow keeps the ink
+     readable if a design ever runs busier behind the text. */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.evc-heading {
+  margin: 0;
+  font-family: var(--mj-font-display, 'Spectral', serif);
+  font-size: calc(7.2cqw * var(--evc-f));
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--evc-text);
+}
+
+.evc-sub {
+  margin: 2.2% 0 0;
+  font-size: calc(4.1cqw * var(--evc-f));
+  font-weight: 500;
+  color: var(--evc-accent, #9a7b3f);
+}
+
+.evc-msg {
+  margin: 4% 0 0;
+  font-size: calc(3.5cqw * var(--evc-f));
+  color: var(--evc-muted, #6b5844);
+  white-space: pre-line;
+}
+
+/* ---- picker grid --------------------------------------------------------- */
+
+.evc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.evc-pick {
+  display: block;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.evc-pick:hover { transform: translateY(-2px); }
+.evc-pick:focus-visible { outline: 2px solid var(--mj-primary, #6d28d9); outline-offset: 3px; }
+.evc-pick[aria-pressed='true'] { border-color: var(--mj-primary, #6d28d9); }
+
+.evc-pick-name {
+  margin: 8px 2px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mj-ink, #1f2937);
+}
+
+.evc-pick-palette {
+  margin: 2px 2px 0;
+  font-size: 12px;
+  color: var(--mj-muted, #6b7280);
+}
+
+.evc-pick-current {
+  display: inline-block;
+  margin: 4px 2px 0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mj-accent-soft, #ede9fe);
+  color: var(--mj-primary, #6d28d9);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evc-pick { transition: none; }
+  .evc-pick:hover { transform: none; }
+}

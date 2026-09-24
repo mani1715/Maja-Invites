@@ -1,0 +1,108 @@
+.mjp-page { font-family: var(--mj-font-body); background: #fff; color: var(--mj-ink); min-height: 100dvh; }
+
+.mjp-hero { padding: 56px 18px 44px; text-align: center; }
+@media (min-width: 640px) { .mjp-hero { padding: 68px 24px 52px; } }
+@media (min-width: 860px) { .mjp-hero { padding: 92px 28px 64px; } }
+.mjp-hero-inner { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; }
+.mjp-eyebrow { font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--mj-primary); margin: 0 0 20px; font-weight: 600; }
+.mjp-h1 { font-family: var(--mj-font-display); font-weight: 400; font-size: clamp(30px,5.6vw,48px); line-height: 1.14; margin: 0 0 16px; color: var(--mj-ink); }
+.mjp-accent { color: var(--mj-primary); font-style: italic; }
+.mjp-sub { font-size: clamp(14.5px,1.4vw,16.5px); color: var(--mj-muted); margin: 0; line-height: 1.7; }
+
+.mjp-tabs-row { display: flex; justify-content: center; padding: 32px 20px 0; }
+.mjp-tabs { display: flex; gap: 4px; background: #fff; border: 1px solid var(--mj-border); border-radius: 999px; padding: 4px; }
+.mjp-tabs button {
+  min-height: 44px; padding: 0 20px; border: none; border-radius: 999px; background: transparent; color: var(--mj-muted);
+  font-size: 13.5px; font-weight: 600; font-family: inherit; cursor: pointer; transition: transform .15s var(--mj-easing), box-shadow .2s, background .18s, color .18s;
+}
+.mjp-tabs button.is-on { background: var(--mj-primary); color: #fff; box-shadow: var(--mj-shadow-button-rest); }
+.mjp-tabs button:hover { transform: translateY(-1px); }
+
+.mjp-body { max-width: 1080px; margin: 0 auto; padding: 40px 18px 100px; }
+@media (min-width: 640px) { .mjp-body { padding: 40px 24px 100px; } }
+@media (min-width: 860px) { .mjp-body { padding: 40px 28px 100px; } }
+
+.mjp-state { text-align: center; padding: 60px 20px; color: var(--mj-muted); font-size: 14px; }
+.mjp-state-error { color: var(--mj-error-text); }
+
+/* Reserves the same grid footprint the real cards take, so the data arriving
+   doesn't shift everything below it (CLS). Reuses global.css's mjShimmer. */
+.mjp-skel-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 20px; }
+.mjp-skel-card {
+  height: 260px; border-radius: var(--mj-radius-card); border: 1px solid var(--mj-border);
+  background: linear-gradient(90deg, var(--mj-section) 25%, var(--mj-section-deep) 37%, var(--mj-section) 63%);
+  background-size: 200% 100%; animation: mjShimmer 1.4s linear infinite;
+}
+
+.mjp-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 20px; align-items: stretch; }
+.mjp-card {
+  background: #fff; border: 1px solid var(--mj-border); border-radius: var(--mj-radius-card); padding: 30px 26px;
+  display: flex; flex-direction: column; position: relative; box-shadow: var(--mj-shadow-card-rest);
+  transition: transform .25s var(--mj-easing), box-shadow .25s;
+}
+.mjp-card:hover { transform: perspective(900px) rotateX(2deg) rotateY(-1.5deg) translateY(-4px); box-shadow: var(--mj-shadow-card-hover); }
+.mjp-card.is-featured { background: var(--mj-primary); border-color: var(--mj-primary); color: #fff; box-shadow: var(--mj-shadow-glass); }
+.mjp-badge {
+  position: absolute; top: -13px; left: 28px; background: #fff; border: 1px solid var(--mj-border-accent); color: var(--mj-primary);
+  font-size: 11px; font-weight: 600; letter-spacing: .04em; padding: 5px 14px; border-radius: 999px; box-shadow: var(--mj-shadow-card-rest); white-space: nowrap;
+}
+.mjp-card-eyebrow { font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 16px; font-weight: 600; color: var(--mj-primary); }
+.mjp-card.is-featured .mjp-card-eyebrow { color: #e9d5ff; }
+.mjp-card-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+.mjp-card-price span:first-child { font-family: var(--mj-font-display); font-size: 38px; line-height: 1; }
+.mjp-card-suffix { font-size: 13px; color: var(--mj-muted); }
+.mjp-card.is-featured .mjp-card-suffix { color: #ddd6fe; }
+.mjp-card-meta { font-size: 12.5px; color: var(--mj-muted); margin: 0 0 6px; }
+.mjp-card.is-featured .mjp-card-meta { color: #ddd6fe; }
+.mjp-card-desc { font-size: 13.5px; color: var(--mj-muted); margin: 0 0 26px; line-height: 1.6; flex: 1; }
+.mjp-card.is-featured .mjp-card-desc { color: #ddd6fe; }
+.mjp-card-cta {
+  display: flex; align-items: center; justify-content: center; min-height: 48px; width: 100%; background: #fff; color: var(--mj-primary);
+  border: 1px solid var(--mj-primary); border-radius: var(--mj-radius-button); font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer;
+  transition: transform .15s var(--mj-easing), box-shadow .3s, background .3s;
+}
+.mjp-card-cta:hover { background: var(--mj-section); transform: translateY(-1px); }
+.mjp-card-cta:active { transform: scale(.97); }
+.mjp-card-cta:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.mjp-card.is-featured .mjp-card-cta { border: none; }
+.mjp-card.is-featured .mjp-card-cta:hover { background: var(--mj-section); box-shadow: var(--mj-shadow-button-hover); }
+/* Secondary line under the order CTA — for the visitor who is not a
+   photographer and landed here anyway. */
+.mjp-card-alt {
+  margin-top: 10px; background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; font-size: 12.5px; color: var(--mj-muted); text-decoration: underline;
+}
+.mjp-card-alt:hover { color: var(--mj-ink); }
+.mjp-card.is-featured .mjp-card-alt { color: #ddd6fe; }
+
+.mjp-addons { max-width: 1080px; margin: 56px auto 0; }
+.mjp-addons h2 { font-family: var(--mj-font-display); font-weight: 500; font-size: 19px; margin: 0 0 6px; }
+.mjp-addons-sub { font-size: 13px; color: var(--mj-muted); margin: 0 0 20px; }
+.mjp-addons-grid { background: #fff; border: 1px solid var(--mj-border); border-radius: var(--mj-radius-card); box-shadow: var(--mj-shadow-card-rest); overflow: hidden; }
+.mjp-addon-row { display: flex; justify-content: space-between; padding: 16px 22px; font-size: 13.5px; border-top: 1px solid var(--mj-border); }
+.mjp-addon-row:first-child { border-top: none; }
+.mjp-addon-price { color: var(--mj-primary); font-weight: 600; }
+
+.mjp-footer { border-top: 1px solid var(--mj-border); background: var(--mj-section); padding: 24px; text-align: center; }
+.mjp-footer p { font-size: 12.5px; color: var(--mj-muted); margin: 0; }
+
+.mjp-portfolio-link { max-width: 1080px; margin: 34px auto 0; padding: 0 18px; font-size: 14px; line-height: 1.7; color: var(--mj-muted); text-align: center; }
+
+.mjp-section-h2 { font-family: var(--mj-font-display); font-weight: 500; font-size: clamp(22px,3vw,28px); margin: 0 0 8px; color: var(--mj-ink); text-align: center; }
+.mjp-section-sub { font-size: 14px; color: var(--mj-muted); margin: 0 0 28px; text-align: center; max-width: 640px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+
+.mjp-invite-rows { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 16px; }
+.mjp-invite-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; border: 1px solid var(--mj-border); border-radius: var(--mj-radius-card-inner);
+  font-size: 13.5px; cursor: pointer;
+}
+.mjp-invite-row-check { display: flex; align-items: center; gap: 10px; color: var(--mj-ink); }
+.mjp-invite-row-check input { width: 17px; height: 17px; accent-color: var(--mj-primary); }
+.mjp-invite-row-price { color: var(--mj-muted); font-weight: 600; white-space: nowrap; }
+.mjp-invite-total {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 14px; margin-bottom: 16px; border-radius: var(--mj-radius-card-inner);
+  background: var(--mj-section); font-size: 13px; font-weight: 600; color: var(--mj-ink-deep);
+}
+.mjp-invite-total span:last-child { font-family: var(--mj-font-display); font-size: 19px; }

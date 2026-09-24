@@ -1,0 +1,6 @@
+<svg width="800" height="1200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="1200" fill="#f8f8f8"/>
+  <circle cx="400" cy="400" r="200" fill="Blue" opacity="0.3"/>
+  <text x="400" y="700" font-family="Arial" font-size="32" text-anchor="middle" fill="#333">venkateswara padmavati</text>
+  <text x="400" y="750" font-family="Arial" font-size="20" text-anchor="middle" fill="#666">Mobile</text>
+</svg>

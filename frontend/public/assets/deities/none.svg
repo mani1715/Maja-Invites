@@ -1,0 +1,6 @@
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" fill="#f0f0f0"/>
+  <circle cx="200" cy="180" r="80" fill="#d0d0d0"/>
+  <rect x="120" y="260" width="160" height="100" rx="10" fill="#d0d0d0"/>
+  <text x="200" y="380" font-family="Arial" font-size="16" text-anchor="middle" fill="#666">No Religious Theme</text>
+</svg>

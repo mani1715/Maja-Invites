@@ -1,0 +1,6 @@
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" fill="#f8f8f8"/>
+  <circle cx="200" cy="160" r="100" fill="Orange" opacity="0.3"/>
+  <text x="200" y="300" font-family="Arial" font-size="18" text-anchor="middle" fill="#333">ganesha</text>
+  <text x="200" y="330" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">Thumbnail</text>
+</svg>

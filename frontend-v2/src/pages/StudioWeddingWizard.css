@@ -1,0 +1,534 @@
+/* Studio wedding wizard. Follows the StudioDashboard shell convention:
+   radial-wash background, RailNav column + main, --mj-* tokens only.
+   Mobile-first inside the main column; the shell grid is set inline from the
+   measured viewport (same approach as StudioDashboard.jsx). */
+
+.wzd-root { font-family: var(--mj-font-body); }
+
+.wzd-shell {
+  background:
+    radial-gradient(70% 45% at 12% -6%, rgba(124, 58, 237, .13), transparent 62%),
+    radial-gradient(55% 40% at 96% 2%, rgba(167, 139, 250, .14), transparent 66%),
+    var(--mj-bg);
+  color: var(--mj-ink);
+  min-height: 100dvh;
+  display: grid;
+}
+
+.wzd-main { min-width: 0; max-width: 980px; }
+
+/* ---------------------------------------------------------------- header */
+.wzd-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+.wzd-kicker {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  color: var(--mj-muted);
+}
+.wzd-kicker a { color: var(--mj-primary); text-decoration: none; font-weight: 600; }
+.wzd-title {
+  font-family: var(--mj-font-display);
+  font-weight: 400;
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.15;
+  margin: 0 0 6px;
+}
+.wzd-hl { color: var(--mj-primary); }
+.wzd-sub { font-size: 14px; color: var(--mj-muted); margin: 0; }
+
+.wzd-head-side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.wzd-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--mj-radius-pill);
+  background: var(--mj-section);
+  color: var(--mj-muted);
+  white-space: nowrap;
+}
+.wzd-pill--live { background: var(--mj-border-accent); color: var(--mj-ink-deep); }
+.wzd-save { font-size: 12.5px; color: var(--mj-faint); white-space: nowrap; }
+
+/* ------------------------------------------------------------ step rail */
+.wzd-rail {
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  padding: 0;
+  margin: 0 0 24px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.wzd-rail-item { flex: 0 0 auto; }
+.wzd-rail-item button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 15px;
+  border-radius: var(--mj-radius-pill);
+  border: 1px solid var(--mj-border);
+  background: var(--mj-card);
+  color: var(--mj-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .2s var(--mj-easing), background-color .2s, color .2s;
+}
+.wzd-rail-item button:disabled { cursor: default; opacity: .6; }
+.wzd-rail-item--current button {
+  border-color: var(--mj-accent-soft);
+  background: var(--mj-accent-soft);
+  color: var(--mj-ink-deep);
+}
+.wzd-rail-item--done button { border-color: var(--mj-border-accent); color: var(--mj-primary); }
+.wzd-rail-n {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .6);
+  font-size: 11px;
+}
+.wzd-rail-item--current .wzd-rail-n { background: rgba(255, 255, 255, .85); }
+@media (max-width: 560px) { .wzd-rail-label { display: none; } }
+
+/* ------------------------------------------------------------------ card */
+.wzd-card {
+  background: var(--mj-card);
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-card);
+  box-shadow: var(--mj-shadow-card-rest);
+  padding: clamp(20px, 4vw, 32px);
+}
+.wzd-card--error { border-color: #fecaca; text-align: center; padding: 56px 24px; }
+.wzd-error-title { font-family: var(--mj-font-display); font-weight: 400; font-size: 22px; margin: 0 0 8px; }
+.wzd-error-body { font-size: 13.5px; color: var(--mj-error-text); margin: 0 0 20px; }
+
+.wzd-step-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mj-font-display);
+  font-weight: 500;
+  font-size: 20px;
+  margin: 0 0 24px;
+  outline: none;
+}
+.wzd-step-n {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--mj-section-deep);
+  color: var(--mj-primary);
+  font-family: var(--mj-font-body);
+  font-size: 13px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+/* ---------------------------------------------------------------- fields */
+.wzd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px 20px;
+}
+.wzd-field { min-width: 0; display: flex; flex-direction: column; }
+.wzd-field--wide { grid-column: 1 / -1; }
+.wzd-field--split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.wzd-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mj-ink);
+  margin-bottom: 7px;
+}
+.wzd-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 14px;
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-control);
+  background: var(--mj-card);
+  color: var(--mj-ink);
+  font-family: inherit;
+  font-size: 14px;
+}
+.wzd-textarea { min-height: 92px; resize: vertical; line-height: 1.6; }
+.wzd-input--bad { border-color: var(--mj-error); }
+.wzd-hint { font-size: 12px; color: var(--mj-faint); margin: 6px 0 0; }
+.wzd-hint--block { margin: 0 0 14px; max-width: 62ch; }
+.wzd-err { font-size: 12px; color: var(--mj-error-text); margin: 6px 0 0; font-weight: 500; }
+
+.wzd-section-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mj-primary);
+  margin: 30px 0 10px;
+}
+.wzd-section-label:first-child { margin-top: 0; }
+
+/* --------------------------------------------------------------- toggles */
+.wzd-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--mj-ink);
+}
+.wzd-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.wzd-toggle-track {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 23px;
+  border-radius: var(--mj-radius-pill);
+  background: var(--mj-border);
+  position: relative;
+  transition: background-color .2s var(--mj-easing);
+}
+.wzd-toggle-dot {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--mj-shadow-ink-soft);
+  transition: transform .2s var(--mj-easing);
+}
+.wzd-toggle input:checked + .wzd-toggle-track { background: var(--mj-primary); }
+.wzd-toggle input:checked + .wzd-toggle-track .wzd-toggle-dot { transform: translateX(17px); }
+.wzd-toggle input:focus-visible + .wzd-toggle-track { box-shadow: var(--mj-shadow-focus-ring); }
+
+.wzd-sec-group { margin-bottom: 18px; }
+.wzd-sec-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mj-muted);
+  margin: 0 0 4px;
+}
+.wzd-sec-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 2px 18px;
+}
+
+/* ---------------------------------------------------------------- photos */
+.wzd-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+.wzd-photo { min-width: 0; }
+.wzd-photo-label { font-size: 13px; font-weight: 600; margin: 0 0 8px; }
+.wzd-photo-frame {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--mj-radius-card-inner);
+  border: 1px solid var(--mj-border);
+  background: repeating-linear-gradient(45deg, var(--mj-section-deep) 0 2px, transparent 2px 11px);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.wzd-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+.wzd-photo-empty { font-size: 12.5px; color: var(--mj-faint); }
+.wzd-photo-busy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, .82);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--mj-primary);
+}
+.wzd-photo-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.wzd-visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* -------------------------------------------------------------- ceremony */
+.wzd-event {
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-card-inner);
+  padding: 18px;
+  margin-bottom: 18px;
+  background: var(--mj-section);
+}
+.wzd-event-legend {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mj-primary);
+  padding: 0 6px;
+}
+.wzd-event-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.wzd-event-order { display: flex; gap: 4px; }
+.wzd-icon-btn {
+  width: 36px;
+  min-height: 36px;
+  border-radius: var(--mj-radius-control);
+  border: 1px solid var(--mj-border);
+  background: var(--mj-card);
+  color: var(--mj-muted);
+  cursor: pointer;
+  font-size: 14px;
+}
+.wzd-icon-btn:disabled { opacity: .4; cursor: default; }
+.wzd-add { margin-top: 4px; }
+
+/* ---------------------------------------------------------------- themes */
+.wzd-themes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.wzd-theme {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  grid-template-rows: auto auto;
+  gap: 2px 12px;
+  align-items: center;
+  text-align: left;
+  padding: 13px 14px;
+  border-radius: var(--mj-radius-card-inner);
+  border: 1px solid var(--mj-border);
+  background: var(--mj-card);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .2s var(--mj-easing), box-shadow .2s var(--mj-easing);
+}
+.wzd-theme--on {
+  border-color: var(--mj-primary);
+  box-shadow: var(--mj-shadow-focus-ring);
+}
+.wzd-theme-swatch {
+  grid-row: 1 / 3;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(0, 0, 0, .08);
+}
+.wzd-theme-name { font-size: 13.5px; font-weight: 600; color: var(--mj-ink); }
+.wzd-theme-hint { font-size: 11.5px; color: var(--mj-faint); line-height: 1.4; }
+
+/* Swatches approximate each theme's dominant palette. Purely indicative —
+   the real artwork lives server-side and is rendered on the invitation. */
+.wzd-sw-royal_heritage { background: linear-gradient(135deg, #7f1d1d, #b45309); }
+.wzd-sw-south_indian_temple { background: linear-gradient(135deg, #b45309, #fbbf24); }
+.wzd-sw-temple_gold { background: linear-gradient(135deg, #d97706, #fef3c7); }
+.wzd-sw-royal_mughal { background: linear-gradient(135deg, #065f46, #b45309); }
+.wzd-sw-modern_minimal { background: linear-gradient(135deg, #f3f4f6, #9ca3af); }
+.wzd-sw-modern_lotus { background: linear-gradient(135deg, #fbcfe8, #a78bfa); }
+.wzd-sw-modern_pastel { background: linear-gradient(135deg, #fecdd3, #bbf7d0); }
+.wzd-sw-ivory_elegance { background: linear-gradient(135deg, #fffbeb, #d6d3d1); }
+.wzd-sw-peacock_dream { background: linear-gradient(135deg, #0f766e, #eab308); }
+.wzd-sw-bollywood_luxury { background: linear-gradient(135deg, #be123c, #f59e0b); }
+.wzd-sw-punjabi_sangeet { background: linear-gradient(135deg, #ea580c, #facc15); }
+.wzd-sw-midnight_sangeet { background: linear-gradient(135deg, #1e1b4b, #a855f7); }
+.wzd-sw-bengali_traditional { background: linear-gradient(135deg, #dc2626, #fef2f2); }
+.wzd-sw-kerala_backwaters { background: linear-gradient(135deg, #15803d, #fde68a); }
+.wzd-sw-beach_destination { background: linear-gradient(135deg, #0ea5e9, #fde68a); }
+.wzd-sw-nature_eco_wedding { background: linear-gradient(135deg, #4d7c0f, #d9f99d); }
+.wzd-sw-christian_elegant { background: linear-gradient(135deg, #e0f2fe, #f8fafc); }
+.wzd-sw-muslim_nikah { background: linear-gradient(135deg, #064e3b, #d4af37); }
+.wzd-sw-dark_royal { background: linear-gradient(135deg, #111827, #a16207); }
+
+/* ----------------------------------------------------------------- chips */
+.wzd-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.wzd-chip {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--mj-radius-pill);
+  border: 1px solid var(--mj-border);
+  background: var(--mj-card);
+  color: var(--mj-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.wzd-chip--on {
+  border-color: var(--mj-accent-soft);
+  background: var(--mj-accent-soft);
+  color: var(--mj-ink-deep);
+}
+
+/* ---------------------------------------------------------------- review */
+.wzd-review { margin: 0 0 24px; }
+.wzd-review-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--mj-border);
+}
+.wzd-review-row dt { font-size: 13px; color: var(--mj-muted); }
+.wzd-review-row dd {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--mj-ink);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  min-width: 0;
+}
+.wzd-review-row dd > span { min-width: 0; overflow-wrap: anywhere; }
+.wzd-review-edit {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: var(--mj-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px;
+}
+@media (max-width: 560px) {
+  .wzd-review-row { grid-template-columns: 1fr; gap: 4px; }
+}
+
+.wzd-publish {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 20px;
+  border-radius: var(--mj-radius-card-inner);
+  background: var(--mj-section);
+  border: 1px solid var(--mj-border-accent);
+}
+.wzd-publish-title { font-family: var(--mj-font-display); font-size: 17px; margin: 0 0 4px; }
+.wzd-publish-body { font-size: 13px; color: var(--mj-muted); margin: 0; max-width: 52ch; line-height: 1.6; }
+
+/* ---------------------------------------------------------------- footer */
+.wzd-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+.wzd-foot-right { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 560px) {
+  .wzd-foot, .wzd-foot-right { width: 100%; }
+  .wzd-foot-right { flex-direction: column-reverse; }
+  .wzd-foot-right .wzd-btn { width: 100%; justify-content: center; }
+}
+
+/* --------------------------------------------------------------- buttons */
+.wzd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: var(--mj-radius-button);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.wzd-btn:disabled { opacity: .55; cursor: default; }
+.wzd-btn--primary {
+  background: var(--mj-primary);
+  color: #fff;
+  box-shadow: var(--mj-shadow-button-rest);
+}
+.wzd-btn--ghost {
+  background: var(--mj-card);
+  color: var(--mj-muted);
+  border-color: var(--mj-border);
+}
+.wzd-btn--danger {
+  background: var(--mj-card);
+  color: var(--mj-error-text);
+  border-color: #fecaca;
+}
+.wzd-btn--sm { min-height: 38px; padding: 0 14px; font-size: 12.5px; }
+
+/* --------------------------------------------------------------- banners */
+.wzd-banner {
+  padding: 13px 16px;
+  border-radius: var(--mj-radius-control);
+  font-size: 13.5px;
+  margin-bottom: 18px;
+}
+.wzd-banner--error { background: #fef2f2; border: 1px solid #fecaca; color: var(--mj-error-text); }
+
+/* ---------------------------------------------------------------- empty */
+.wzd-empty {
+  text-align: center;
+  padding: 44px 24px;
+  border: 1px dashed var(--mj-border-accent);
+  border-radius: var(--mj-radius-card-inner);
+  background: var(--mj-section);
+  margin-bottom: 18px;
+}
+.wzd-empty-title { font-family: var(--mj-font-display); font-size: 18px; margin: 0 0 8px; }
+.wzd-empty-body { font-size: 13.5px; color: var(--mj-muted); margin: 0 auto; max-width: 54ch; line-height: 1.65; }
+
+/* ------------------------------------------------------------- skeletons */
+@keyframes wzdShimmer { from { background-position: 200% 50%; } to { background-position: -200% 50%; } }
+.wzd-skel-head, .wzd-skel-rail, .wzd-skel-body {
+  border-radius: var(--mj-radius-control);
+  background: linear-gradient(90deg, var(--mj-section) 25%, var(--mj-section-deep) 37%, var(--mj-section) 63%);
+  background-size: 200% 100%;
+  animation: wzdShimmer 1.4s linear infinite;
+}
+.wzd-skel-head { height: 44px; width: 60%; margin-bottom: 26px; }
+.wzd-skel-rail { height: 44px; width: 100%; margin-bottom: 24px; }
+.wzd-skel-body { height: 320px; }

@@ -1,0 +1,60 @@
+/* Shared nav chrome — ported verbatim from the M12 nav .dc.html helmets. */
+
+/* Mobile Nav */
+.mjn-glass { backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); }
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .mjn-glass { background-color: var(--mjn-solid) !important; }
+}
+.mjn-drawer { scrollbar-width: thin; scrollbar-color: #ddd6fe transparent; overscroll-behavior: contain; }
+.mjn-glass a:focus-visible, .mjn-glass button:focus-visible { outline: 2px solid #8b5cf6; outline-offset: 2px; }
+
+/* Studio / Pixora rail (light) */
+.pxg-snav, .pxg-nav {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .76), rgba(237, 233, 254, .64)),
+    radial-gradient(120% 30% at 0% 0%, rgba(167, 139, 250, .30), transparent 64%),
+    radial-gradient(100% 26% at 100% 100%, rgba(109, 40, 217, .12), transparent 68%);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border-right: 1px solid rgba(221, 214, 254, .9);
+  box-shadow: 0 20px 50px rgba(124, 58, 237, .14);
+  scrollbar-width: thin;
+  scrollbar-color: #ddd6fe transparent;
+  overscroll-behavior: contain;
+}
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .pxg-snav, .pxg-nav { background-color: #f5f3ff; }
+}
+.pxg-snav a:focus-visible, .pxg-nav a:focus-visible { outline: 2px solid #6d28d9; outline-offset: 2px; }
+
+/* Admin rail (dark) */
+.pxg-anav {
+  background:
+    radial-gradient(120% 30% at 0% 0%, rgba(167, 139, 250, .22), transparent 66%),
+    radial-gradient(100% 26% at 100% 100%, rgba(196, 181, 253, .10), transparent 70%),
+    linear-gradient(180deg, #2e1065, #2e1065);
+  border-right: 1px solid rgba(196, 181, 253, .22);
+  box-shadow: 0 20px 50px rgba(46, 16, 101, .35);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 181, 253, .35) transparent;
+  overscroll-behavior: contain;
+}
+.pxg-anav a:focus-visible { outline: 2px solid #c4b5fd; outline-offset: 2px; }
+
+/* Wedding Toolbar rail */
+.mjw-rail {
+  background:
+    radial-gradient(70% 200% at 12% 0%, rgba(167, 139, 250, .30), transparent 62%),
+    radial-gradient(55% 180% at 88% 100%, rgba(109, 40, 217, .16), transparent 64%),
+    linear-gradient(165deg, #f5f3ff, #ede9fe 55%, #f5f3ff);
+  background-size: 180% 180%, 180% 180%, 100% 100%;
+  animation: pxAurora 30s ease-in-out infinite;
+  scrollbar-width: thin;
+  scrollbar-color: #ddd6fe transparent;
+  overscroll-behavior-x: contain;
+}
+.mjw-tb { min-width: 0; }
+.mjw-tb a:focus-visible { outline: 2px solid #6d28d9; outline-offset: 2px; }
+
+.mj-aside { font-family: 'Inter', system-ui, sans-serif; flex-direction: column; overflow-y: auto; height: 100dvh; position: sticky; top: 0; box-sizing: border-box; }
+.mj-rail-item { text-decoration: none; transition: background .2s cubic-bezier(.22,.61,.36,1), color .2s, transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .2s; }

@@ -1,0 +1,7 @@
+# Build context for the FRONTEND image (context = ./frontend).
+node_modules
+build
+.git
+.env
+Dockerfile
+Caddyfile

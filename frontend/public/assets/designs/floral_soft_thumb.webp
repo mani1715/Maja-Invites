@@ -1,0 +1,11 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad_floral_soft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:Pink;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:HotPink;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#grad_floral_soft)"/>
+  <text x="200" y="150" font-family="Arial" font-size="24" text-anchor="middle" fill="white" font-weight="bold">floral soft</text>
+  <text x="200" y="180" font-family="Arial" font-size="14" text-anchor="middle" fill="white">Thumbnail</text>
+</svg>

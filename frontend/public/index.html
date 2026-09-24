@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+        <!-- PHASE 29B: Mobile-First Polish - Optimized viewport settings -->
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="description" content="MAJA Invites — the AI-powered wedding experience platform for premium Indian photographers." />
+
+        <!-- Brand-level Open Graph / Twitter defaults so link shares (WhatsApp,
+             Facebook, Twitter, LinkedIn, Telegram) render a preview card instead
+             of a bare URL. Public invitation + portfolio routes are re-rendered
+             server-side for crawlers with their own per-page og:* (see Caddy
+             @crawler -> server.py _render_og_*), which override these. Absolute
+             URLs are required — crawlers reject relative og:image / og:url.
+             NOTE: /og-image.jpg (1200x630, <1MB, logo + one-line value prop) is
+             the recommended upgrade; using logo512.png as an interim so the card
+             is never empty. Per-route <link rel=canonical> is set in-app, not
+             here (a static shell canonical would point every route at the home
+             page). -->
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="MAJA Invites" />
+        <meta property="og:locale" content="en_IN" />
+        <meta property="og:url" content="https://majainvites.com/" />
+        <meta property="og:title" content="MAJA Invites — Cinematic AI Wedding Invitations" />
+        <meta property="og:description" content="Premium digital wedding invitations, live photo walls, and AI storytelling for Indian wedding photographers." />
+        <meta property="og:image" content="https://majainvites.com/logo512.png" />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="MAJA Invites — Cinematic AI Wedding Invitations" />
+        <meta name="twitter:description" content="Premium digital wedding invitations for Indian wedding photographers." />
+        <meta name="twitter:image" content="https://majainvites.com/logo512.png" />
+
+        <!-- Brand entity + site JSON-LD (Organization / WebSite) so Google can
+             build the branded knowledge panel — important while marketplaces
+             (Etsy/Minted) contest the "MAJA Invites" name. Update sameAs with the
+             real Instagram / LinkedIn URLs. -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://majainvites.com/#organization",
+              "name": "MAJA Invites",
+              "url": "https://majainvites.com",
+              "logo": "https://majainvites.com/logo512.png",
+              "description": "AI-powered wedding experience platform for premium Indian wedding photographers.",
+              "sameAs": []
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://majainvites.com/#website",
+              "url": "https://majainvites.com",
+              "name": "MAJA Invites",
+              "publisher": { "@id": "https://majainvites.com/#organization" }
+            }
+          ]
+        }
+        </script>
+        <!-- Mobile web app capable -->
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        
+        <!-- PHASE 29A: Preload critical assets for performance -->
+        <!-- Preconnect to external domains for faster loading -->
+        <link rel="dns-prefetch" href="https://us.i.posthog.com" />
+
+        <!-- PHASE 9 (perf): Google Fonts moved from index.css @import to head <link>
+             for parallel download + earlier discovery by the browser preloader. -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Gowun+Batang:wght@400;700&family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+        />
+        <!-- Portfolio Background Design System fonts (Fraunces already in luxury.css) -->
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Archivo+Narrow:wght@400;500;600;700&family=Jost:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Zilla+Slab:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        />
+
+        <!-- Preload critical fonts (if using custom fonts, add them here) -->
+        <!-- Example: <link rel="preload" href="/fonts/YourFont.woff2" as="font" type="font/woff2" crossorigin /> -->
+        
+        <!--
+        manifest.json provides metadata used when your web app is installed on a
+        user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+        -->
+        <!--
+        Notice the use of %PUBLIC_URL% in the tags above.
+        It will be replaced with the URL of the `public` folder during the build.
+        Only files inside the `public` folder can be referenced from the HTML.
+
+        Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+        work correctly both with client-side routing and a non-root public URL.
+        Learn how to configure a non-root public URL by running `npm run build`.
+        -->
+        <title>MAJA Invites — Premium Wedding Experience</title>
+
+        <!-- ============================================================
+             Blank-page-on-refresh recovery.
+
+             After a redeploy the JS bundle filenames change and the old ones are
+             deleted. If a browser (or a CDN) hands out a stale index.html that
+             still points at a deleted /static/js chunk, that chunk 404s, React
+             NEVER boots, and the page is a black void (the app's dark body shows
+             through an empty #root). The in-app React ErrorBoundary cannot help
+             here — it only exists once React has mounted.
+
+             This runs BEFORE React, catches a failed app chunk / stylesheet, and
+             force-reloads ONCE (bypassing cache) to pull the current index.html.
+             It is hard rate-limited so it can never loop into the very black
+             screen it is trying to prevent — if a single recovery reload doesn't
+             fix it, it paints a readable "Reload" card instead of a black page.
+             ============================================================ -->
+        <script>
+        (function () {
+          var KEY = 'maja_boot_reload_at';
+          var WINDOW_MS = 20000; // at most one auto-reload per 20s → no loop
+          function recently() {
+            try { return Date.now() - (parseInt(sessionStorage.getItem(KEY), 10) || 0) < WINDOW_MS; }
+            catch (e) { return false; }
+          }
+          function stuckCard() {
+            var r = document.getElementById('root');
+            if (!r || r.getAttribute('data-booted') === '1' || (r.firstChild && r.firstChild.id !== 'boot-splash')) return;
+            r.innerHTML =
+              '<div style="min-height:100vh;display:grid;place-items:center;background:#12100c;color:#e8d5a3;font-family:system-ui,sans-serif;text-align:center;padding:24px">'
+              + '<div><div style="font-size:18px;margin-bottom:8px">Couldn’t finish loading</div>'
+              + '<div style="font-size:13px;opacity:.75;margin-bottom:18px;max-width:320px">A new version may have just been released. Reloading usually fixes it.</div>'
+              + '<button id="maja-reload-btn" style="background:#d4af37;color:#16110c;border:0;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer">Reload</button></div></div>';
+            var b = document.getElementById('maja-reload-btn');
+            if (b) b.onclick = function () { try { sessionStorage.removeItem(KEY); } catch (e) {} window.location.reload(); };
+          }
+          function recover() {
+            if (recently()) { stuckCard(); return; }
+            try { sessionStorage.setItem(KEY, String(Date.now())); } catch (e) {}
+            var u;
+            try { u = new URL(window.location.href); u.searchParams.set('_v', String(Date.now())); }
+            catch (e) { window.location.reload(); return; }
+            window.location.replace(u.toString());
+          }
+          // A <script>/<link> that fails to load fires 'error' at the window in
+          // the CAPTURE phase (it does not bubble). Only recover for OUR build
+          // assets, never for a third-party script (analytics, fonts, …).
+          window.addEventListener('error', function (e) {
+            var t = e && e.target; if (!t) return;
+            var url = t.src || t.href || '';
+            if ((t.tagName === 'SCRIPT' || t.tagName === 'LINK') && /\/static\/(js|css)\//.test(url)) recover();
+          }, true);
+          // A failed dynamic import surfaces as an unhandled ChunkLoadError.
+          window.addEventListener('unhandledrejection', function (e) {
+            var m = (e && e.reason && ((e.reason.name || '') + ' ' + (e.reason.message || ''))) || '';
+            if (/ChunkLoadError|Loading chunk|Loading CSS chunk|dynamically imported module/i.test(m)) recover();
+          });
+          // Last resort: if #root is STILL empty a while after load, React never
+          // mounted at all — recover once, else show the card (never stay black).
+          window.addEventListener('load', function () {
+            setTimeout(function () {
+              var r = document.getElementById('root');
+              var empty = r && r.getAttribute('data-booted') !== '1' &&
+                          (!r.firstChild || r.firstChild.id === 'boot-splash');
+              if (empty) { if (!recently()) recover(); else stuckCard(); }
+            }, 9000);
+          });
+        })();
+        </script>
+    </head>
+    <body>
+        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <!-- Boot splash: shown until React mounts, so the first paint (and any
+             load hiccup) is a branded loading screen, never a black void. React
+             replaces #root's contents on mount. -->
+        <div id="root">
+          <div id="boot-splash" style="min-height:100vh;display:grid;place-items:center;background:#12100c;font-family:system-ui,sans-serif">
+            <div style="text-align:center">
+              <div style="font-size:22px;letter-spacing:.18em;color:#e8d5a3;font-weight:600">MAJA</div>
+              <div style="margin-top:10px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:rgba(232,213,163,.55)">Loading</div>
+            </div>
+          </div>
+        </div>
+        <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+        <script>
+            !(function (t, e) {
+                var o, n, p, r;
+                e.__SV ||
+                    ((window.posthog = e),
+                    (e._i = []),
+                    (e.init = function (i, s, a) {
+                        function g(t, e) {
+                            var o = e.split(".");
+                            2 == o.length && ((t = t[o[0]]), (e = o[1])),
+                                (t[e] = function () {
+                                    t.push(
+                                        [e].concat(
+                                            Array.prototype.slice.call(
+                                                arguments,
+                                                0,
+                                            ),
+                                        ),
+                                    );
+                                });
+                        }
+                        ((p = t.createElement("script")).type =
+                            "text/javascript"),
+                            (p.crossOrigin = "anonymous"),
+                            (p.async = !0),
+                            (p.src =
+                                s.api_host.replace(
+                                    ".i.posthog.com",
+                                    "-assets.i.posthog.com",
+                                ) + "/static/array.js"),
+                            (r =
+                                t.getElementsByTagName(
+                                    "script",
+                                )[0]).parentNode.insertBefore(p, r);
+                        var u = e;
+                        for (
+                            void 0 !== a ? (u = e[a] = []) : (a = "posthog"),
+                                u.people = u.people || [],
+                                u.toString = function (t) {
+                                    var e = "posthog";
+                                    return (
+                                        "posthog" !== a && (e += "." + a),
+                                        t || (e += " (stub)"),
+                                        e
+                                    );
+                                },
+                                u.people.toString = function () {
+                                    return u.toString(1) + ".people (stub)";
+                                },
+                                o =
+                                    "init me ws ys ps bs capture je Di ks register register_once register_for_session unregister unregister_for_session Ps getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Es $s createPersonProfile Is opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing Ss debug xs getPageViewId captureTraceFeedback captureTraceMetric".split(
+                                        " ",
+                                    ),
+                                n = 0;
+                            n < o.length;
+                            n++
+                        )
+                            g(u, o[n]);
+                        e._i.push([i, s, a]);
+                    }),
+                    (e.__SV = 1));
+            })(document, window.posthog || []);
+            posthog.init("phc_xAvL2Iq4tFmANRE7kzbKwaSqp1HJjN7x48s3vr0CMjs", {
+                api_host: "https://us.i.posthog.com",
+                person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well,
+                session_recording: {
+                    recordCrossOriginIframes: true,
+                },
+            });
+        </script>
+    </body>
+</html>

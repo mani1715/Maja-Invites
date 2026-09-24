@@ -1,0 +1,28 @@
+/* Ported from "MAJA Studio Plans.dc.html". Keep selectors/values EXACT. */
+.stplan-card { transition: transform .3s cubic-bezier(.22,.61,.36,1), box-shadow .3s, border-color .3s; box-shadow: 0 8px 24px rgba(124,58,237,.10); }
+.stplan-card:hover { transform: translateY(-3px); box-shadow: 0 24px 56px rgba(124,58,237,.22); }
+.stplan-glass { background: rgba(25,15,51,.50); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); border: 1px solid rgba(196,181,253,.22); box-shadow: 0 20px 50px rgba(124,58,237,.16); }
+@supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))) { .stplan-glass { background: rgba(25,15,51,.86); } }
+.stplan-btn { transition: background .3s, transform .3s cubic-bezier(.22,.61,.36,1), box-shadow .3s; }
+.stplan-btn:hover:not(:disabled) { background: #5b21b6; transform: translateY(-1px); box-shadow: 0 18px 40px rgba(109,40,217,.30); }
+.stplan-btn:active:not(:disabled) { transform: scale(.97); }
+.stplan-btn:disabled { opacity: .55; cursor: not-allowed; }
+.stplan-btn2 { transition: background .3s, transform .3s cubic-bezier(.22,.61,.36,1); }
+.stplan-btn2:hover:not(:disabled) { background: #f5f3ff; transform: translateY(-1px); }
+.stplan-btn2:disabled { opacity: .55; cursor: not-allowed; }
+.stplan-pill { transition: background .3s, border-color .3s, transform .2s cubic-bezier(.22,.61,.36,1); }
+.stplan-pill:hover { transform: translateY(-1px); }
+.stplan-pill:active { transform: scale(.96); }
+.stplan-skel { background: linear-gradient(90deg,#f5f3ff 25%,#ede9fe 37%,#f5f3ff 63%); background-size: 400% 100%; animation: stplanShimmer 1.4s ease infinite; }
+@keyframes stplanShimmer { 0%{background-position:100% 50%} 100%{background-position:0 50%} }
+@keyframes stplanRise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+@keyframes stplanFade { from{opacity:0} to{opacity:1} }
+@keyframes stplanPop { 0%{opacity:0;transform:scale(.6)} 70%{transform:scale(1.06)} 100%{opacity:1;transform:scale(1)} }
+.stplan-main { animation: stplanRise .55s cubic-bezier(.22,.61,.36,1) both; }
+.stplan-modal-in { animation: stplanFade .24s cubic-bezier(.22,.61,.36,1) both; }
+.stplan-pop-in { animation: stplanPop .5s cubic-bezier(.22,.61,.36,1) .06s both; }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #6d28d9; outline-offset: 2px; }
+.stplan-field { min-height: 44px; padding: 0 14px; border: 1px solid #e5e7eb; border-radius: 14px; background: #ffffff; font-size: 13px; font-family: inherit; color: #111827; transition: border-color .3s, box-shadow .3s; }
+.stplan-field:focus { outline: none; border-color: #6d28d9; box-shadow: 0 0 0 4px rgba(109,40,217,.14); }
+@media (hover:none) { .stplan-card:hover { transform: none; box-shadow: 0 8px 24px rgba(124,58,237,.10); } }
+@media (prefers-reduced-motion:reduce) { .stplan-main, .stplan-skel, .stplan-modal-in, .stplan-pop-in { animation: none !important; } }

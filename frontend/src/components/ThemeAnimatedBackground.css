@@ -1,0 +1,40 @@
+/* Theme Animated Background Styles */
+
+.theme-animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: auto;
+  z-index: 1;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Ensure content appears above the animated background */
+.theme-animated-background ~ * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Performance optimization */
+.theme-animated-background {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Mobile optimization - reduce particle count on small screens */
+@media (max-width: 768px) {
+  .theme-animated-background {
+    opacity: 0.9;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .theme-animated-background {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}

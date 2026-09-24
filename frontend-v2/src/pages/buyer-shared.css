@@ -1,0 +1,194 @@
+/* Shared helmet CSS for the buyer money-path pages (Cart/Checkout/OrderDetails),
+   ported verbatim from the three .dc.html prototypes' <style> blocks. The
+   mj* keyframes / [data-mj-field] / .mjGlass already live in styles/global.css;
+   only what's specific to these three pages (the lighter aurora wash + the
+   ripple texture layer) lives here. */
+.mjWashLite {
+  background:
+    radial-gradient(70% 60% at 12% 0%, rgba(167, 139, 250, .20), transparent 62%),
+    radial-gradient(60% 55% at 96% 14%, rgba(109, 40, 217, .12), transparent 64%),
+    radial-gradient(55% 45% at 50% 104%, rgba(216, 180, 254, .16), transparent 62%),
+    #ffffff;
+  background-size: 170% 170%, 170% 170%, 150% 150%, 100% 100%;
+  animation: mjAuroraField 32s ease-in-out infinite;
+}
+.mjRipple {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-radial-gradient(circle at 50% 120%, rgba(167, 139, 250, .12) 0 2px, transparent 2px 42px);
+}
+[data-mj-opt] { transition: background .2s cubic-bezier(.22, .61, .36, 1), color .2s; }
+[data-mj-opt]:hover { background: #f5f3ff; }
+
+.mj-buyer-page {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--mj-ink);
+  min-height: 100dvh;
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+}
+.mj-buyer-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  border-bottom: 1px solid var(--mj-border-accent);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  animation: mjFade .6s var(--mj-easing) both;
+  padding: 14px 18px;
+}
+@media (min-width: 640px) { .mj-buyer-nav { padding: 16px 28px; } }
+@media (min-width: 860px) { .mj-buyer-nav { padding: 18px 40px; } }
+.mj-buyer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  text-decoration: none;
+  color: var(--mj-ink);
+  flex-shrink: 0;
+}
+.mj-buyer-brand-mark {
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--mj-ink);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mj-font-display);
+  font-size: 15px;
+  flex: none;
+}
+.mj-buyer-brand-name { font-family: var(--mj-font-display); font-size: 17px; font-weight: 500; white-space: nowrap; }
+.mj-buyer-navlink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--mj-muted);
+  text-decoration: none;
+  font-size: 13.5px;
+}
+
+.mj-buyer-h1 {
+  font-family: var(--mj-font-display);
+  font-weight: 400;
+  font-size: var(--mj-text-h1);
+  margin: 0 0 28px;
+  animation: mjBlurIn .9s var(--mj-easing-hero) .08s both;
+}
+.mj-buyer-eyebrow {
+  font-size: 12px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--mj-primary);
+  margin: 0 0 18px;
+  font-weight: 600;
+}
+.mj-buyer-card {
+  background: var(--mj-card);
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-card);
+  margin-bottom: 20px;
+  box-shadow: var(--mj-shadow-card-rest);
+  animation: mjRise .8s var(--mj-easing-hero) .16s both;
+  padding: 20px 18px;
+}
+@media (min-width: 640px) { .mj-buyer-card { padding: 24px; } }
+
+.mj-buyer-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--mj-muted);
+  padding: 10px 0;
+  border-top: 1px solid var(--mj-section-deep);
+}
+.mj-buyer-row:first-child { border-top: none; }
+
+.mj-buyer-field-label {
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mj-muted);
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.mj-buyer-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px;
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-card-inner);
+  font-size: 13.5px;
+  background: #ffffff;
+  font-family: inherit;
+  color: var(--mj-ink);
+}
+
+.mj-buyer-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  background: var(--mj-primary);
+  color: #ffffff;
+  border: none;
+  text-decoration: none;
+  border-radius: var(--mj-radius-button);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--mj-shadow-button-rest);
+  transition: transform .15s var(--mj-easing), box-shadow .2s var(--mj-easing), background .2s;
+  font-family: inherit;
+}
+.mj-buyer-btn-primary:hover:not(:disabled) { background: var(--mj-primary-hover); transform: translateY(-1px); box-shadow: var(--mj-shadow-button-hover); }
+.mj-buyer-btn-primary:active:not(:disabled) { transform: scale(.97); }
+.mj-buyer-btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+
+.mj-buyer-btn-secondary {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--mj-radius-button);
+  border: 1px solid var(--mj-border);
+  background: #ffffff;
+  color: var(--mj-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform .15s var(--mj-easing), background .2s, border-color .2s, color .2s;
+}
+.mj-buyer-btn-secondary:hover { background: #f5f3ff; color: var(--mj-error-text); border-color: var(--mj-border-accent); }
+.mj-buyer-btn-secondary:active { transform: scale(.97); }
+
+.mj-buyer-error {
+  font-size: 12.5px;
+  color: var(--mj-error-text);
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: var(--mj-radius-card-inner);
+  padding: 10px 14px;
+  margin: 0 0 16px;
+}
+.mj-buyer-hint { font-size: 11.5px; color: var(--mj-muted); margin: 0; line-height: 1.6; }
+.mj-buyer-loading { font-size: 13.5px; color: var(--mj-muted); padding: 4px 0; }
+
+@keyframes mj-spin-btn { to { transform: rotate(360deg); } }
+.mj-buyer-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+  animation: mj-spin-btn .7s linear infinite;
+}

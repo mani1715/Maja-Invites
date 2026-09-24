@@ -1,0 +1,65 @@
+/* Ported from "MAJA Wedding QR Codes.dc.html" helmet <style>. Classes are
+   scoped with a qrp- prefix (rather than reusing the global .px-wash/.px-glass
+   names) because this screen's exact rgba/blur values differ slightly from
+   the shared design-system tokens in styles/global.css. */
+.qrp-page a { color: #6d28d9; }
+.qrp-page a:hover { color: #6d28d9; }
+
+@keyframes qrpWash {
+  0%, 100% { background-position: 0% 40%, 100% 60%, 0 0; }
+  50% { background-position: 55% 62%, 26% 38%, 0 0; }
+}
+.qrp-wash {
+  background:
+    radial-gradient(70% 90% at 12% 0%, rgba(167, 139, 250, .30), transparent 62%),
+    radial-gradient(52% 74% at 88% 16%, rgba(109, 40, 217, .16), transparent 64%),
+    linear-gradient(165deg, #f5f3ff, #ede9fe 58%, #f5f3ff);
+  background-size: 180% 180%, 180% 180%, 100% 100%;
+  border: 1px solid #ddd6fe;
+  animation: qrpWash 32s ease-in-out infinite;
+}
+.qrp-glass {
+  background: rgba(255, 255, 255, .62);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, .72);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, .10);
+  transition: transform .25s cubic-bezier(.22, .61, .36, 1), box-shadow .25s;
+}
+.qrp-glass:hover { transform: translateY(-3px); box-shadow: 0 24px 56px rgba(124, 58, 237, .22); }
+
+.qrp-card {
+  background: #ffffff; border: 1px solid #e5e7eb; border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, .10);
+  transition: transform .25s cubic-bezier(.22, .61, .36, 1), box-shadow .25s;
+}
+.qrp-card:hover { transform: translateY(-3px); box-shadow: 0 24px 56px rgba(124, 58, 237, .22); }
+
+.qrp-btn-ghost {
+  border: 1px solid #6d28d9; background: #ffffff; color: #6d28d9;
+  transition: background .3s, transform .15s, box-shadow .3s;
+}
+.qrp-btn-ghost:hover:not(:disabled) { background: #f5f3ff; transform: translateY(-1px); box-shadow: 0 18px 40px rgba(109, 40, 217, .30); }
+.qrp-btn-ghost:active:not(:disabled) { transform: scale(.97); }
+
+.qrp-btn-solid {
+  border: none; background: #6d28d9; color: #ffffff;
+  box-shadow: 0 10px 26px rgba(109, 40, 217, .24);
+  transition: background .3s, transform .15s, box-shadow .3s;
+}
+.qrp-btn-solid:hover:not(:disabled) { background: #5b21b6; transform: translateY(-1px); box-shadow: 0 18px 40px rgba(109, 40, 217, .30); }
+.qrp-btn-solid:active:not(:disabled) { transform: scale(.97); }
+.qrp-btn-solid:disabled, .qrp-btn-ghost:disabled { opacity: .55; cursor: not-allowed; }
+
+.qrp-style-btn { transition: background .18s, transform .15s, box-shadow .2s; }
+.qrp-style-btn:active { transform: scale(.97); }
+
+.qrp-row:hover { background: #f5f3ff; }
+
+.qrp-toast {
+  position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+  background: #2e1065; color: #f5f3ff; font-size: 13px; padding: 13px 20px;
+  border-radius: 14px; z-index: 80; width: max-content; max-width: calc(100vw - 32px);
+  box-shadow: 0 24px 56px rgba(124, 58, 237, .22);
+  animation: mjFade .28s cubic-bezier(.22, .61, .36, 1) both;
+}

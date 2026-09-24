@@ -1,0 +1,47 @@
+/* SaveTheDate.css — ported from "MAJA Save the Date.dc.html". The DC file's
+   nav bar toggled between a hardcoded 'Live'/'Unavailable' preview state for
+   authoring purposes; the real page has no such control — which state
+   renders is decided by the /api/save-the-date/{slug} response (200 vs
+   404/410), so the nav bar is dropped and its two layouts kept as-is.
+   Breakpoints: <640 phone, 640-859 mobile, >=860 desktop. */
+
+.std-page { font-family: var(--mj-font-body); background: #190f33; color: #f2eefb; min-height: 100dvh; display: flex; flex-direction: column; }
+
+.std-main { flex: 1; display: grid; grid-template-columns: 1fr; min-height: 0; }
+@media (min-width: 860px) { .std-main { grid-template-columns: 1fr 1fr; } }
+
+.std-photo { min-height: 220px; display: flex; align-items: flex-end; padding: 18px; position: relative; overflow: hidden; isolation: isolate; animation: mjFade 1s var(--mj-easing-hero) both; }
+@media (min-width: 640px) { .std-photo { min-height: 300px; padding: 24px; } }
+@media (min-width: 860px) { .std-photo { min-height: 0; padding: 34px; } }
+.std-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+.std-photo-glow { position: absolute; z-index: -1; top: -18%; left: -18%; width: clamp(200px, 55vw, 480px); height: clamp(200px, 55vw, 480px); border-radius: 50%; background: radial-gradient(circle, #e5a93c, transparent 70%); filter: blur(60px); opacity: .3; pointer-events: none; animation: mjFloat 13s ease-in-out infinite; }
+.std-photo-caption { font-family: var(--mj-font-display); font-style: italic; font-size: 15px; color: rgba(242, 238, 251, .78); margin: 0; line-height: 1.6; position: relative; z-index: 1; animation: mjRise .8s var(--mj-easing-hero) .5s both; }
+
+.std-content { display: flex; flex-direction: column; justify-content: center; padding: 40px 18px 56px; position: relative; overflow: hidden; min-width: 0; }
+@media (min-width: 640px) { .std-content { padding: 52px 32px 64px; } }
+@media (min-width: 860px) { .std-content { padding: 64px 56px; } }
+.std-kicker { font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: #c4b5fd; margin: 0 0 26px; font-weight: 600; position: relative; z-index: 1; animation: mjRise .7s var(--mj-easing-hero) both; }
+.std-title { font-family: var(--mj-font-display); font-style: italic; font-weight: 400; font-size: clamp(34px, 11vw, 42px); margin: 0 0 22px; line-height: 1.1; position: relative; z-index: 1; animation: mjBlurIn .9s var(--mj-easing-hero) .08s both; }
+@media (min-width: 860px) { .std-title { font-size: clamp(44px, 5.4vw, 62px); } }
+.std-title .accent { color: #c4b5fd; }
+.std-rule { width: 56px; height: 1px; background: #a78bfa; margin-bottom: 24px; position: relative; z-index: 1; animation: mjScaleIn .6s var(--mj-easing-hero) .16s both; }
+.std-date { font-size: 16px; letter-spacing: .1em; color: #f2eefb; margin: 0 0 8px; font-weight: 500; position: relative; z-index: 1; animation: mjRise .7s var(--mj-easing-hero) .24s both; }
+@media (min-width: 860px) { .std-date { font-size: 18px; } }
+.std-venue { font-size: 14.5px; letter-spacing: .06em; color: #ddd6fe; margin: 0 0 32px; line-height: 1.6; position: relative; z-index: 1; animation: mjRise .7s var(--mj-easing-hero) .32s both; }
+
+.std-countdown { display: flex; gap: 14px; flex-wrap: wrap; border-radius: 20px; padding: 18px 22px; margin-bottom: 32px; position: relative; z-index: 1; }
+@media (min-width: 640px) { .std-countdown { gap: 18px; } }
+@media (min-width: 860px) { .std-countdown { gap: 28px; } }
+.std-cd-value { font-family: var(--mj-font-display); font-size: 24px; margin: 0; color: #f2eefb; }
+@media (min-width: 640px) { .std-cd-value { font-size: 26px; } }
+@media (min-width: 860px) { .std-cd-value { font-size: 32px; } }
+.std-cd-label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #c4b5fd; margin: 5px 0 0; }
+
+.std-actions { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; animation: mjRise .7s var(--mj-easing-hero) .64s both; }
+.std-link-line { font-size: 12.5px; color: #a78bfa; margin: 22px 0 0; word-break: break-all; position: relative; z-index: 1; animation: mjFade .8s var(--mj-easing) .72s both; }
+
+.std-empty-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 18px 56px; text-align: center; }
+@media (min-width: 860px) { .std-empty-main { padding: 64px 56px; } }
+.std-empty-card { max-width: 420px; padding: 28px 22px; }
+@media (min-width: 640px) { .std-empty-card { padding: 34px 30px; } }
+.std-empty-icon { width: 64px; height: 64px; border-radius: 50%; border: 1px solid rgba(196, 181, 253, .28); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #c4b5fd; margin: 0 auto 26px; animation: mjPop .6s var(--mj-easing-hero) both; }

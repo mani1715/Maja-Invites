@@ -1,0 +1,119 @@
+# backend/requirements.txt — RUNTIME dependencies only.
+#
+# backend/Dockerfile installs this file into the production image, so anything
+# here ships to production. Development and CI tooling lives in
+# requirements-dev.txt; install both locally:
+#
+#     pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+#
+# Before adding a pin: it belongs here only if the deployed backend imports it.
+aiohappyeyeballs==2.6.2
+aiohttp==3.13.5
+aiohttp-retry==2.9.1
+aiosignal==1.4.0
+annotated-types==0.7.0
+anyio==4.13.0
+APScheduler==3.11.2
+attrs==26.1.0
+# Pinned <4.1: bcrypt 4.1 dropped the __about__.__version__ attr that
+# passlib==1.7.4 reads on load, which printed a noisy "error reading bcrypt
+# version" traceback at startup. 4.0.1 is the last release passlib reads cleanly.
+bcrypt==4.0.1
+bleach==6.3.0
+boto3==1.43.13
+botocore==1.43.13
+certifi==2026.5.20
+cffi==2.0.0
+charset-normalizer==3.4.7
+click==8.4.1
+cryptography==48.0.0
+distro==1.9.0
+dnspython==2.8.0
+ecdsa==0.19.2
+email-validator==2.3.0
+et_xmlfile==2.0.0
+fastapi==0.110.1
+frozenlist==1.8.0
+google-ai-generativelanguage==0.6.15
+google-api-core==2.30.3
+google-api-python-client==2.196.0
+google-auth==2.53.0
+google-auth-httplib2==0.4.0
+google-genai==2.6.0
+google-generativeai==0.8.6
+googleapis-common-protos==1.75.0
+grpcio==1.80.0
+grpcio-status==1.71.2
+h11==0.16.0
+httpcore==1.0.9
+httplib2==0.31.2
+httpx==0.28.1
+idna==3.16
+importlib_metadata==9.0.0
+Jinja2==3.1.6
+jmespath==1.1.0
+MarkupSafe==3.0.3
+multidict==6.7.1
+oauthlib==3.3.1
+openpyxl==3.1.5
+packaging==26.2
+# Camera ingestion lane. paramiko = SFTP server (camera_sftp_server.py, pulls
+# PyNaCl); pyftpdlib = FTPES/FTP-over-TLS server (camera_ftps_server.py) for
+# cameras like the Sony a7 IV that speak FTPES, not SFTP.
+paramiko==3.5.1
+PyNaCl==1.5.0
+pyftpdlib==1.5.10
+# pyftpdlib's TLS_FTPHandler (FTPES) is only defined when PyOpenSSL is present.
+# 26.2.0 is the release whose pin (cryptography<49,>=46) is compatible with the
+# cryptography==48 pinned above — 25.x caps at <47, 26.3+ requires >=49.
+pyOpenSSL==26.2.0
+passlib==1.7.4
+pillow==12.2.0
+platformdirs==4.9.6
+propcache==0.5.2
+proto-plus==1.28.0
+protobuf==5.29.6
+pyasn1==0.6.3
+pyasn1_modules==0.4.2
+pycparser==3.0
+pydantic==2.13.4
+pydantic_core==2.46.4
+PyJWT==2.13.0
+asyncpg==0.30.0
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
+python-jose==3.5.0
+python-multipart==0.0.29
+pytz==2026.2
+PyYAML==6.0.3
+qrcode==8.2
+razorpay==2.0.1
+regex==2026.5.9
+reportlab==4.5.1
+requests==2.34.2
+requests-oauthlib==2.0.0
+rsa==4.9.1
+s3transfer==0.17.0
+sentry-sdk==2.19.2
+six==1.17.0
+sniffio==1.3.1
+starlette==0.37.2
+tenacity==9.1.4
+tqdm==4.67.3
+twilio==9.10.9
+typing-inspection==0.4.2
+typing_extensions==4.15.0
+tzdata==2026.2
+tzlocal==5.3.1
+uritemplate==4.2.0
+urllib3==2.7.0
+uvicorn==0.25.0
+watchfiles==1.2.0
+webencodings==0.5.1
+websockets>=13,<16
+yarl==1.24.2
+zipp==4.1.0
+supabase==2.31.0
+redis==5.2.1
+google-auth-oauthlib==1.2.1

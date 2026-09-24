@@ -1,0 +1,170 @@
+/* Public design-discovery funnel. Marketing-page language (hero + grid),
+   not the studio shell. --mj-* tokens only. */
+
+.brw-page { min-height: 100dvh; background: var(--mj-bg); display: flex; flex-direction: column; }
+
+.brw-hero { padding: 52px clamp(16px, 4vw, 40px) 40px; }
+.brw-hero-inner { max-width: 1120px; margin: 0 auto; }
+.brw-crumbs { font-size: 12.5px; color: var(--mj-muted); margin-bottom: 12px; }
+.brw-crumbs a { color: var(--mj-primary); text-decoration: none; font-weight: 600; }
+.brw-h1 {
+  font-family: var(--mj-font-display);
+  font-weight: 400;
+  font-size: var(--mj-text-h1);
+  line-height: 1.12;
+  margin: 0 0 10px;
+}
+.brw-hl { color: var(--mj-primary); }
+.brw-sub { font-size: 14.5px; line-height: 1.65; color: var(--mj-muted); margin: 0; max-width: 60ch; }
+
+.brw-body { flex: 1; max-width: 1120px; width: 100%; margin: 0 auto; padding: 32px clamp(16px, 4vw, 40px) 72px; }
+
+.brw-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.brw-search {
+  min-height: 46px;
+  padding: 11px 15px;
+  width: min(320px, 100%);
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-control);
+  background: var(--mj-card);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--mj-ink);
+}
+.brw-count { font-size: 13px; color: var(--mj-muted); }
+
+.brw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+}
+.brw-grid--wide { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+.brw-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  background: var(--mj-card);
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-card);
+  overflow: hidden;
+  transition: transform .25s var(--mj-easing), box-shadow .25s var(--mj-easing), border-color .25s;
+}
+.brw-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--mj-border-accent);
+  box-shadow: var(--mj-shadow-card-hover);
+}
+.brw-thumb {
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.brw-thumb--tall { aspect-ratio: 3 / 4; }
+.brw-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.brw-thumb-label {
+  font-family: var(--mj-font-display);
+  font-size: 19px;
+  color: rgba(255, 255, 255, .95);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .35);
+  letter-spacing: .02em;
+}
+.brw-card-body { padding: 15px 17px 18px; display: flex; flex-direction: column; gap: 5px; }
+.brw-card-name { font-family: var(--mj-font-display); font-weight: 500; font-size: 16px; }
+.brw-card-desc { font-size: 12.5px; color: var(--mj-muted); line-height: 1.5; }
+.brw-tag {
+  align-self: flex-start;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--mj-radius-pill);
+  background: var(--mj-section-deep);
+  color: var(--mj-primary);
+}
+
+/* Separates the two things /browse lists: the artwork collections, and the
+   page styles from /api/themes. They are different axes of the product, so
+   they get a heading rather than being run together in one grid. */
+.brw-h2 {
+  font-family: var(--mj-font-display);
+  font-weight: 500;
+  font-size: clamp(20px, 2.6vw, 26px);
+  margin: 48px 0 6px;
+}
+
+.brw-empty {
+  font-size: 14px;
+  color: var(--mj-muted);
+  line-height: 1.7;
+  max-width: 58ch;
+  padding: 40px 0;
+}
+
+.brw-error {
+  text-align: center;
+  padding: 56px 24px;
+  border: 1px solid #fecaca;
+  border-radius: var(--mj-radius-card);
+  background: var(--mj-card);
+}
+.brw-error-title { font-family: var(--mj-font-display); font-size: 18px; margin: 0 0 16px; }
+.brw-error-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+.brw-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: var(--mj-radius-button);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.brw-btn--primary { background: var(--mj-primary); color: #fff; box-shadow: var(--mj-shadow-button-rest); }
+.brw-btn--ghost { background: var(--mj-card); color: var(--mj-muted); border-color: var(--mj-border); }
+
+.brw-cta {
+  margin-top: 56px;
+  padding: 36px clamp(20px, 4vw, 44px);
+  border-radius: var(--mj-radius-card);
+  background: var(--mj-section);
+  border: 1px solid var(--mj-border-accent);
+  text-align: center;
+}
+.brw-cta-title { font-family: var(--mj-font-display); font-weight: 400; font-size: 24px; margin: 0 0 10px; }
+.brw-cta-body { font-size: 14px; color: var(--mj-muted); line-height: 1.7; margin: 0 auto 20px; max-width: 54ch; }
+.brw-cta-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+@keyframes brwShimmer { from { background-position: 200% 50%; } to { background-position: -200% 50%; } }
+.brw-skel {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--mj-radius-card);
+  background: linear-gradient(90deg, var(--mj-section) 25%, var(--mj-section-deep) 37%, var(--mj-section) 63%);
+  background-size: 200% 100%;
+  animation: brwShimmer 1.4s linear infinite;
+}
+
+/* Bundle price on a collection hero. Sits under .brw-sub as a fact, not a
+   marketing banner — it only renders when an admin has actually set one. */
+.brw-bundle {
+  font-size: 14px;
+  color: var(--mj-ink);
+  margin: 14px 0 0;
+  line-height: 1.6;
+}
+.brw-bundle strong { color: var(--mj-primary); font-weight: 700; }

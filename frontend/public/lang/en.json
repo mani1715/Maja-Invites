@@ -1,0 +1,45 @@
+{
+  "opening": {
+    "title": "Wedding Invitation",
+    "subtitle": "Join us in celebrating our special day"
+  },
+  "welcome": {
+    "message": "With great joy, we invite you to witness the beginning of our journey together"
+  },
+  "couple": {
+    "groomLabel": "Groom",
+    "brideLabel": "Bride"
+  },
+  "events": {
+    "title": "Event Details",
+    "dateLabel": "Date",
+    "venueLabel": "Venue"
+  },
+  "photos": {
+    "title": "Our Moments"
+  },
+  "video": {
+    "title": "Our Story"
+  },
+  "greetings": {
+    "title": "Wedding Wishes",
+    "nameLabel": "Your Name",
+    "messagePlaceholder": "Write your wishes here...",
+    "submitButton": "Send Wishes"
+  },
+  "whatsapp": {
+    "groomButton": "Message Groom",
+    "brideButton": "Message Bride",
+    "defaultMessage": "Congratulations on your wedding! Wishing you both a lifetime of love and happiness."
+  },
+  "footer": {
+    "thankyou": "Thank you for being part of our celebration"
+  },
+  "rsvp": {
+    "attending": "Will you be attending?",
+    "yes": "Yes, I'll be there",
+    "no": "Sorry, can't make it",
+    "guestCount": "Number of guests",
+    "submit": "Confirm RSVP"
+  }
+}

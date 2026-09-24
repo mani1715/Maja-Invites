@@ -1,0 +1,133 @@
+.mjmnav {
+  padding: 12px clamp(16px, 4vw, 40px);
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-bottom: 1px solid rgba(255, 255, 255, .65);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, .72);
+}
+.mjmnav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+.mjmnav-brand {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--mj-ink);
+  min-width: 0;
+}
+.mjmnav-logo {
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--mj-ink);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mj-font-display);
+  font-size: 15px;
+  flex: none;
+}
+.mjmnav-name {
+  font-family: var(--mj-font-display);
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mjmnav-right { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.mjmnav-right .mjmnav-link { margin-right: 10px; }
+.mjmnav-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--mj-muted);
+  text-decoration: none;
+  font-size: 13.5px;
+  white-space: nowrap;
+  background-position: 0 calc(100% - 12px);
+}
+.mjmnav-link[aria-current="page"] { color: var(--mj-ink); font-weight: 600; }
+.mjmnav-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 20px;
+  background: var(--mj-primary);
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--mj-radius-button);
+  white-space: nowrap;
+  box-shadow: var(--mj-shadow-button-rest);
+  transition: transform .15s var(--mj-easing), box-shadow .3s, background .3s;
+}
+.mjmnav-cta:hover {
+  background: var(--mj-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--mj-shadow-button-hover);
+}
+.mjmnav-cta:active { transform: scale(.97); }
+
+/* Hamburger (mobile only) — 44px tap target, three token-ink bars. */
+.mjmnav-burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  flex: none;
+}
+.mjmnav-burger-bar {
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--mj-ink);
+}
+.mjmnav-drawer { display: none; }
+
+@media not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .mjmnav { background: rgba(255, 255, 255, .94); }
+}
+
+/* Mobile/tablet: the desktop row hid Sign in + the CTA past the viewport edge
+   (global overflow-x clip made them invisible AND untappable). Replace with a
+   hamburger + full-width drawer; every item is its own 44px row. */
+@media (max-width: 860px) {
+  .mjmnav-right { display: none; }
+  .mjmnav-burger { display: flex; }
+  .mjmnav-drawer:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 8px 0 12px;
+    border-top: 1px solid rgba(0, 0, 0, .06);
+    margin-top: 10px;
+  }
+  .mjmnav-drawer .mjmnav-link {
+    min-height: 44px;
+    font-size: 14px;
+    padding: 0 4px;
+  }
+  .mjmnav-drawer .mjmnav-cta {
+    justify-content: center;
+    margin-top: 8px;
+  }
+}

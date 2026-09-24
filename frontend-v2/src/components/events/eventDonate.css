@@ -1,0 +1,119 @@
+/* Guest donation form on the public event page. Sits inside .evp-section, so it
+   inherits the page's restraint — no panel chrome, no card-in-a-card. */
+
+.evd {
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-card-inner);
+  background: var(--mj-section);
+  padding: 18px clamp(14px, 3vw, 22px) 20px;
+  margin-top: 18px;
+}
+
+.evd-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.evd-preset {
+  border: 1px solid var(--mj-border);
+  background: var(--mj-bg);
+  color: var(--mj-ink);
+  border-radius: 999px;
+  padding: 9px 15px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 40px;
+}
+.evd-preset:hover { border-color: var(--mj-primary); }
+.evd-preset.is-on {
+  background: var(--mj-accent-soft);
+  border-color: var(--mj-primary);
+  color: var(--mj-primary);
+}
+
+.evd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.evd-field { display: flex; flex-direction: column; gap: 5px; }
+.evd-field--wide { margin-top: 12px; }
+.evd-field > span {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--mj-muted);
+}
+.evd-field input,
+.evd-field select,
+.evd-field textarea {
+  width: 100%;
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-input, 10px);
+  background: var(--mj-bg);
+  color: var(--mj-ink);
+  font: inherit;
+  font-size: 14.5px;
+  padding: 10px 12px;
+  min-height: 44px;
+}
+.evd-field textarea { min-height: 62px; resize: vertical; }
+.evd-field input:focus,
+.evd-field select:focus,
+.evd-field textarea:focus {
+  outline: none;
+  border-color: var(--mj-primary);
+}
+
+.evd-checks { display: flex; flex-wrap: wrap; gap: 16px; margin: 14px 0 4px; }
+.evd-check {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13.5px; color: var(--mj-ink); cursor: pointer;
+  min-height: 40px;
+}
+.evd-check input { width: 16px; height: 16px; accent-color: var(--mj-primary); }
+
+.evd-error {
+  font-size: 13.5px;
+  color: var(--mj-error);
+  margin: 12px 0 0;
+  line-height: 1.6;
+}
+
+.evd-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.evd-btn {
+  border: 1px solid var(--mj-border);
+  background: var(--mj-bg);
+  color: var(--mj-ink);
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+}
+.evd-btn:disabled { opacity: .55; cursor: default; }
+.evd-btn--primary {
+  background: var(--mj-primary);
+  border-color: var(--mj-primary);
+  color: #fff;
+  box-shadow: var(--mj-shadow-button-rest);
+}
+
+.evd-fine {
+  font-size: 12.5px;
+  color: var(--mj-muted);
+  line-height: 1.65;
+  margin: 12px 0 0;
+}
+
+.evd--done { text-align: center; padding: 26px 20px; }
+.evd-done-h {
+  font-family: var(--mj-font-display);
+  font-size: 19px;
+  margin: 0 0 8px;
+  color: var(--mj-ink);
+}
+.evd-done-p { font-size: 14px; color: var(--mj-muted); line-height: 1.7; margin: 0; }
+
+@media (max-width: 480px) {
+  .evd-actions .evd-btn { flex: 1 1 100%; }
+}

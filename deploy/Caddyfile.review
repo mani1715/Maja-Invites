@@ -1,0 +1,185 @@
+# deploy/Caddyfile.review — sibling of Caddyfile, loaded ONLY by
+# ./deployed.out --review (see docker-compose.review.yml).
+#
+# Identical to Caddyfile, plus one extra site: `:80` answers for any host that
+# is not {$DOMAIN}, which is how a request to the VM bare IP reaches the app
+# before DNS and TLS exist. The domain block below is untouched, so nothing
+# about the production HTTPS path changes.
+#
+# Plain HTTP: no HSTS, no encryption. Review only. Redeploy without --review
+# before a public launch.
+#
+# Keep the proxy routes in sync with Caddyfile by hand.
+
+# deploy/Caddyfile — adapted from microservices/Caddyfile for the gateway-less
+# single-VM stack: every /api/* + crawler/SSR path goes straight to core:8200
+# (there is no gateway tier to bypass anymore — core IS the only backend).
+# DOMAIN + ACME_EMAIL come from the environment (deploy/.env via compose).
+#
+# FE build step: run with GENERATE_SOURCEMAP=false (see docs/DEPLOYMENT.md) so
+# the SPA never emits .js.map files — the @sourcemaps 404 below is
+# defence-in-depth for anything already deployed before that flag was set.
+{$DOMAIN} {
+	encode gzip zstd
+
+	# Security headers on EVERY response, including the SPA pages themselves.
+	# The backend's SecurityHeadersMiddleware only covers /api/*; the HTML shell
+	# is served straight from Caddy, so without this the pages had no HSTS
+	# (SSL-strip), no X-Frame-Options (clickjacking) and no nosniff.
+	# NOTE: a page Content-Security-Policy is deliberately NOT set here — the SPA
+	# loads PostHog, Razorpay checkout and Google Fonts, so an untested CSP would
+	# break the site. Add one only after testing against a staging build.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		# same-origin-allow-popups (not same-origin) so Supabase/Google OAuth
+		# popups keep working while the top-level context stays isolated.
+		Cross-Origin-Opener-Policy "same-origin-allow-popups"
+		# CSP in REPORT-ONLY: it never blocks anything, only POSTs violations to
+		# /api/csp-report so we can see what a real enforced policy would break
+		# before switching the header name to Content-Security-Policy. Inventory:
+		# self + PostHog + Razorpay checkout + Google Fonts + Supabase auth/realtime
+		# + the live-gallery WebSocket (wss). 'unsafe-inline'/'unsafe-eval' are the
+		# CRA-runtime compromise (no nonce infra); tighten once reports are clean.
+		Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us.i.posthog.com https://us-assets.i.posthog.com https://checkout.razorpay.com https://*.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' https: blob:; connect-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://*.supabase.co wss://*.supabase.co https://*.razorpay.com https://unpkg.com wss:; frame-src 'self' https://checkout.razorpay.com https://*.razorpay.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; report-uri /api/csp-report"
+		-Server
+	}
+
+	# Live-gallery WebSocket. Must go straight to core: core serves it
+	# (live_gallery_features -> @router.websocket). Caddy upgrades WS natively.
+	handle /api/ws/* {
+		reverse_proxy core:8200
+	}
+
+	# Everything else under /api -> core directly (no gateway hop; core is the
+	# only backend in this stack). reverse_proxy also upgrades WS automatically,
+	# so the block above is only needed for the doc comment / explicitness.
+	handle /api/* {
+		reverse_proxy core:8200
+	}
+
+	# Uploaded media. Some endpoints return bare "/uploads/..." URLs (portfolio
+	# photos, live-gallery). Without this they'd fall through to the SPA and 404.
+	# The backend mounts /uploads as static; served by core directly.
+	handle /uploads/* {
+		reverse_proxy core:8200
+	}
+
+	# SEO crawler files. Backend serves a real robots.txt (with the Sitemap: line)
+	# and a dynamic sitemap.xml. Without these handles the bare paths fall through
+	# to the SPA below and return the app shell, so crawlers got HTML where they
+	# expect directives -- the site read as having no robots and no sitemap.
+	handle /robots.txt {
+		reverse_proxy core:8200
+	}
+	handle /sitemap.xml {
+		reverse_proxy core:8200
+	}
+
+	# Source maps must never be reachable — they expose the full original source.
+	# The prod build also omits them (GENERATE_SOURCEMAP=false); this is edge
+	# defence-in-depth and covers any already-deployed .map until the next build.
+	@sourcemaps path *.map
+	handle @sourcemaps {
+		respond 404
+	}
+
+	# Obvious scanner / non-route junk → a real 404 instead of the 200 SPA shell,
+	# so Google can't soft-404-index nonsense and probes show as 404s in the log.
+	@junk path *.php *.aspx *.asp *.jsp *.env *.sql *.bak /.git* /wp-* /vendor/* /.aws/* /.ssh/*
+	handle @junk {
+		respond 404
+	}
+
+	# Dynamic rendering for SEO + social share previews. Search engines and
+	# link scrapers (WhatsApp/Facebook/Twitter/…) requesting a public invitation
+	# or a photographer portfolio are routed to core, which returns real <head>
+	# meta + JSON-LD (server.py _render_og_for_slug / _render_og_for_portfolio).
+	# Humans fall through to the SPA below and see the full app. Backend kill
+	# switch: SEO_BOT_RENDER_DISABLED=1.
+	# /browse, /themes/* and /preview/design/* were added when the 188-design
+	# catalogue landed: the sitemap advertises 259 of those URLs, and without
+	# routing crawlers here they would each return the SPA shell — one generic
+	# title, no description, no image. See backend/design_seo.py.
+	#
+	# This list is only half the contract: the backend must have a route for
+	# EVERY path matched here, or a crawler gets a 404 JSON body where a human
+	# gets the app. That is exactly what happened to /photographer/{slug} — the
+	# canonical the pages emit and the sitemap lists — and to /themes/*/gallery.
+	# Both are routed now. If you add a path here, add the @app.get for it in
+	# the same commit — scripts/check_seo_routes.py checks the pairing against
+	# a running server, and also that a crawler is never served a redirect back
+	# to the URL it just asked for.
+	@crawler {
+		header_regexp User-Agent (?i)(googlebot|bingbot|bingpreview|yandexbot|duckduckbot|baiduspider|sogou|petalbot|applebot|whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|telegrambot|slackbot|discordbot|embedly|pinterest|redditbot|skypeuripreview|vkshare)
+		path /invite/* /photographer/* /photographers /photographers/* /browse /themes/* /preview/design/*
+	}
+	handle @crawler {
+		reverse_proxy core:8200
+	}
+
+	# Everything else → the SPA (client-side routing fallback).
+	handle {
+		root * /srv
+
+		# Content-hashed build assets (/static/js|css|media) are immutable —
+		# a new deploy emits new filenames, so these can cache forever.
+		@immutable path /static/*
+		header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+		# The HTML shell is served for EVERY client route (via the fallback
+		# below) and must never be cached: after a redeploy the bundle hashes
+		# change and the old JS files are deleted, so a stale index.html points
+		# at bundles that 404 → a BLANK page on reload (Back still shows the
+		# already-painted page). no-cache forces a revalidation so every reload
+		# boots the current build; Caddy's ETag still yields a cheap 304.
+		@html not path /static/*
+		header @html Cache-Control "no-cache"
+
+		try_files {path} /index.html
+		file_server
+	}
+
+	tls {$ACME_EMAIL}
+}
+
+# ---------------------------------------------------------------------------
+# Review-on-IP site. Matches any host on :80 that is not {$DOMAIN} above.
+# Same routing as the domain block, minus the TLS-only headers (HSTS on a
+# plain-HTTP IP would pin a certificate the IP can never present).
+# ---------------------------------------------------------------------------
+:80 {
+	encode gzip zstd
+
+	header {
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		# Review builds must never be indexed — this URL is temporary and the
+		# content would compete with the real domain in search results.
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy core:8200
+	}
+
+	handle /uploads/* {
+		reverse_proxy core:8200
+	}
+
+	handle {
+		root * /srv
+		@immutable path /static/*
+		header @immutable Cache-Control "public, max-age=31536000, immutable"
+		@html not path /static/*
+		header @html Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}

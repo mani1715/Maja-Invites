@@ -1,0 +1,108 @@
+/* Home-page collection showcase — see ThemeShowcase.jsx. */
+
+/* ---- category tabs ---- */
+.tsc-tabs {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  margin: 0 0 40px;
+}
+.tsc-tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--mj-border); background: var(--mj-bg);
+  font-size: 13px; letter-spacing: .04em; color: var(--mj-muted);
+  transition: color .2s, background .2s, border-color .2s;
+}
+.tsc-tab:hover { color: var(--mj-ink); border-color: var(--mj-primary); }
+.tsc-tab.is-active {
+  background: var(--mj-primary); border-color: var(--mj-primary);
+  color: #fff; font-weight: 600;
+}
+.tsc-tab-icon { font-size: 15px; line-height: 1; }
+
+/* ---- collection / design grid ---- */
+.tsc-grid {
+  display: grid; gap: 22px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+.tsc-card {
+  display: flex; flex-direction: column; min-width: 0;
+  background: var(--mj-bg); border: 1px solid var(--mj-border);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: var(--mj-shadow-card-rest);
+  transition: transform .25s var(--mj-easing), box-shadow .25s;
+}
+.tsc-card:hover { transform: translateY(-4px); box-shadow: var(--mj-shadow-card-hover); }
+
+.tsc-art-hit {
+  display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
+  text-align: left;
+}
+.tsc-art {
+  position: relative; display: block; width: 100%; aspect-ratio: 3 / 4;
+  background-size: cover; background-position: center; overflow: hidden;
+}
+.tsc-art img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+/* The affordance. Without it a picture of a card reads as decoration — which
+   is precisely how the old showcase was read. */
+.tsc-art-cue {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%) translateY(6px);
+  padding: 7px 16px; border-radius: 999px; white-space: nowrap;
+  background: color-mix(in srgb, var(--mj-ink) 82%, transparent);
+  color: #fff; font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  opacity: 0; transition: opacity .22s, transform .22s;
+}
+.tsc-art-hit:hover .tsc-art-cue,
+.tsc-art-hit:focus-visible .tsc-art-cue { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* Touch has no hover, so the cue would never appear on a phone. */
+@media (hover: none) { .tsc-art-cue { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+.tsc-body { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px 18px; }
+.tsc-body-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tsc-name {
+  margin: 0; font-family: var(--mj-font-display); font-weight: 500;
+  font-size: 17px; line-height: 1.3; color: var(--mj-ink); min-width: 0;
+}
+.tsc-swatches { display: inline-flex; flex: none; }
+.tsc-swatch {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1px solid var(--mj-border); margin-left: -4px;
+}
+.tsc-blurb { margin: 0; font-size: 13px; line-height: 1.6; color: var(--mj-muted); }
+.tsc-count {
+  margin: 0; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--mj-faint);
+}
+.tsc-actions { display: flex; gap: 8px; margin-top: 6px; }
+.tsc-btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center;
+  padding: 9px 12px; border-radius: 999px; cursor: pointer; text-decoration: none;
+  font-size: 12.5px; border: 1px solid var(--mj-primary);
+  background: var(--mj-primary); color: #fff;
+  transition: background .2s, color .2s;
+}
+.tsc-btn:hover { background: var(--mj-primary-hover); border-color: var(--mj-primary-hover); }
+.tsc-btn--ghost { background: transparent; color: var(--mj-ink); border-color: var(--mj-border); }
+.tsc-btn--ghost:hover { background: var(--mj-section); color: var(--mj-ink); border-color: var(--mj-border); }
+
+/* ---- celebration categories ---- */
+.tsc-cat { display: flex; flex-direction: column; gap: 22px; }
+.tsc-cat-lead { margin: 0; font-size: 15px; line-height: 1.7; color: var(--mj-muted); max-width: 62ch; }
+.tsc-cat-empty { margin: 0; font-size: 14px; line-height: 1.75; color: var(--mj-muted); max-width: 62ch; }
+.tsc-cat-loading {
+  height: 220px; border-radius: 16px; border: 1px solid var(--mj-border);
+  background: linear-gradient(100deg, var(--mj-section) 30%, var(--mj-section-deep) 50%, var(--mj-section) 70%);
+  background-size: 300% 100%; animation: tscShimmer 1.4s linear infinite;
+}
+@keyframes tscShimmer { to { background-position: -300% 0; } }
+.tsc-inline-btn {
+  border: 0; background: none; padding: 0; cursor: pointer;
+  color: var(--mj-primary); font: inherit; text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tsc-card, .tsc-art-cue { transition: none; }
+  .tsc-cat-loading { animation: none; }
+}

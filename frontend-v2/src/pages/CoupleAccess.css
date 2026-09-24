@@ -1,0 +1,63 @@
+/* Ported from "MAJA Couple Access Portal.dc.html" helmet <style>. Scoped with
+   a cap- prefix — the page commits to the dark "night" chrome regardless of
+   the viewer's OS theme (matches the DC source, which has no light variant). */
+.cap-page { background: #190f33; color: #f2eefb; }
+.cap-page a { color: #c4b5fd; }
+.cap-page a:hover { color: #ddd6fe; }
+.cap-page input, .cap-page button { font-family: 'Inter', system-ui, sans-serif; }
+.cap-page input:focus {
+  outline: none; border-color: #6d28d9 !important;
+  box-shadow: 0 0 0 4px rgba(109, 40, 217, .14);
+}
+
+@keyframes capAurora {
+  0%, 100% { background-position: 0% 40%, 100% 60%, 50% 100%, 0 0; }
+  50% { background-position: 60% 60%, 30% 40%, 45% 85%, 0 0; }
+}
+.cap-night {
+  position: relative; overflow: hidden; isolation: isolate;
+  background:
+    radial-gradient(70% 90% at 18% 8%, rgba(124, 58, 237, .55), transparent 60%),
+    radial-gradient(55% 75% at 82% 22%, rgba(167, 139, 250, .30), transparent 62%),
+    radial-gradient(45% 60% at 55% 100%, rgba(229, 169, 60, .13), transparent 70%),
+    linear-gradient(165deg, #190f33, #241448 55%, #190f33);
+  background-size: 180% 180%, 180% 180%, 160% 160%, 100% 100%;
+  animation: capAurora 32s ease-in-out infinite;
+}
+.cap-glass {
+  background: rgba(25, 15, 51, .62);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(196, 181, 253, .22);
+  box-shadow: 0 20px 50px rgba(124, 58, 237, .22);
+}
+/* The header's texture, applied directly as a background (not the absolutely-
+   positioned overlay shape styles/global.css's .px-ripple is built for). */
+.cap-ripple {
+  background-image: repeating-radial-gradient(circle at 50% 120%, rgba(167, 139, 250, .12) 0 2px, transparent 2px 42px);
+}
+.cap-card {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(196, 181, 253, .18);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, .10);
+}
+.cap-lift { transition: transform .25s cubic-bezier(.22, .61, .36, 1), box-shadow .25s cubic-bezier(.22, .61, .36, 1); }
+.cap-lift:hover { transform: translateY(-4px); box-shadow: 0 24px 56px rgba(124, 58, 237, .22); }
+
+.cap-btn { transition: transform .15s cubic-bezier(.22, .61, .36, 1), box-shadow .2s, background .2s, border-color .2s; }
+.cap-btn:active { transform: scale(.97); }
+.cap-btn-outline { border: 1px solid rgba(196, 181, 253, .28); background: transparent; color: #f2eefb; }
+.cap-btn-outline:hover:not(:disabled) { border-color: #a78bfa; transform: translateY(-2px); box-shadow: 0 10px 26px rgba(109, 40, 217, .24); }
+.cap-btn-solid { border: none; background: #6d28d9; color: #ffffff; box-shadow: 0 10px 26px rgba(109, 40, 217, .24); }
+.cap-btn-solid:hover:not(:disabled) { background: #5b21b6; transform: translateY(-2px); box-shadow: 0 18px 40px rgba(109, 40, 217, .30); }
+.cap-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.cap-link { background-image: linear-gradient(currentColor, currentColor); background-size: 0% 1.5px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size .25s cubic-bezier(.22, .61, .36, 1); text-decoration: none; }
+.cap-link:hover { background-size: 100% 1.5px; }
+
+.cap-error { font-size: 13px; color: #fca5a5; background: rgba(239, 68, 68, .14); border: 1px solid rgba(239, 68, 68, .34); border-radius: 14px; padding: 12px 16px; margin: 14px 0 0; animation: mjPop .4s cubic-bezier(.22, .61, .36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cap-night { animation-duration: .01ms !important; }
+}

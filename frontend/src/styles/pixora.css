@@ -1,0 +1,324 @@
+/*
+ * pixora.css — Pixora design-system foundation (reskin chrome layer only).
+ *
+ * Scope: modals, buttons, forms, navs, overlays around the product. Never
+ * the guest invitation theme content itself (HeroCover, kit.js designs) —
+ * that stays untouched per house rules.
+ *
+ * Source of truth: "M 12 New ui/design-system/{tokens,colors,radius,
+ * shadows,typography,animations}.ts" and the aurora/glass CSS in
+ * "MAJA Invites Landing.dc.html" (adapted, not copied — no DC-runtime syntax).
+ *
+ * Class map:
+ *   .px-btn             primary solid button, r14, 44px min-height
+ *   .px-btn-secondary   modifier (combine with .px-btn) — white bg, tint border
+ *   .px-btn-ghost       modifier (combine with .px-btn) — transparent
+ *   .px-card            white r20 card, border, purple rest shadow
+ *   .px-glass           frosted glass panel (blur+saturate, @supports fallback)
+ *   .px-aurora          lavender radial-gradient section bg, slow drift
+ *   .px-petal           optional floating decorative petal (aurora sections)
+ *   .px-input           r14 bordered input, 44px min-height, purple focus ring
+ *   .px-chip            pill badge
+ *   .px-modal-overlay   fixed full-screen modal backdrop
+ *   .px-modal           modal panel (use inside .px-modal-overlay)
+ *   .px-section-header  eyebrow + title + sub wrapper
+ *   .px-eyebrow         small uppercase label above a heading
+ *   .px-section-title   section/heading text (display serif)
+ *   .px-section-sub     section subtitle/body copy
+ *   .px-spinner         CSS-only loading spinner
+ *
+ * All animation is transform/opacity/filter/background-position only, and
+ * every keyframe here is killed or slowed under prefers-reduced-motion.
+ */
+
+:root {
+  /* Brand */
+  --px-primary: #6D28D9;
+  --px-primary-hover: #5B21B6;
+  --px-secondary: #8B5CF6;
+  --px-accent: #A855F7;
+  --px-tint: #A78BFA;
+  --px-tint-2: #C4B5FD;
+
+  /* Surfaces */
+  --px-bg: #FFFFFF;
+  --px-section: #F5F3FF;
+  --px-violet-100: #EDE9FE;
+
+  /* Text */
+  --px-ink: #111827;
+  --px-muted: #6B7280;
+  --px-faint: #9CA3AF;
+
+  /* Borders */
+  --px-border: #E5E7EB;
+  --px-border-tint: #DDD6FE;
+
+  /* Status */
+  --px-success: #10B981;
+  --px-warning: #F59E0B;
+  --px-error: #EF4444;
+
+  /* Radius */
+  --px-r-btn: 14px;
+  --px-r-card: 20px;
+  --px-r-media: 16px;
+  --px-r-pill: 999px;
+
+  /* Shadow (required set) */
+  --px-shadow: 0 8px 24px rgba(124, 58, 237, .10);
+  --px-shadow-hover: 0 24px 56px rgba(124, 58, 237, .22);
+
+  /* Shadow (supplementary — shadows.ts buttonRest/buttonHover/glass/focusRing,
+     needed by .px-btn/.px-glass/.px-input but not in the required var list) */
+  --px-shadow-btn: 0 10px 26px rgba(109, 40, 217, .24);
+  --px-shadow-btn-hover: 0 18px 40px rgba(109, 40, 217, .30);
+  --px-shadow-glass: 0 20px 50px rgba(124, 58, 237, .14);
+  --px-focus-ring: 0 0 0 4px rgba(109, 40, 217, .14);
+
+  /* Motion (animations.ts easing) */
+  --px-ease: cubic-bezier(.22, .61, .36, 1);
+  --px-ease-hero: cubic-bezier(.16, 1, .3, 1);
+
+  /* Type (typography.ts — Spectral isn't loaded in public/index.html yet;
+     Fraunces is an already-loaded high-contrast serif used as the nearest
+     stand-in until a font-loading pass adds Spectral). */
+  --px-font-display: 'Fraunces', Georgia, serif;
+  --px-font-body: 'Inter', system-ui, sans-serif;
+}
+
+/* ---------- Buttons ---------- */
+
+.px-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: var(--px-r-btn);
+  border: none;
+  background: var(--px-primary);
+  color: #fff;
+  font-family: var(--px-font-body);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--px-shadow-btn);
+  transition: background-color .3s var(--px-ease), box-shadow .3s var(--px-ease), transform .15s var(--px-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.px-btn:hover { background: var(--px-primary-hover); box-shadow: var(--px-shadow-btn-hover); }
+.px-btn:active { transform: scale(.97); }
+.px-btn:disabled,
+.px-btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; box-shadow: none; transform: none; pointer-events: none; }
+.px-btn:focus-visible {
+  outline: 2px solid var(--px-primary);
+  outline-offset: 2px;
+}
+
+.px-btn-secondary {
+  background: #fff;
+  color: var(--px-primary);
+  border: 1.5px solid var(--px-border-tint);
+  box-shadow: none;
+}
+.px-btn-secondary:hover { background: var(--px-violet-100); border-color: var(--px-primary); box-shadow: none; }
+
+.px-btn-ghost {
+  background: transparent;
+  color: var(--px-primary);
+  border: none;
+  box-shadow: none;
+}
+.px-btn-ghost:hover { background: var(--px-violet-100); box-shadow: none; }
+
+/* ---------- Cards / glass ---------- */
+
+.px-card {
+  background: var(--px-bg);
+  border: 1px solid var(--px-border);
+  border-radius: var(--px-r-card);
+  box-shadow: var(--px-shadow);
+}
+
+.px-glass {
+  background: rgba(255, 255, 255, .72);
+  border: 1px solid rgba(255, 255, 255, .65);
+  border-radius: var(--px-r-card);
+  box-shadow: var(--px-shadow-glass);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .px-glass {
+    background: rgba(255, 255, 255, .55);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  }
+}
+
+/* ---------- Aurora section bg + petal decor ---------- */
+
+@keyframes pxAurora {
+  0%, 100% { background-position: 0% 40%, 100% 60%, 50% 100%, 0 0; }
+  50% { background-position: 60% 60%, 30% 40%, 45% 85%, 0 0; }
+}
+.px-aurora {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 90% at 18% 8%, rgba(167, 139, 250, .38), transparent 60%),
+    radial-gradient(55% 75% at 82% 22%, rgba(109, 40, 217, .26), transparent 62%),
+    radial-gradient(45% 60% at 55% 100%, rgba(103, 232, 249, .14), transparent 70%),
+    linear-gradient(165deg, #f5f3ff, #ede9fe 55%, #f5f3ff);
+  background-size: 180% 180%, 180% 180%, 160% 160%, 100% 100%;
+  animation: pxAurora 30s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .px-aurora { animation: none; }
+}
+
+@keyframes pxPetal {
+  from { transform: translateY(-8vh) rotate(0deg); }
+  to { transform: translateY(105vh) rotate(300deg); }
+}
+.px-petal {
+  position: absolute;
+  top: 0;
+  width: 12px;
+  height: 16px;
+  border-radius: 80% 0 80% 0;
+  background: linear-gradient(135deg, var(--px-tint-2), var(--px-tint));
+  opacity: .55;
+  pointer-events: none;
+  will-change: transform;
+  animation: pxPetal 14s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .px-petal { animation: none; display: none; }
+}
+
+/* ---------- Inputs ---------- */
+
+.px-input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--px-r-btn);
+  border: 1.5px solid var(--px-border);
+  background: var(--px-bg);
+  color: var(--px-ink);
+  font-family: var(--px-font-body);
+  font-size: 14px;
+  transition: border-color .2s var(--px-ease), box-shadow .2s var(--px-ease);
+}
+.px-input::placeholder { color: var(--px-faint); }
+.px-input:focus {
+  outline: none;
+  border-color: var(--px-primary);
+  box-shadow: var(--px-focus-ring);
+}
+.px-input:focus-visible {
+  outline: 2px solid var(--px-primary);
+  outline-offset: 2px;
+}
+.px-input:disabled { background: var(--px-section); color: var(--px-faint); cursor: not-allowed; }
+
+/* ---------- Chip ---------- */
+
+.px-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 12px;
+  border-radius: var(--px-r-pill);
+  background: var(--px-violet-100);
+  color: var(--px-primary);
+  font-family: var(--px-font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid var(--px-border-tint);
+  white-space: nowrap;
+}
+
+/* ---------- Modal ---------- */
+
+@keyframes pxFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pxScaleIn { from { opacity: 0; transform: scale(.96) translateY(8px); } to { opacity: 1; transform: none; } }
+
+.px-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(17, 24, 39, .45);
+  animation: pxFadeIn .2s var(--px-ease);
+}
+.px-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100svh - 32px);
+  overflow-y: auto;
+  background: var(--px-bg);
+  border-radius: var(--px-r-card);
+  border: 1px solid var(--px-border);
+  box-shadow: var(--px-shadow-hover);
+  padding: 24px;
+  animation: pxScaleIn .25s var(--px-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .px-modal-overlay, .px-modal { animation: none; }
+}
+
+/* ---------- Section text ---------- */
+
+.px-section-header { margin-bottom: 24px; }
+.px-section-header > * + * { margin-top: 6px; }
+
+.px-eyebrow {
+  display: block;
+  font-family: var(--px-font-body);
+  font-size: 12px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--px-primary);
+  font-weight: 600;
+}
+.px-section-title {
+  font-family: var(--px-font-display);
+  font-weight: 500;
+  font-size: clamp(22px, 3.2vw, 32px);
+  color: var(--px-ink);
+  margin: 0;
+}
+.px-section-sub {
+  font-family: var(--px-font-body);
+  color: var(--px-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---------- Spinner ---------- */
+
+@keyframes pxSpin { to { transform: rotate(360deg); } }
+.px-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--px-border-tint);
+  border-top-color: var(--px-primary);
+  border-radius: 50%;
+  animation: pxSpin .7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* A loading state must keep moving to convey "still working" — slow it
+     instead of freezing it, per WCAG 2.3.3 guidance for essential motion. */
+  .px-spinner { animation-duration: 1.6s; }
+}

@@ -1,0 +1,84 @@
+/* Live invitation preview modal — see LivePreviewModal.jsx. */
+
+.lpm-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--mj-ink) 72%, transparent);
+  backdrop-filter: blur(6px);
+  animation: lpm-fade .18s ease-out;
+}
+@keyframes lpm-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.lpm-dialog {
+  width: min(980px, 100%);
+  max-height: min(92vh, 900px);
+  display: flex; flex-direction: column;
+  background: var(--mj-bg);
+  border: 1px solid var(--mj-border);
+  border-radius: 20px;
+  box-shadow: var(--mj-shadow-card-hover);
+  overflow: hidden;
+}
+
+.lpm-head {
+  display: flex; align-items: flex-start; gap: 16px;
+  padding: 18px 20px; border-bottom: 1px solid var(--mj-border);
+}
+.lpm-head-text { min-width: 0; }
+.lpm-eyebrow {
+  margin: 0 0 4px; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--mj-primary); font-weight: 600;
+}
+.lpm-title { margin: 0; font-family: var(--mj-font-display); font-size: 22px; font-weight: 500; color: var(--mj-ink); }
+.lpm-sub { margin: 6px 0 0; font-size: 13px; line-height: 1.55; color: var(--mj-muted); }
+.lpm-close {
+  margin-left: auto; flex: none; width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--mj-border); background: var(--mj-section);
+  color: var(--mj-ink); font-size: 22px; line-height: 1; cursor: pointer;
+}
+.lpm-close:hover { background: var(--mj-section-deep); }
+
+.lpm-body {
+  display: grid; grid-template-columns: 1fr; gap: 22px;
+  padding: 22px 20px 26px; overflow-y: auto;
+  justify-items: center;
+}
+@media (min-width: 780px) {
+  .lpm-body { grid-template-columns: auto 1fr; align-items: start; justify-items: stretch; }
+}
+
+/* Device frame. The invitation inside is responsive, so a phone-width frame
+   shows exactly the layout a guest gets on their phone. */
+.lpm-phone {
+  position: relative; flex: none;
+  width: min(360px, 86vw);
+  height: min(660px, 62vh);
+  border: 8px solid var(--mj-ink);
+  border-radius: 34px;
+  background: var(--mj-bg);
+  overflow: hidden;
+  box-shadow: var(--mj-shadow-card-hover);
+}
+@media (min-width: 780px) { .lpm-phone { height: min(660px, 70vh); } }
+.lpm-phone-notch {
+  position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+  width: 34%; height: 5px; border-radius: 3px; background: var(--mj-ink); opacity: .75; z-index: 2;
+}
+.lpm-frame { width: 100%; height: 100%; border: 0; display: block; background: var(--mj-bg); }
+
+.lpm-aside { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.lpm-note { margin: 0; font-size: 14px; line-height: 1.7; color: var(--mj-muted); }
+.lpm-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.lpm-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 11px 20px; border-radius: 999px; font-size: 14px; text-decoration: none;
+}
+.lpm-btn--ghost {
+  border: 1px solid var(--mj-border); color: var(--mj-ink); background: transparent;
+}
+.lpm-btn--ghost:hover { background: var(--mj-section); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lpm-backdrop { animation: none; }
+}

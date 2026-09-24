@@ -1,0 +1,344 @@
+/* MAJA Invites — global design system, ported verbatim from M12 design-system/*.ts
+   and the shared helmet CSS in the .dc.html prototypes. Keep selectors/values EXACT. */
+
+:root {
+  /* colors.ts */
+  --mj-primary: #6D28D9;
+  --mj-primary-hover: #5B21B6;
+  --mj-secondary: #8B5CF6;
+  --mj-accent: #A855F7;
+  --mj-accent-soft: #A78BFA;
+  --mj-accent-tint: #C4B5FD;
+  --mj-petal: #D8B4FE;
+  --mj-glow: #E9D5FF;
+
+  --mj-bg: #FFFFFF;
+  --mj-section: #F5F3FF;
+  --mj-section-deep: #EDE9FE;
+  --mj-card: #FFFFFF;
+
+  --mj-ink: #111827;
+  --mj-muted: #6B7280;
+  --mj-faint: #6B7280; /* darkened from #9CA3AF — WCAG AA contrast on white */
+  --mj-ink-deep: #2E1065;
+
+  --mj-border: #E5E7EB;
+  --mj-border-accent: #DDD6FE;
+
+  --mj-success: #10B981;
+  --mj-warning: #F59E0B;
+  --mj-error: #EF4444;
+  --mj-error-text: #DC2626;
+  --mj-gold: #E5A93C;
+
+  --mj-aurora-night: #190F33;
+  --mj-cyan-streak: rgba(103, 232, 249, .14);
+
+  /* radius.ts */
+  --mj-radius-control: 10px;
+  --mj-radius-button: 14px;
+  --mj-radius-card: 20px;
+  --mj-radius-card-inner: 12px;
+  --mj-radius-pill: 999px;
+  --mj-radius-glass: 20px;
+
+  /* shadows.ts */
+  --mj-shadow-card-rest: 0 8px 24px rgba(124, 58, 237, .10);
+  --mj-shadow-card-hover: 0 24px 56px rgba(124, 58, 237, .22);
+  --mj-shadow-button-rest: 0 10px 26px rgba(109, 40, 217, .24);
+  --mj-shadow-button-hover: 0 18px 40px rgba(109, 40, 217, .30);
+  --mj-shadow-glass: 0 20px 50px rgba(124, 58, 237, .14);
+  --mj-shadow-focus-ring: 0 0 0 4px rgba(109, 40, 217, .14);
+  --mj-shadow-ink-soft: 0 1px 3px rgba(17, 24, 39, .25);
+
+  /* typography.ts */
+  --mj-font-display: 'Spectral', serif;
+  --mj-font-body: 'Inter', system-ui, sans-serif;
+  --mj-text-hero: clamp(30px, 5.6vw, 54px);
+  --mj-text-h1: clamp(26px, 4vw, 38px);
+  --mj-easing: cubic-bezier(.22, .61, .36, 1);
+  --mj-easing-hero: cubic-bezier(.16, 1, .3, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+body {
+  margin: 0;
+  background: var(--mj-bg);
+  color: var(--mj-ink);
+  font-family: var(--mj-font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: rgba(109, 40, 217, .16); }
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+button { font-family: inherit; }
+
+/* focus-visible rings */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--mj-primary);
+  outline-offset: 2px;
+}
+
+/* ---- Pixora signature layer ---- */
+@keyframes pxAurora { 0%, 100% { background-position: 0% 40%, 100% 60%, 50% 100%, 0 0 } 50% { background-position: 60% 60%, 30% 40%, 45% 85%, 0 0 } }
+@keyframes pxPetal { from { transform: translateY(-8vh) rotate(0deg) } to { transform: translateY(105vh) rotate(300deg) } }
+
+.px-aurora {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 90% at 18% 8%, rgba(167, 139, 250, .38), transparent 60%),
+    radial-gradient(55% 75% at 82% 22%, rgba(109, 40, 217, .26), transparent 62%),
+    radial-gradient(45% 60% at 55% 100%, rgba(103, 232, 249, .14), transparent 70%),
+    linear-gradient(165deg, #f5f3ff, #ede9fe 55%, #f5f3ff);
+  background-size: 180% 180%, 180% 180%, 160% 160%, 100% 100%;
+  animation: pxAurora 30s ease-in-out infinite;
+}
+.px-petal {
+  position: absolute;
+  top: 0;
+  width: 12px;
+  height: 16px;
+  border-radius: 80% 0 80% 0;
+  background: linear-gradient(135deg, #d8b4fe, #c4a9e8);
+  opacity: .55;
+  pointer-events: none;
+  will-change: transform;
+  animation: pxPetal 14s linear infinite;
+}
+.px-glass {
+  background: rgba(255, 255, 255, .55);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, .65);
+  box-shadow: 0 20px 50px rgba(124, 58, 237, .16);
+}
+.px-ripple {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-radial-gradient(circle at 50% 120%, rgba(167, 139, 250, .12) 0 2px, transparent 2px 42px);
+}
+
+/* ---- mj* keyframes ---- */
+@keyframes mjRise { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: none } }
+@keyframes mjFade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes mjScaleIn { from { opacity: 0; transform: scale(.96) } to { opacity: 1; transform: none } }
+@keyframes mjSlideL { from { opacity: 0; transform: translateX(-24px) } to { opacity: 1; transform: none } }
+@keyframes mjSlideR { from { opacity: 0; transform: translateX(24px) } to { opacity: 1; transform: none } }
+@keyframes mjBlurIn { from { opacity: 0; filter: blur(8px) } to { opacity: 1; filter: none } }
+@keyframes mjMask { from { clip-path: inset(0 100% 0 0) } to { clip-path: inset(0 0 0 0) } }
+@keyframes mjFloat { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }
+@keyframes mjShimmer { from { background-position: 200% 50% } to { background-position: -200% 50% } }
+@keyframes mjPop { 0% { transform: scale(.9); opacity: 0 } 70% { transform: scale(1.03); opacity: 1 } 100% { transform: scale(1) } }
+
+/* Scroll-driven section reveals. Older engines play the entrance once at load. */
+[data-reveal] { animation: mjRise .8s var(--mj-easing) both; animation-timeline: view(); animation-range: entry 0% cover 30%; }
+[data-reveal="l"] { animation-name: mjSlideL; }
+[data-reveal="r"] { animation-name: mjSlideR; }
+[data-reveal="scale"] { animation-name: mjScaleIn; }
+[data-reveal="blur"] { animation-name: mjBlurIn; }
+[data-mj-stagger] > [data-reveal]:nth-child(2) { animation-range: entry 0% cover 38%; }
+[data-mj-stagger] > [data-reveal]:nth-child(3) { animation-range: entry 0% cover 46%; }
+[data-mj-stagger] > [data-reveal]:nth-child(4) { animation-range: entry 0% cover 54%; }
+[data-mj-stagger] > [data-reveal]:nth-child(5) { animation-range: entry 0% cover 62%; }
+[data-mj-stagger] > [data-reveal]:nth-child(6) { animation-range: entry 0% cover 70%; }
+
+[data-mj-ink] { color: #6d28d9; }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  [data-mj-ink] {
+    background: linear-gradient(100deg, #6d28d9, #a855f7, #6d28d9);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: mjShimmer 9s linear infinite;
+  }
+}
+
+[data-mj-link] {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1.5px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: background-size .25s var(--mj-easing), color .25s;
+}
+[data-mj-link]:hover { background-size: 100% 1.5px; }
+
+[data-mj-drawer] > a { animation: mjRise .5s var(--mj-easing) both; }
+[data-mj-drawer] > a:nth-child(1) { animation-delay: .04s; }
+[data-mj-drawer] > a:nth-child(2) { animation-delay: .09s; }
+[data-mj-drawer] > a:nth-child(3) { animation-delay: .14s; }
+[data-mj-drawer] > a:nth-child(4) { animation-delay: .19s; }
+[data-mj-drawer] > a:nth-child(5) { animation-delay: .24s; }
+[data-mj-drawer] > a:nth-child(6) { animation-delay: .29s; }
+[data-mj-drawer] > a:nth-child(7) { animation-delay: .34s; }
+[data-mj-drawer] > a:nth-child(8) { animation-delay: .39s; }
+
+[data-mj-field] {
+  transition: border-color .2s var(--mj-easing), box-shadow .2s var(--mj-easing), background-color .2s;
+}
+[data-mj-field]:focus {
+  border-color: var(--mj-primary);
+  box-shadow: var(--mj-shadow-focus-ring);
+  background-color: #ffffff;
+}
+
+/* liquid-glass wash backgrounds used on auth/dashboard pages */
+@keyframes mjAuroraField { 0%, 100% { background-position: 0% 40%, 100% 60%, 50% 100%, 0 0 } 50% { background-position: 60% 60%, 30% 40%, 45% 85%, 0 0 } }
+.mjWash {
+  background:
+    radial-gradient(70% 90% at 18% 8%, rgba(167, 139, 250, .38), transparent 60%),
+    radial-gradient(55% 75% at 82% 22%, rgba(109, 40, 217, .26), transparent 62%),
+    radial-gradient(45% 60% at 55% 100%, rgba(103, 232, 249, .12), transparent 70%),
+    linear-gradient(165deg, #f5f3ff, #ede9fe 55%, #f5f3ff);
+  background-size: 180% 180%, 180% 180%, 160% 160%, 100% 100%;
+  animation: mjAuroraField 30s ease-in-out infinite;
+}
+.mjGlass {
+  background: rgba(255, 255, 255, .62);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, .72);
+  box-shadow: 0 20px 50px rgba(124, 58, 237, .16);
+}
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .mjGlass { background: rgba(255, 255, 255, .96); }
+}
+
+/* Loader fallback shown by App.jsx's Suspense boundary */
+.mj-loader {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mj-bg);
+  color: var(--mj-muted);
+  font-size: 13.5px;
+  letter-spacing: .04em;
+}
+.mj-loader::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  margin-right: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--mj-border-accent);
+  border-top-color: var(--mj-primary);
+  animation: mj-spin .8s linear infinite;
+}
+@keyframes mj-spin { to { transform: rotate(360deg); } }
+
+/* ---- WCAG 2.4.1 bypass block ----
+   Keyboard and screen-reader users skip the nav rail / marketing header and
+   jump straight to the page's own <main id="main-content">. Off-screen until
+   focused, then pinned top-left above everything. */
+.mj-skip-link {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  transform: translateY(-120%);
+  margin: 10px;
+  padding: 12px 18px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--mj-radius-button);
+  background: var(--mj-primary);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--mj-shadow-button-rest);
+  transition: transform .18s var(--mj-easing);
+}
+.mj-skip-link:focus { transform: translateY(0); }
+
+/* ---- ErrorBoundary recovery card ---- */
+.mj-crash {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(70% 90% at 18% 8%, rgba(167, 139, 250, .30), transparent 60%),
+    linear-gradient(165deg, #f5f3ff, #ede9fe 55%, #f5f3ff);
+}
+.mj-crash-card {
+  max-width: 520px;
+  width: 100%;
+  padding: 40px 32px;
+  border-radius: var(--mj-radius-card);
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid var(--mj-border-accent);
+  box-shadow: var(--mj-shadow-glass);
+  text-align: center;
+}
+.mj-crash-kicker {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mj-primary);
+}
+.mj-crash-title {
+  margin: 0 0 12px;
+  font-family: var(--mj-font-display);
+  font-weight: 400;
+  font-size: clamp(22px, 5vw, 30px);
+  line-height: 1.2;
+  color: var(--mj-ink);
+}
+.mj-crash-body {
+  margin: 0 0 26px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--mj-muted);
+}
+.mj-crash-body a { color: var(--mj-primary); font-weight: 600; }
+.mj-crash-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.mj-crash-primary,
+.mj-crash-secondary {
+  min-height: 46px;
+  padding: 0 22px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--mj-radius-button);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+.mj-crash-primary {
+  background: var(--mj-primary);
+  color: #fff;
+  border: none;
+  box-shadow: var(--mj-shadow-button-rest);
+}
+.mj-crash-secondary {
+  background: #fff;
+  color: var(--mj-muted);
+  border: 1px solid var(--mj-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-timeline: auto !important;
+    animation-delay: 0s !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .px-petal { display: none; }
+  .mj-loader::before { animation-duration: .01ms; }
+}

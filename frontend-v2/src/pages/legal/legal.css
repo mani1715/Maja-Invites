@@ -1,0 +1,176 @@
+/* Shared styles for the three legal pages (Terms, Privacy, Refund). One
+   file because the three pages are the same shape: nav, small hero, long
+   prose body, slim footer - no reason for three near-identical stylesheets. */
+
+.mjl-page {
+  min-height: 100dvh;
+  background: var(--mj-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- hero ---- */
+.mjl-hero {
+  padding: 56px clamp(16px, 4vw, 40px) 44px;
+}
+.mjl-hero-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.mjl-eyebrow {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mj-primary);
+}
+.mjl-h1 {
+  margin: 0 0 12px;
+  font-family: var(--mj-font-display);
+  font-size: var(--mj-text-h1);
+  color: var(--mj-ink-deep);
+  line-height: 1.15;
+}
+.mjl-updated {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--mj-muted);
+}
+
+/* ---- prose body ---- */
+.mjl-body {
+  flex: 1;
+  width: 100%;
+  max-width: 76ch;
+  margin: 0 auto;
+  padding: 8px clamp(16px, 4vw, 40px) 64px;
+}
+.mjl-intro {
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--mj-ink);
+  margin: 0 0 32px;
+}
+.mjl-notice {
+  margin: 0 0 32px;
+  padding: 14px 18px;
+  border: 1px dashed var(--mj-border-accent);
+  border-radius: var(--mj-radius-card-inner);
+  background: var(--mj-section);
+  font-size: 13px;
+  color: var(--mj-muted);
+  line-height: 1.6;
+}
+.mjl-section {
+  margin: 0 0 32px;
+}
+.mjl-section h2 {
+  font-family: var(--mj-font-display);
+  font-size: 20px;
+  color: var(--mj-ink-deep);
+  margin: 0 0 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mj-border);
+}
+.mjl-section:first-of-type h2 {
+  border-top: none;
+  padding-top: 0;
+}
+.mjl-section h3 {
+  font-size: 15px;
+  color: var(--mj-ink);
+  margin: 20px 0 8px;
+}
+.mjl-section p {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--mj-ink);
+  margin: 0 0 14px;
+}
+.mjl-section ul, .mjl-section ol {
+  margin: 0 0 14px;
+  padding-left: 22px;
+}
+.mjl-section li {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--mj-ink);
+  margin: 0 0 8px;
+}
+.mjl-section a {
+  color: var(--mj-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.mjl-callout {
+  margin: 0 0 14px;
+  padding: 16px 18px;
+  border-radius: var(--mj-radius-card-inner);
+  background: var(--mj-section);
+  border: 1px solid var(--mj-border-accent);
+}
+.mjl-callout p:last-child { margin-bottom: 0; }
+
+.mjl-table-wrap {
+  overflow-x: auto;
+  margin: 0 0 16px;
+  border: 1px solid var(--mj-border);
+  border-radius: var(--mj-radius-card-inner);
+}
+.mjl-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.mjl-table th, .mjl-table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mj-border);
+  vertical-align: top;
+}
+.mjl-table th {
+  background: var(--mj-section);
+  color: var(--mj-ink-deep);
+  font-weight: 600;
+}
+.mjl-table tr:last-child td { border-bottom: none; }
+
+/* ---- footer ---- */
+.mjl-footer {
+  border-top: 1px solid var(--mj-border);
+  background: var(--mj-section);
+  padding: 22px clamp(16px, 4vw, 40px);
+  text-align: center;
+}
+.mjl-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  margin: 0 0 8px;
+}
+.mjl-footer-links a {
+  font-size: 13px;
+  color: var(--mj-muted);
+  text-decoration: none;
+}
+.mjl-footer-links a:hover { color: var(--mj-primary); }
+.mjl-footer p {
+  font-size: 12.5px;
+  color: var(--mj-faint);
+  margin: 0;
+}
+
+/* Closing "see also" line on Cookies / Data Retention. The three original
+   pages ended with a nav block (.mjl-footer-links); these two end with a
+   sentence instead, so it needs its own quieter treatment. */
+.mjl-foot-note {
+  margin: 36px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--mj-border);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--mj-muted);
+}
+.mjl-foot-note a { color: var(--mj-primary); font-weight: 600; text-decoration: none; }

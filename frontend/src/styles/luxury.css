@@ -1,0 +1,923 @@
+/* ============================================================
+   LUXURY DESIGN SYSTEM
+   Premium Wedding Experience Platform for Indian Photographers
+   Royal Heritage palette · cinematic motion · glass-morphism
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Cinzel:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Manrope:wght@200;300;400;500;600;700&family=Tangerine:wght@400;700&display=swap');
+
+:root {
+  /* Royal Heritage core palette */
+  --lux-crimson: #8B0000;
+  --lux-crimson-soft: #6E0F0F;
+  --lux-gold: #D4AF37;
+  --lux-gold-soft: #B8902B;
+  --lux-gold-bright: #E8C766;
+  --lux-ivory: #FFF8DC;
+  --lux-ivory-soft: #F5ECC9;
+  --lux-charcoal: #2F2F2F;
+  --lux-onyx: #16110C;
+  --lux-night: #0E0A06;
+
+  /* Surfaces (dark-first cinematic — Sprint 11 design spec) */
+  /* FIX (Bug 6): use a rich radial gradient instead of flat #0A0A0F so any
+     un-painted area of the page (above-the-fold gap, side bars on ultrawide
+     monitors, between sections) reads as a cinematic backdrop instead of a
+     dead black void. Solid fallback kept for browsers that ignore the var. */
+  --lux-bg-solid: #0A0A0F;
+  --lux-bg: radial-gradient(ellipse at top, #1a1410 0%, #0E0A06 45%, #0A0A0F 100%);
+  --lux-bg-2: #0D0D14;
+  --lux-surface: rgba(255, 255, 255, 0.04);
+  --lux-surface-2: rgba(255, 255, 255, 0.07);
+  --lux-border: rgba(201, 168, 76, 0.2);
+  --lux-border-strong: rgba(201, 168, 76, 0.5);
+  --lux-blush: #E8C4B8;
+  --lux-burgundy: #4A0E2A;
+
+  --lux-glow-sm: 0 0 20px rgba(201, 168, 76, 0.15);
+  --lux-glow-md: 0 0 40px rgba(201, 168, 76, 0.2);
+  --lux-glow-lg: 0 0 80px rgba(201, 168, 76, 0.25);
+  --lux-shadow-card: 0 24px 64px rgba(0, 0, 0, 0.4);
+  --lux-shadow-lifted: 0 40px 80px rgba(0, 0, 0, 0.5);
+
+  /* Typography — single family sitewide (owner request). Cormorant Garamond
+     for display, headings, body and the italic "script" accents alike; the
+     italic look for script comes from .font-script { font-style: italic }.
+     (Invitation-artwork renderers keep their own per-theme fonts — that's
+     product design, not site chrome.) */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Cormorant Garamond', Georgia, serif;
+  --font-script: 'Cormorant Garamond', Georgia, serif;
+
+  /* Motion easings (cinematic) */
+  --ease-cinema: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-velvet: cubic-bezier(0.6, 0.05, 0.2, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Semantic text/panel tokens (Task 01 — theme architecture) */
+  --lux-text: #FFF8DC;
+  --lux-text-muted: rgba(255, 248, 220, 0.78);
+  --lux-text-faint: rgba(255, 248, 220, 0.55);
+  --lux-panel: rgba(255, 255, 255, 0.04);
+  --lux-chrome: rgba(14, 10, 6, 0.92);
+
+  /* Mandala decoration tokens (dark defaults — unchanged from current look) */
+  --mandala-gold: #D4AF37;
+  --mandala-alpha-scale: 1;
+
+  /* Floating help-tour pill tokens (dark defaults — unchanged from current look) */
+  --help-pill-bg: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(184,148,31,0.14));
+  --help-pill-fg: #FFE38A;
+  --help-pill-border: rgba(212,175,55,0.55);
+  --help-pill-shadow: 0 6px 18px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,248,220,0.05);
+}
+
+/* ============================================================
+   LIGHT THEME — opt-in via [data-theme="light"] on <html>.
+   Dark values above in :root are untouched (dark stays default).
+   Only surface/derived tokens + gold/crimson/ivory accents unchanged.
+   ============================================================ */
+[data-theme="light"] {
+  /* Deeper warm champagne — richer shade (owner: "increase the color shade"),
+     still ivory-not-yellow, with real vertical depth top→bottom. */
+  --lux-bg-solid: #EBE0C2;
+  --lux-bg: radial-gradient(ellipse 120% 90% at 50% -10%, #F4EBD0 0%, #E9DCB8 45%, #DBC9A0 100%);
+  --lux-bg-2: #E5D8B6;
+  --lux-surface: rgba(255, 252, 244, 0.66);
+  --lux-surface-2: rgba(255, 253, 246, 0.82);
+  --lux-border: rgba(160, 120, 40, 0.28);
+  --lux-border-strong: rgba(160, 120, 40, 0.5);
+
+  --lux-glow-sm: 0 0 20px rgba(212, 175, 55, 0.10);
+  --lux-glow-md: 0 0 40px rgba(212, 175, 55, 0.14);
+  --lux-glow-lg: 0 0 80px rgba(212, 175, 55, 0.18);
+  --lux-shadow-card: 0 24px 64px rgba(80, 60, 20, 0.12);
+  --lux-shadow-lifted: 0 40px 80px rgba(80, 60, 20, 0.16);
+
+  /* Near-black warm ink for maximum contrast on the champagne bg (owner:
+     "darker and blacker" — gold stays only where it's an accent). */
+  --lux-text: #120C05;
+  --lux-text-muted: rgba(18, 12, 5, 0.86);
+  --lux-text-faint: rgba(18, 12, 5, 0.64);
+  --lux-panel: rgba(255, 255, 255, 0.65);
+  --lux-chrome: rgba(250, 246, 238, 0.92);
+
+  /* Deeper gold + boosted opacity so hero mandalas don't wash out on ivory */
+  --mandala-gold: #B8902B;
+  --mandala-alpha-scale: 1.6;
+
+  /* Solid ink-on-gold chip — the low-alpha dark-theme gradient is
+     near-invisible on a light background, so light theme gets a
+     high-contrast solid pill instead (same recipe as .lux-chip.is-active). */
+  --help-pill-bg: linear-gradient(135deg, #D4AF37, #B8941F);
+  --help-pill-fg: #16110C;
+  --help-pill-border: #D4AF37;
+  --help-pill-shadow: 0 6px 18px rgba(80,60,20,0.22), inset 0 0 0 1px rgba(255,255,255,0.25);
+}
+
+/* Toggled on <html> for ~400ms around a theme switch (see ThemeToggle.jsx)
+   so the swap animates instead of flashing; removed after so normal
+   interactions aren't taxed by a global transition. */
+.theme-transition * {
+  transition: background-color 350ms var(--ease-cinema),
+              color 350ms var(--ease-cinema),
+              border-color 350ms var(--ease-cinema),
+              box-shadow 350ms var(--ease-cinema) !important;
+}
+
+/* Body luxe defaults when .luxe is applied - scroll handled by scroll-fix-final.css */
+.luxe {
+  /* Use the SOLID fallback colour on .luxe itself — applying a fixed-attached
+     background-image here was breaking scroll on Android Chrome / iOS Safari
+     (page would only scroll in the top viewport-height area). The cinematic
+     gradient is now painted by a fixed ::after pseudo-element so it doesn't
+     participate in the document's scroll/overflow at all. */
+  background: var(--lux-bg-solid);
+  color: var(--lux-text);
+  font-family: var(--font-body);
+  /* Single font is Cormorant Garamond (a display serif) — 300 reads too
+     thin for body/UI, so lift the base weight so text looks substantial
+     ("darker/blacker"). Headings set their own heavier weight. */
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Fixed cinematic gradient backdrop — sits behind the ambient canvas (which
+   is at z-index:-1) and behind every page section. Pointer-events:none so it
+   never interferes with clicks or scroll gestures. */
+.luxe::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  background: var(--lux-bg);
+  pointer-events: none;
+}
+
+/* Subtle grain texture */
+.luxe-grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Soft gold-on-night radial vignette */
+.luxe-vignette::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(1200px 800px at 70% -10%, rgba(212,175,55,0.10), transparent 60%),
+              radial-gradient(900px 700px at -10% 110%, rgba(139,0,0,0.18), transparent 60%);
+}
+/* Light theme — softer gold wash only, no dark crimson pool (crimson reads
+   like a stain on a warm ivory backdrop). Third blush radial (bottom-right)
+   adds warm depth so the page doesn't read as flat cream. */
+[data-theme="light"] .luxe-vignette::after {
+  background: radial-gradient(1200px 800px at 70% -10%, rgba(212,175,55,0.14), transparent 60%),
+              radial-gradient(900px 700px at -10% 110%, rgba(212,175,55,0.08), transparent 60%),
+              radial-gradient(900px 700px at 110% 110%, rgba(232,196,184,0.18), transparent 60%);
+  background-size: 140% 140%;
+}
+
+/* Barely-perceptible living background — slow drift of the light vignette
+   only. Transform/background-position only, no layout impact. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme="light"] .luxe-vignette::after {
+    animation: lux-ambient-drift 60s var(--ease-cinema) infinite alternate;
+  }
+}
+@keyframes lux-ambient-drift {
+  0%   { background-position: 0% 0%,   0% 0%,   0% 0%; }
+  100% { background-position: 4% 3%,  -3% -4%,  3% -3%; }
+}
+
+/* Grain is invisible at dark-tuned overlay opacity on ivory — deepen + swap
+   to multiply so noise darkens the light surface instead of no-op'ing. */
+[data-theme="light"] .luxe-grain::before {
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+}
+
+/* Orbit rings are drawn at 0.25 alpha gold, calibrated for a near-black
+   backdrop — bump to a deeper, more opaque gold so they read on ivory. */
+[data-theme="light"] .lux-orbit {
+  border-color: rgba(160, 120, 40, 0.35);
+}
+
+/* Typography helpers */
+.font-display { font-family: var(--font-display); }
+.font-heading { font-family: var(--font-heading); }
+.font-script  { font-family: var(--font-script); font-style: italic; }
+.font-body    { font-family: var(--font-body); }
+
+/* HIGH QUALITY RENDERING FOR 2160P DISPLAYS */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure design cards and invitation renders at maximum quality */
+.design-card,
+.invitation-card,
+.theme-preview,
+[class*="design"],
+[class*="invitation"],
+[class*="template"] {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Canvas and WebGL contexts for 3D renders */
+canvas {
+  image-rendering: high-quality;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Gold text gradient */
+.text-gold {
+  background: linear-gradient(180deg, #F0D67E 0%, #D4AF37 45%, #8C6A1A 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Soft eyebrow label */
+.lux-eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  color: var(--lux-gold);
+  font-weight: 500;
+}
+
+/* Glass card — GPU-friendly: lighter blur, no saturate (saturate is the most
+   expensive CSS filter and pegs the GPU during scroll). Promoted to its own
+   compositor layer so neighbouring content doesn't repaint on scroll. 
+   MOBILE OPTIMIZED: Reduced blur on smaller devices */
+.lux-glass {
+  background: var(--lux-surface);
+  border: 1px solid var(--lux-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 18px;
+  transform: translateZ(0);
+  will-change: transform;
+  transition: border-color 0.6s var(--ease-cinema), transform 0.6s var(--ease-cinema), background 0.6s var(--ease-cinema);
+}
+.lux-glass:hover {
+  border-color: var(--lux-border-strong);
+  background: var(--lux-surface-2);
+}
+
+/* Mobile optimization — kill GPU-expensive backdrop-filter entirely on phones.
+   Use a slightly stronger semi-transparent surface so cards still read as
+   "glass" without the per-frame compositor cost that freezes mobile scroll. */
+@media (max-width: 1023px) {
+  .lux-glass {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(20, 14, 8, 0.62);
+    border-color: rgba(212, 175, 55, 0.28);
+    will-change: auto;            /* don't promote layers needlessly on phones */
+  }
+}
+
+/* ===== Skip-to-content link (WCAG 2.4.1) — hidden until keyboard focus ===== */
+.lux-skip-link {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  transform: translateY(-130%);
+  background: var(--lux-gold, #D4AF37); color: #16110C;
+  padding: 0.6rem 1.1rem; border-radius: 0 0 0.6rem 0;
+  font-weight: 600; font-size: 0.85rem; letter-spacing: 0.02em;
+  transition: transform 0.18s ease;
+}
+.lux-skip-link:focus { transform: translateY(0); outline: 2px solid #fff; outline-offset: 2px; }
+
+/* ===== 44px tap targets (WCAG 2.5.5 AAA) ===================================
+   The chrome's icon buttons are 36x36 — fine for AA (24px) but a thumb misses
+   them. Growing the box would break the nav's spacing, so an invisible 44x44
+   ::after extends only the HIT area. The button keeps its visual size.
+
+   Requires the element to be positioned: add Tailwind's `relative` alongside
+   this class (the class deliberately does NOT set `position`, or it would
+   clobber the `fixed`/`absolute` buttons that use it). Not for children of an
+   `overflow-hidden`/`overflow-auto` box — the overhang gets clipped; use
+   `min-h-[44px]` there instead. */
+.lux-tap44::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+/* ===== Mobile-safe full-viewport height =====================================
+   100vh on iOS Safari includes the URL bar — every time it shows/hides the
+   layout jumps. Tailwind's `min-h-screen` resolves to `min-height: 100vh`.
+   We retarget it (via @supports) to `100dvh` (dynamic viewport units) on
+   browsers that support them and fall back to `100vh` otherwise. */
+@supports (height: 100dvh) {
+  .min-h-screen   { min-height: 100dvh !important; }
+  .h-screen       { height:     100dvh !important; }
+  .min-h-dvh      { min-height: 100dvh; }
+}
+.min-h-dvh        { min-height: 100vh; } /* fallback for older browsers */
+
+/* Respect users who explicitly ask for reduced motion and on smaller devices
+   disable the GPU-heavy backdrop-blur entirely. */
+@media (prefers-reduced-motion: reduce) {
+  .lux-glass { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .luxe * { animation-duration: 0.001s !important; transition-duration: 0.001s !important; }
+}
+
+/* Safe-area padding so floating buttons clear the iPhone home indicator */
+.pb-safe { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); }
+.bottom-safe { bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem) !important; }
+
+/* Hairline gold divider */
+.lux-hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--lux-gold) 50%, transparent);
+  opacity: 0.55;
+}
+
+/* Premium button */
+.lux-btn {
+  --bg: var(--lux-gold);
+  --fg: var(--lux-onyx);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1.8rem;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: transform 0.5s var(--ease-cinema), box-shadow 0.5s var(--ease-cinema), background 0.5s var(--ease-cinema);
+  box-shadow: 0 10px 30px -10px rgba(212,175,55,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.lux-btn:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -12px rgba(212,175,55,0.6), inset 0 1px 0 rgba(255,255,255,0.35); }
+/* Bucket 2 — tactile tap micro-interaction across every primary/ghost CTA.
+   On touch devices :hover isn't reliable, so :active gives the user a
+   satisfying press-down feedback. */
+.lux-btn:active { transform: translateY(0) scale(0.97); box-shadow: 0 6px 18px -8px rgba(212,175,55,0.45); transition: transform 120ms ease, box-shadow 120ms ease; }
+.lux-btn-ghost:active { transform: scale(0.97); transition: transform 120ms ease; }
+
+/* Shared form input style for dashboard modals & filters */
+.lux-input {
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(255, 248, 220, 0.04);
+  color: #FFF8DC;
+  font-size: 0.85rem;
+  border: 1px solid var(--lux-border);
+  outline: none;
+  transition: border-color 200ms ease, background 200ms ease;
+}
+.lux-input:focus { border-color: var(--lux-gold); background: rgba(212, 175, 55, 0.05); }
+.lux-input::placeholder { color: rgba(255, 248, 220, 0.45); }
+select.lux-input option { background: #14100a; color: #FFF8DC; }
+
+/* ── Form focus glow (Phase D micro-interaction) ────────────────────────────
+   A soft gold ring eases in on focus for EVERY text field across the app —
+   .lux-input, plus raw inputs/selects/textareas (covers the portaled auth
+   modal + studio login, which don't use .lux-input). Additive box-shadow, so
+   it never fights a component's own border/bg. Transition gated to
+   no-preference so reduced-motion users get the ring with no animation. */
+.lux-input:focus,
+.lux-input:focus-visible,
+input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus,
+input[type="password"]:focus, input[type="number"]:focus, input[type="search"]:focus,
+input[type="url"]:focus, input[type="date"]:focus, textarea:focus, select:focus {
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+  border-color: var(--lux-gold);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lux-input,
+  input[type="text"], input[type="email"], input[type="tel"],
+  input[type="password"], input[type="number"], input[type="search"],
+  input[type="url"], input[type="date"], textarea, select {
+    transition: box-shadow 200ms var(--ease-out-soft), border-color 200ms var(--ease-out-soft), background 200ms var(--ease-out-soft);
+  }
+}
+
+/* Form error message enters with a small fade + slide (no shake). Apply
+   className="lux-field-error" to inline validation messages. */
+@keyframes lux-field-error-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.lux-field-error { animation: lux-field-error-in 200ms var(--ease-out-soft) both; }
+@media (prefers-reduced-motion: reduce) { .lux-field-error { animation: none; } }
+
+/* Status chip / filter chip used in dashboard */
+.lux-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid var(--lux-border);
+  background: transparent;
+  color: rgba(255, 248, 220, 0.65);
+  transition: all 180ms ease;
+}
+.lux-chip:hover { color: #FFF8DC; border-color: var(--lux-border-strong); }
+.lux-chip.is-active {
+  color: #16110C;
+  background: linear-gradient(135deg, #D4AF37, #B8941F);
+  border-color: #D4AF37;
+  font-weight: 600;
+}
+
+/* Mobile-tuned button — slightly smaller padding so two buttons sit
+   comfortably in the nav, and minimum 44px tap target for accessibility. */
+@media (max-width: 640px) {
+  .lux-btn { padding: 0.7rem 1.1rem; font-size: 0.78rem; gap: 0.4rem; min-height: 40px; }
+  .lux-btn svg { width: 14px; height: 14px; }
+}
+
+.lux-btn-ghost {
+  background: transparent;
+  /* var(--lux-text) === --lux-ivory in dark; flips to warm ink in light so
+     ghost buttons never render ivory-on-ivory. */
+  color: var(--lux-text);
+  border: 1px solid var(--lux-border-strong);
+  box-shadow: none;
+}
+.lux-btn-ghost:hover { background: rgba(212,175,55,0.06); box-shadow: 0 10px 30px -10px rgba(212,175,55,0.2); }
+
+/* Task 4 — CTA shine sweep. .lux-btn is already `position: relative` (see
+   above), so this only adds the clipping + the sweep pseudo-element. Gated
+   to real hover-capable pointers with motion allowed, so touch devices and
+   reduced-motion users never pay for (or see) the effect. */
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .lux-btn { overflow: hidden; }
+  .lux-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+    transform: translateX(-150%);
+    transition: transform 900ms var(--ease-out-soft);
+    pointer-events: none;
+  }
+  .lux-btn:hover::after { transform: translateX(150%); }
+}
+
+/* Task 3 — Nav link underline-grow. Desktop nav Links only (see Nav in
+   LandingPage.jsx); a 1px gold rule grows in from the left on hover/focus. */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1px;
+  background: var(--lux-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 250ms var(--ease-out-soft);
+}
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Task 5 — Logo shimmer. Masked overlay (::after) instead of touching the
+   wordmark's own color, so both themes keep their existing MAJA Invites
+   color; the truncate utility already gives this span `overflow: hidden`,
+   which also clips the sweep. */
+.logo-shimmer { position: relative; }
+.logo-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  background: linear-gradient(100deg, transparent, rgba(232,199,102,0.55) 45%, rgba(255,248,220,0.65) 50%, rgba(232,199,102,0.55) 55%, transparent);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transform: translateX(-220%) skewX(-12deg);
+  animation: logo-shimmer-sweep 7s ease-in-out infinite;
+}
+[data-theme="light"] .logo-shimmer::after { mix-blend-mode: multiply; opacity: 0.55; }
+@keyframes logo-shimmer-sweep {
+  0%, 80%  { transform: translateX(-220%) skewX(-12deg); opacity: 0; }
+  84%      { opacity: 1; }
+  100%     { transform: translateX(220%) skewX(-12deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-shimmer::after { animation: none; opacity: 0; }
+}
+
+/* Task 7 — Morphing gold blob (behind Hero text). Wrapper carries caller
+   positioning (top/left/width/height/z-index); the inner element owns the
+   border-radius morph + rotate animation so the two `transform`/geometry
+   sources never fight. */
+.lux-morph-blob-wrap {
+  position: absolute;
+  pointer-events: none;
+}
+.lux-morph-blob {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 35% 35%, rgba(212,175,55,0.55), rgba(232,196,184,0.35) 55%, transparent 75%);
+  filter: blur(40px);
+  opacity: 0.35;
+  border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
+  animation: lux-blob-morph 18s ease-in-out infinite, lux-blob-rotate 36s linear infinite;
+}
+[data-theme="light"] .lux-morph-blob { opacity: 0.16; }
+.lux-morph-blob--static { animation: none; }
+@keyframes lux-blob-morph {
+  0%   { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; }
+  25%  { border-radius: 60% 40% 30% 70% / 55% 65% 35% 45%; }
+  50%  { border-radius: 35% 65% 55% 45% / 60% 30% 70% 40%; }
+  75%  { border-radius: 55% 45% 40% 60% / 35% 55% 45% 65%; }
+  100% { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; }
+}
+@keyframes lux-blob-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lux-morph-blob { animation: none !important; }
+}
+
+/* Task 8 — Cursor glow (desktop-only, mounted once in LandingPage). */
+.lux-cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,175,55,0.55), transparent 70%);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+}
+[data-theme="light"] .lux-cursor-glow { mix-blend-mode: multiply; }
+
+/* Cinematic reveal keyframes */
+@keyframes lux-fade-up {
+  from { opacity: 0; transform: translateY(28px); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+@keyframes lux-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes lux-shimmer-line {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.lux-reveal { animation: lux-fade-up 1.1s var(--ease-out-soft) both; }
+
+/* Mandala spinner (slow rotate gold ring) */
+.lux-mandala {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, var(--lux-gold) 90deg, transparent 180deg, var(--lux-gold) 270deg, transparent 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 16px, #000 17px);
+          mask: radial-gradient(circle, transparent 16px, #000 17px);
+  animation: lux-spin 4.5s linear infinite;
+}
+@keyframes lux-spin { to { transform: rotate(360deg); } }
+
+/* Subtle gold orbit ornament */
+.lux-orbit {
+  position: absolute;
+  border: 1px dashed rgba(212,175,55,0.25);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Selection */
+.luxe ::selection { background: var(--lux-gold); color: var(--lux-onyx); }
+
+/* Custom scrollbar inside luxe */
+.luxe::-webkit-scrollbar { width: 10px; }
+.luxe::-webkit-scrollbar-track { background: var(--lux-bg-2); }
+.luxe::-webkit-scrollbar-thumb { background: linear-gradient(var(--lux-gold-soft), var(--lux-crimson)); border-radius: 10px; }
+
+/* Mobile reductions for heavy motion — strongest reduction here since most
+   real-world wedding guests will scroll on phones. */
+@media (max-width: 768px) {
+  .lux-glass { 
+    backdrop-filter: blur(4px); 
+    -webkit-backdrop-filter: blur(4px); 
+  }
+  .lux-orbit { display: none; }
+  
+  /* Reduce grain opacity for better performance */
+  .luxe-grain::before { 
+    opacity: 0.03; 
+    will-change: auto;
+  }
+  
+  /* Simplify vignette for mobile */
+  .luxe-vignette::after {
+    background: radial-gradient(1000px 600px at 70% 0%, rgba(212,175,55,0.06), transparent 50%);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Sprint 11 — 3D Hero Mandala canvas (cinematic master design)
+   ───────────────────────────────────────────────────────────── */
+.hero-mandala-3d {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.95;
+  mix-blend-mode: screen;
+  /* Let the browser skip rendering work when scrolled out of view */
+  content-visibility: auto;
+  contain-intrinsic-size: 100vw 100vh;
+}
+.hero-mandala-3d canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+/* Subtle vignette so text stays legible over 3D */
+.hero-mandala-3d::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 50%,
+              rgba(10, 10, 15, 0.35) 0%,
+              rgba(10, 10, 15, 0.75) 70%,
+              rgba(10, 10, 15, 0.9) 100%);
+  pointer-events: none;
+}
+@media (max-width: 768px) {
+  .hero-mandala-3d { opacity: 0.7; }
+}
+/* Light theme — mix-blend-mode:screen lightens toward the backdrop, so on
+   near-white ivory the whole gold mandala washes out to invisible. Multiply
+   preserves the gold against a light backdrop instead. Vignette swapped from
+   near-black to a warm ivory tone so multiply doesn't paint black smudges. */
+[data-theme="light"] .hero-mandala-3d {
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+[data-theme="light"] .hero-mandala-3d::after {
+  background: radial-gradient(ellipse at 30% 50%,
+              rgba(239, 231, 214, 0.0) 0%,
+              rgba(239, 231, 214, 0.35) 70%,
+              rgba(239, 231, 214, 0.55) 100%);
+}
+
+/* Mandala stack — perfectly centered, layered, GPU-accelerated */
+.hero-mandala-3d .mandala-stack {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+}
+.hero-mandala-3d .mandala-svg {
+  position: absolute;
+  filter: drop-shadow(0 0 24px rgba(201, 168, 76, 0.25));
+  will-change: transform;
+}
+.hero-mandala-3d .mandala-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 55%,
+              rgba(201, 168, 76, 0.18) 0%,
+              rgba(201, 168, 76, 0.06) 28%,
+              transparent 55%);
+  pointer-events: none;
+}
+
+/* Gold dust particles */
+.hero-mandala-3d .gold-dust-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-mandala-3d .gold-dust {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, #E8D5A3 0%, #C9A84C 60%, transparent 100%);
+  box-shadow: 0 0 6px rgba(232, 213, 163, 0.65);
+  animation-name: dustFloat;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+@keyframes dustFloat {
+  0%   { transform: translate3d(0, 0, 0)         scale(0.8); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translate3d(20px, -120vh, 0) scale(1.4); opacity: 0; }
+}
+@media (max-width: 768px) {
+  .hero-mandala-3d .mandala-svg { transform-origin: center; }
+  .hero-mandala-3d::after { background: radial-gradient(ellipse at center,
+                                          rgba(10, 10, 15, 0.4) 0%,
+                                          rgba(10, 10, 15, 0.85) 70%); }
+}
+
+/* ===========================================================================
+   GILDED DUSK — atmosphere, tilt & infinite rails
+   ---------------------------------------------------------------------------
+   The invitation used to sit on one flat radial gradient, which read as plain
+   black on large screens. These layers add depth WITHOUT touching the document
+   flow: everything is position:fixed / pointer-events:none behind the content,
+   so scrolling on mobile is unaffected (same reason .luxe::after exists).
+   All motion is disabled under prefers-reduced-motion.
+   ========================================================================= */
+
+/* --- 1. Aurora: three slow warm blooms drifting behind everything --------- */
+.lux-aurora {
+  position: fixed;
+  inset: -20%;
+  /* z-index 0, and rendered AFTER the couple-photo backdrop (which is also 0):
+     later sibling wins, so the blooms glow over the darkened photo instead of
+     being buried under it. Content sits at z-index 1 and stays on top. */
+  z-index: 0;
+  pointer-events: none;
+  filter: blur(70px) saturate(125%);
+  opacity: 0.55;
+}
+.lux-aurora span {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.lux-aurora .a1 {
+  width: 52vw; height: 52vw; top: -6%; left: -8%;
+  background: radial-gradient(circle at 35% 35%, rgba(139, 0, 0, 0.55), transparent 68%);
+  animation: auroraDriftA 26s ease-in-out infinite alternate;
+}
+.lux-aurora .a2 {
+  width: 46vw; height: 46vw; top: 18%; right: -10%;
+  background: radial-gradient(circle at 60% 40%, rgba(212, 175, 55, 0.38), transparent 66%);
+  animation: auroraDriftB 32s ease-in-out infinite alternate;
+}
+.lux-aurora .a3 {
+  width: 60vw; height: 60vw; bottom: -18%; left: 18%;
+  background: radial-gradient(circle at 50% 50%, rgba(74, 14, 42, 0.6), transparent 70%);
+  animation: auroraDriftC 38s ease-in-out infinite alternate;
+}
+@keyframes auroraDriftA { from { transform: translate3d(0,0,0)      scale(1);    }
+                          to   { transform: translate3d(6vw,4vh,0)  scale(1.18); } }
+@keyframes auroraDriftB { from { transform: translate3d(0,0,0)      scale(1.1);  }
+                          to   { transform: translate3d(-5vw,6vh,0) scale(0.92); } }
+@keyframes auroraDriftC { from { transform: translate3d(0,0,0)      scale(0.95); }
+                          to   { transform: translate3d(4vw,-5vh,0) scale(1.15); } }
+
+/* --- 2. Jaali: a woven lattice, the texture a plain gradient was missing --- */
+.lux-jaali {
+  position: fixed;
+  inset: 0;
+  z-index: -8;
+  pointer-events: none;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><g fill='none' stroke='%23D4AF37' stroke-width='1'><path d='M32 0 L64 32 L32 64 L0 32 Z'/><circle cx='32' cy='32' r='11'/><path d='M0 0 L64 64 M64 0 L0 64' stroke-opacity='0.45'/></g></svg>");
+  background-size: 64px 64px;
+  /* fade the lattice out toward the middle so text never fights the texture */
+  -webkit-mask-image: radial-gradient(ellipse at center, transparent 22%, #000 78%);
+          mask-image: radial-gradient(ellipse at center, transparent 22%, #000 78%);
+}
+
+/* --- 3. Tilt card: the opening card reacts to the pointer ----------------- */
+.lux-tilt {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.lux-tilt__inner { transform: translateZ(38px); }
+/* Gold foil sheen that tracks the cursor across the card face. */
+.lux-tilt__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background: radial-gradient(
+    340px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 233, 168, 0.30),
+    rgba(212, 175, 55, 0.10) 42%,
+    transparent 68%
+  );
+  mix-blend-mode: screen;
+}
+.lux-tilt:hover .lux-tilt__sheen { opacity: 1; }
+/* Thin gilded rim so the card edge catches light at any angle. */
+.lux-tilt__rim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255, 233, 168, 0.28),
+              0 28px 70px rgba(0, 0, 0, 0.55);
+}
+
+/* --- 4. Infinite rails: two opposing photo marquees ----------------------- */
+.lux-marquee {
+  position: relative;
+  overflow: hidden;
+  /* feather both ends so photos dissolve instead of being guillotined */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+}
+.lux-marquee__track {
+  display: flex;
+  width: max-content;
+  gap: 1.25rem;
+  will-change: transform;
+}
+/* The track holds the SAME set of items twice; translating exactly -50% lands
+   on the duplicate, so the loop is seamless with no JS and no snap. */
+.lux-marquee__track--l { animation: marqueeL var(--rail-speed, 50s) linear infinite; }
+.lux-marquee__track--r { animation: marqueeR var(--rail-speed, 50s) linear infinite; }
+/* No hover pause. The rails sit mid-page, so a pointer resting anywhere over
+   them froze the whole section — it read as broken rather than interactive. */
+@keyframes marqueeL { from { transform: translate3d(0,0,0); }     to { transform: translate3d(-50%,0,0); } }
+@keyframes marqueeR { from { transform: translate3d(-50%,0,0); }  to { transform: translate3d(0,0,0); } }
+
+.lux-rail-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(190px, 24vw, 300px);
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+  /* Dark backing so a fully-shown (contain) photo letterboxes cleanly instead of
+     revealing the page behind it. */
+  background: #140E07;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 420ms ease;
+}
+.lux-rail-card img {
+  width: 100%; height: 100%;
+  /* Show the whole photo (no crop) — owner wants full pictures, not half. */
+  object-fit: contain;
+  display: block;
+  filter: saturate(0.9) contrast(1.04);
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1), filter 500ms ease;
+}
+.lux-rail-card:hover { transform: translateY(-8px) scale(1.03); border-color: rgba(212,175,55,0.75); }
+.lux-rail-card:hover img { transform: scale(1.08); filter: saturate(1.05) contrast(1.02); }
+.lux-rail-card__cap {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 1.6rem 0.9rem 0.75rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 248, 220, 0.92);
+  background: linear-gradient(to top, rgba(10,10,15,0.9), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lux-aurora span,
+  .lux-marquee__track--l,
+  .lux-marquee__track--r { animation: none; }
+  .lux-tilt { transition: none; }
+}

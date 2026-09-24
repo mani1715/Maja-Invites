@@ -1,0 +1,24 @@
+# backend/requirements-dev.txt — development and CI only. NEVER installed into
+# the production image (backend/Dockerfile installs requirements.txt alone).
+#
+#     pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+#
+# These were previously pinned in requirements.txt, which meant every
+# production container carried a linter, a type checker and a test runner.
+-r requirements.txt
+
+black==26.5.1
+flake8==7.3.0
+iniconfig==2.3.0
+isort==8.0.1
+mccabe==0.7.0
+mypy==2.1.0
+mypy_extensions==1.1.0
+pathspec==1.1.1
+pluggy==1.6.0
+pycodestyle==2.14.0
+pyflakes==3.4.0
+pytest-asyncio==1.4.0
+pytest-timeout==2.4.0
+pytest==9.0.3
+pytokens==0.4.1

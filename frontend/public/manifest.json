@@ -1,0 +1,16 @@
+{
+  "short_name": "MAJA",
+  "name": "MAJA Invites — Premium Wedding Experience",
+  "icons": [
+    { "src": "favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" },
+    { "src": "logo192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "logo512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#16110C",
+  "background_color": "#0E0A06",
+  "description": "Cinematic Indian wedding invitations, live photo walls, and AI-powered storytelling for premium photographers.",
+  "scope": "/",
+  "orientation": "portrait"
+}

@@ -1,0 +1,132 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Runtime user media — NEVER commit. The running app writes guest photos, live
+# galleries and wedding uploads here; they belong on disk / S3, not in git
+# (privacy + repo bloat). This stops `git add -A` on the server from sweeping
+# them in. (A few legacy files under uploads/ were committed before this rule
+# and remain tracked; untrack them separately if desired.)
+uploads/
+
+# Camera daemon runtime — the persisted SFTP host key + FTPES TLS cert/key
+# (secrets), and the per-connection upload scratch dirs.
+backend/.camera_sftp_host_key
+backend/.camera_tmp/
+backend/.camera_ftps_cert.pem
+backend/.camera_ftps_key.pem
+backend/.camera_ftps_tmp/
+
+# IDE and editors
+.idea/
+.vscode/
+
+# Dependencies
+node_modules/
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Production builds
+/build
+dist/
+dist
+
+# Environment files (comprehensive coverage)
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+
+*token.json*
+*credentials.json*
+
+# Logs and debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dump.rdb
+
+# System files
+.DS_Store
+*.pem
+
+# Python
+__pycache__/
+*pyc*
+venv/
+.venv/
+
+# Development tools
+chainlit.md
+.chainlit
+.ipynb_checkpoints/
+.ac
+
+# Deployment
+.vercel
+
+# Data and databases
+agenthub/agents/youtube/db
+
+# Archive files and large assets
+**/*.zip
+**/*.tar.gz
+**/*.tar
+**/*.tgz
+*.pack
+*.deb
+*.dylib
+
+# Build caches
+.cache/
+
+memory/test_credentials.md
+
+# Mobile development
+android-sdk/frontend/node_modules/.cache/default-development/2.pack
+frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/3.pack
+frontend/node_modules/.cache/default-development/2.pack
+frontend/node_modules/.cache/default-development/5.pack
+frontend/node_modules/.cache/default-development/7.pack
+frontend/node_modules/.cache/default-development/6.pack
+backend/.env
+.env
+
+# local dev artifacts (not for repo)
+frontend/.devserver.log
+package-lock.json
+.claude/
+
+# local runtime / embedded postgres (do not commit)
+.localpg/
+.run_pids.txt
+.gstack/
+
+# dev server log
+frontend/devserver.log
+*.log
+
+# local agent-memory artifacts (codebase-memory MCP)
+ruvector.db
+backend/ruvector.db
+
+# media cache backing the Drive serving path — regenerable, never commit
+.mediacache/
+.claude-flow/

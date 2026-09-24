@@ -1,0 +1,41 @@
+/* Ported from "MAJA Photographer Portfolio Editor.dc.html". Keep the stpf-* palette
+   in line with the sibling studio pages (StudioDashboard.css / StudioGallery.css). */
+.stpf-glass { background: rgba(255,255,255,.66); backdrop-filter: blur(14px) saturate(1.35); -webkit-backdrop-filter: blur(14px) saturate(1.35); border: 1px solid rgba(255,255,255,.75); }
+@supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))) { .stpf-glass { background: rgba(255,255,255,.96); } }
+
+.stpf-card { transition: box-shadow .25s, border-color .25s; }
+.stpf-card:hover { box-shadow: 0 24px 56px rgba(124,58,237,.16); }
+
+.stpf-rail-item { transition: background .2s, color .2s, transform .15s cubic-bezier(.22,.61,.36,1); }
+.stpf-rail-item:hover { background: #ede9fe; color: #6d28d9; }
+.stpf-rail-item:active { transform: scale(.98); }
+
+.stpf-chip { transition: background .2s, color .2s, transform .15s cubic-bezier(.22,.61,.36,1); }
+.stpf-chip:hover { transform: translateY(-1px); }
+.stpf-chip:active { transform: scale(.96); }
+
+.stpf-btn { transition: transform .15s cubic-bezier(.22,.61,.36,1), box-shadow .3s, background .3s, border-color .3s; }
+.stpf-btn:hover:not(:disabled) { background: #5b21b6; transform: translateY(-1px); box-shadow: 0 18px 40px rgba(109,40,217,.30); }
+.stpf-btn:active:not(:disabled) { transform: scale(.97); }
+.stpf-btn:disabled { opacity: .55; cursor: not-allowed; }
+.stpf-btn-outline:hover:not(:disabled) { background: #f5f3ff; }
+
+.stpf-drop { transition: border-color .2s, background .2s; cursor: pointer; }
+.stpf-drop:hover { border-color: #a78bfa; }
+
+.stpf-design-card { transition: transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .25s, border-color .2s; }
+.stpf-design-card:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(124,58,237,.18); }
+
+.stpf-skel { background: linear-gradient(90deg,#f5f3ff 25%,#ede9fe 37%,#f5f3ff 63%); background-size: 400% 100%; animation: stpfShimmer 1.4s ease infinite; }
+@keyframes stpfShimmer { 0%{background-position:100% 50%} 100%{background-position:0 50%} }
+
+@keyframes stpfRise { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+@keyframes stpfFade { from{opacity:0} to{opacity:1} }
+.stpf-main { animation: stpfRise .5s cubic-bezier(.22,.61,.36,1) both; }
+.stpf-section { animation: stpfFade .35s ease both; }
+
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid #6d28d9; outline-offset: 2px;
+}
+@media (hover:none) { .stpf-card:hover, .stpf-design-card:hover { transform: none; } }
+@media (prefers-reduced-motion:reduce) { .stpf-main, .stpf-section, .stpf-skel { animation: none !important; } }

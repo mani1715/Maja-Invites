@@ -1,0 +1,90 @@
+/* Signup-only bits layered on top of AuthSplit.css — ported from
+   "MAJA Sign Up.dc.html" (name/city grid, perk list, strength meter, agree
+   checkbox, OTP step). */
+
+.mj-auth-card--wide { max-width: 420px; }
+
+.mj-auth-name-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+  animation: mjRise .7s var(--mj-easing) .24s both;
+}
+@media (max-width: 639px) { .mj-auth-name-grid { grid-template-columns: 1fr; } }
+
+.mj-auth-meter {
+  display: flex;
+  gap: 5px;
+  margin: 10px 0 8px;
+}
+.mj-auth-meter-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--mj-border);
+  transition: background .3s var(--mj-easing);
+}
+.mj-auth-strength {
+  font-size: 12px;
+  margin: 0 0 18px;
+  transition: color .25s;
+}
+
+.mj-auth-agree {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  color: var(--mj-muted);
+  line-height: 1.55;
+  margin-bottom: 24px;
+  cursor: pointer;
+  min-height: 44px;
+  animation: mjRise .7s var(--mj-easing) .42s both;
+}
+.mj-auth-agree input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--mj-primary); flex: none; }
+.mj-auth-agree a { color: var(--mj-primary); text-decoration: none; }
+
+.mj-auth-otp-input {
+  text-align: center;
+  font-family: ui-monospace, Menlo, monospace;
+  letter-spacing: .5em;
+  font-size: 20px;
+}
+
+.mj-auth-otp-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--mj-section-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--mj-primary);
+  margin-bottom: 22px;
+  animation: mjPop .6s var(--mj-easing-hero) both;
+}
+
+.mj-auth-link-btn {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 44px;
+  background: none;
+  border: none;
+  color: var(--mj-muted);
+  cursor: pointer;
+  font-family: var(--mj-font-body);
+}
+.mj-auth-link-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.mj-auth-back-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+.mj-auth-back-row button { background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 600; min-height: 44px; }

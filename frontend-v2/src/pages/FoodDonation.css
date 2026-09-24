@@ -1,0 +1,130 @@
+/* Public food-donation directory. Tokens from styles/global.css only. */
+
+.fdon-page { min-height: 100dvh; background: var(--mj-bg); color: var(--mj-ink); }
+
+.fdon-hero { padding: 64px 20px 52px; text-align: center; position: relative; }
+.fdon-hero-inner { max-width: 720px; margin: 0 auto; }
+.fdon-eyebrow {
+  font-size: 12px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--mj-primary);
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+.fdon-h1 {
+  font-family: var(--mj-font-display), serif;
+  font-weight: 500;
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.1;
+  margin: 0;
+}
+.fdon-h1 span { color: var(--mj-primary); font-style: italic; }
+.fdon-sub {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--mj-muted);
+  margin: 16px auto 0;
+  max-width: 56ch;
+}
+
+.fdon-body { max-width: 980px; margin: 0 auto; padding: 0 20px 90px; }
+
+.fdon-search { margin: -14px 0 34px; }
+.fdon-label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mj-muted);
+  margin-bottom: 8px;
+}
+.fdon-search-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.fdon-input {
+  flex: 1;
+  min-width: 180px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--mj-border);
+  border-radius: 14px;
+  background: var(--mj-bg);
+  color: var(--mj-ink);
+  font: inherit;
+  font-size: 15px;
+}
+.fdon-btn {
+  min-height: 48px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--mj-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fdon-section { margin-bottom: 40px; }
+.fdon-h2 {
+  font-family: var(--mj-font-display), serif;
+  font-weight: 500;
+  font-size: clamp(20px, 2.8vw, 26px);
+  margin: 0 0 16px;
+}
+
+.fdon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.fdon-card {
+  border: 1px solid var(--mj-border);
+  border-radius: 18px;
+  padding: 20px;
+  background: var(--mj-bg);
+}
+.fdon-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.fdon-card-name {
+  font-family: var(--mj-font-display), serif;
+  font-weight: 500;
+  font-size: 17px;
+  margin: 0;
+  color: var(--mj-ink);
+}
+.fdon-verified {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--mj-accent-soft);
+  color: var(--mj-primary);
+}
+.fdon-phone {
+  display: inline-block;
+  margin: 10px 0 8px;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--mj-primary);
+  text-decoration: none;
+}
+.fdon-phone:hover { text-decoration: underline; }
+.fdon-card-line { margin: 0 0 4px; font-size: 13.5px; line-height: 1.55; color: var(--mj-muted); }
+.fdon-card-loc { font-style: italic; }
+
+.fdon-state { font-size: 14px; color: var(--mj-muted); line-height: 1.7; margin: 0 0 28px; }
+.fdon-state--error { color: var(--mj-error); }
+
+.fdon-note {
+  margin-top: 12px;
+  padding: 24px;
+  border-radius: 18px;
+  background: var(--mj-section);
+  border: 1px solid var(--mj-border);
+}
+.fdon-note ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.fdon-note li { font-size: 14px; line-height: 1.6; color: var(--mj-ink); }
+.fdon-note-foot { margin: 18px 0 0; font-size: 13.5px; color: var(--mj-muted); line-height: 1.65; }
+.fdon-note-foot a { color: var(--mj-primary); }

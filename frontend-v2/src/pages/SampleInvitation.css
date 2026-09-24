@@ -1,0 +1,60 @@
+/* SampleInvitation.css — the chrome AROUND a live sample invitation.
+   The invitation itself is the real GuestInvitation render and brings its own
+   styles; nothing here may reach inside it, or the preview stops matching the
+   page it is previewing. */
+
+.smp-wrap { background: var(--mj-surface, #fff); min-height: 100vh; }
+
+/* `?embed=1` — inside a frame on another page. No chrome of our own, and the
+   frame supplies the height, so `min-height: 100vh` on top of a scrolling
+   invitation would add a blank screen at the end of every preview. */
+.smp-wrap--embed { min-height: 0; }
+
+.smp-bar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px clamp(16px, 4vw, 32px);
+  background: color-mix(in srgb, var(--mj-surface, #fff) 88%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--mj-border, rgba(17, 24, 39, .10));
+}
+.smp-bar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.smp-back { font-size: 14px; white-space: nowrap; }
+.smp-tag {
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--mj-primary, #6d28d9) 12%, transparent);
+  color: var(--mj-primary, #6d28d9); font-weight: 600; white-space: nowrap;
+}
+
+.smp-picker { display: flex; align-items: center; gap: 8px; }
+.smp-picker-label {
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--mj-text-soft, #6b7280);
+}
+.smp-picker select {
+  font: inherit; font-size: 14px; padding: 7px 10px; border-radius: 10px;
+  border: 1px solid var(--mj-border, rgba(17, 24, 39, .14));
+  background: var(--mj-surface, #fff); color: inherit; max-width: 46vw;
+}
+
+.smp-note {
+  margin: 0; padding: 14px clamp(16px, 4vw, 32px);
+  font-size: 14px; line-height: 1.6; color: var(--mj-text-soft, #4b5563);
+  border-bottom: 1px solid var(--mj-border, rgba(17, 24, 39, .08));
+}
+
+/* The invitation renders full-bleed, exactly as a guest sees it. */
+.smp-frame { position: relative; }
+
+.smp-cta {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 16px; padding: clamp(20px, 5vw, 36px) clamp(16px, 4vw, 32px);
+  border-top: 1px solid var(--mj-border, rgba(17, 24, 39, .10));
+}
+.smp-cta-copy { margin: 0; font-size: 15px; color: var(--mj-text-soft, #4b5563); max-width: 52ch; }
+
+@media (max-width: 560px) {
+  .smp-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .smp-picker select { max-width: none; width: 100%; }
+}

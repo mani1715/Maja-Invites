@@ -1,0 +1,175 @@
+/* Single-design preview. Tokens from styles/global.css only. */
+
+.dpv-page { min-height: 100dvh; background: var(--mj-bg); color: var(--mj-ink); }
+
+.dpv-body {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 20px 90px;
+}
+
+.dpv-crumbs { font-size: 13px; color: var(--mj-muted); margin-bottom: 18px; }
+.dpv-crumbs a { color: var(--mj-primary); text-decoration: none; }
+.dpv-crumbs a:hover { text-decoration: underline; }
+
+.dpv-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .dpv-split { grid-template-columns: minmax(0, 1.05fr) minmax(280px, .95fr); gap: 44px; }
+}
+
+.dpv-figure {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--mj-border);
+  border-radius: 20px;
+  background-size: cover;
+  background-position: center;
+}
+.dpv-figure img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dpv-eyebrow {
+  font-size: 12px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--mj-primary);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+.dpv-h1 {
+  font-family: var(--mj-font-display), serif;
+  font-weight: 500;
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.14;
+  margin: 0;
+}
+.dpv-h2 {
+  font-family: var(--mj-font-display), serif;
+  font-weight: 500;
+  font-size: clamp(19px, 2.4vw, 24px);
+  margin: 0 0 16px;
+}
+.dpv-code {
+  font-size: 13px;
+  letter-spacing: .08em;
+  font-weight: 600;
+  color: var(--mj-primary);
+  margin: 8px 0 0;
+}
+.dpv-sub {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--mj-muted);
+  max-width: 52ch;
+  margin: 16px 0 0;
+}
+
+.dpv-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 14px;
+  margin: 20px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--mj-border);
+}
+.dpv-facts dt {
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mj-muted);
+}
+.dpv-facts dd { margin: 4px 0 0; font-size: 14px; color: var(--mj-ink); }
+
+.dpv-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+.dpv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.dpv-btn--primary { background: var(--mj-primary); color: #fff; }
+.dpv-btn--ghost { background: transparent; color: var(--mj-primary); border-color: var(--mj-border); }
+.dpv-btn:focus-visible { outline: 2px solid var(--mj-primary); outline-offset: 2px; }
+
+.dpv-more { margin-top: 56px; }
+.dpv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+}
+
+.dpv-skel {
+  height: 60vh;
+  border-radius: 20px;
+  background: var(--mj-section);
+  border: 1px solid var(--mj-border);
+}
+
+.dpv-missing { max-width: 56ch; padding: 40px 0; }
+.dpv-missing .dpv-btn { margin-top: 22px; }
+.dpv-missing code {
+  background: var(--mj-section);
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: .95em;
+}
+
+/* Price block. Only ever rendered when the server returned a real figure. */
+.dpv-price {
+  margin: 22px 0 0;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: var(--mj-section);
+  border: 1px solid var(--mj-border);
+}
+.dpv-price-amount {
+  font-family: var(--mj-font-display), serif;
+  font-size: 30px;
+  color: var(--mj-ink);
+  display: block;
+}
+.dpv-price-note { font-size: 13px; color: var(--mj-muted); }
+.dpv-includes {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+.dpv-includes li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 13px;
+  color: var(--mj-ink);
+}
+.dpv-includes li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: .55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--mj-primary);
+}

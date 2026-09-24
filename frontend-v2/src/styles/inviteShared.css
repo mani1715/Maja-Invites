@@ -1,0 +1,139 @@
+/* inviteShared.css — pieces the M12 guest-invite prototypes (Guest/Ceremony/
+   Save-the-Date invitation .dc.html) use that global.css doesn't already
+   define. global.css owns px-aurora/px-glass/px-petal + the mj* keyframes;
+   this file adds the dark/"night" counterparts and the interactive-state
+   selectors, kept EXACT to the .dc.html helmet CSS. Imported by all three
+   guest-invite pages. */
+
+.px-night {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 90% at 18% 8%, rgba(var(--inv-primary-rgb, 124, 58, 237), .55), transparent 60%),
+    radial-gradient(55% 75% at 82% 22%, rgba(var(--inv-primary-rgb, 167, 139, 250), .30), transparent 62%),
+    radial-gradient(45% 60% at 55% 100%, rgba(var(--inv-accent-rgb, 229, 169, 60), .13), transparent 70%),
+    linear-gradient(165deg, var(--inv-bg, #190f33), var(--inv-bg-alt, #241448) 55%, var(--inv-bg, #190f33));
+  background-size: 180% 180%, 180% 180%, 160% 160%, 100% 100%;
+  animation: pxAurora 32s ease-in-out infinite;
+}
+.px-glass-d {
+  background: rgba(var(--inv-bg-rgb, 25, 15, 51), .62);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(var(--inv-ink-rgb, 196, 181, 253), .22);
+  box-shadow: 0 20px 50px rgba(var(--inv-primary-rgb, 124, 58, 237), .22);
+}
+.px-card-d {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(var(--inv-ink-rgb, 196, 181, 253), .18);
+  border-radius: var(--mj-radius-card);
+  box-shadow: var(--mj-shadow-card-rest);
+}
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .px-glass-d { background: rgba(var(--inv-bg-rgb, 25, 15, 51), .94); }
+}
+
+[data-mj-btn] {
+  transition: transform .15s var(--mj-easing), box-shadow .2s var(--mj-easing),
+    background .2s var(--mj-easing), border-color .2s var(--mj-easing);
+}
+[data-mj-lift] {
+  transition: transform .25s var(--mj-easing), box-shadow .25s var(--mj-easing);
+}
+[data-mj-underline] {
+  transition: color .25s var(--mj-easing), border-color .25s var(--mj-easing);
+}
+[data-mj-lift]:hover { transform: translateY(-4px); box-shadow: var(--mj-shadow-card-hover); }
+
+/* ---- recurring button/pill shapes across Guest/Ceremony/Save-the-date ---- */
+.mj-btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--mj-primary); color: #fff; border: none; padding: 0 20px; min-height: 48px;
+  border-radius: var(--mj-radius-button); font-size: 14px; font-weight: 600; cursor: pointer;
+  text-decoration: none; box-shadow: var(--mj-shadow-button-rest); font-family: inherit;
+}
+.mj-btn-primary:hover { background: var(--mj-primary-hover); transform: translateY(-1px); box-shadow: var(--mj-shadow-button-hover); }
+.mj-btn-primary:active { transform: scale(.97); }
+.mj-btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.mj-btn-outline-d {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 20px;
+  border-radius: var(--mj-radius-button); border: 1px solid rgba(var(--inv-ink-rgb, 196, 181, 253), .28); background: transparent;
+  color: var(--inv-ink, #f2eefb); font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none;
+}
+.mj-btn-outline-d:hover { border-color: var(--inv-primary, #a78bfa); transform: translateY(-1px); box-shadow: var(--mj-shadow-button-rest); }
+.mj-btn-outline-d:active { transform: scale(.97); }
+
+.mj-pill-toggle {
+  min-height: 44px; padding: 0 20px; border-radius: var(--mj-radius-pill); font-size: 13px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; flex: none; font-family: inherit;
+  transition: transform .15s var(--mj-easing), box-shadow .2s var(--mj-easing);
+}
+.mj-pill-toggle:hover { transform: translateY(-1px); box-shadow: var(--mj-shadow-button-rest); }
+.mj-pill-toggle:active { transform: scale(.97); }
+
+/* ---- shared loading / error / empty states (not part of any one .dc.html —
+   the conversion brief calls for styling these "in the same design language") ---- */
+.mj-invite-state {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  padding: 40px 24px;
+}
+.mj-invite-state[data-tone="night"] {
+  background: var(--inv-bg, #190f33);
+  color: var(--inv-ink, #f2eefb);
+}
+.mj-invite-state[data-tone="light"] {
+  background: #ffffff;
+  color: var(--mj-ink);
+}
+.mj-invite-state .mj-eyebrow {
+  font-size: 12px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin: 0;
+  color: var(--inv-primary, #a78bfa);
+}
+.mj-invite-state[data-tone="light"] .mj-eyebrow { color: var(--mj-primary); }
+.mj-invite-state h1 {
+  font-family: var(--inv-font-display, var(--mj-font-display));
+  font-weight: 400;
+  font-size: clamp(24px, 4.4vw, 34px);
+  margin: 0;
+  max-width: 24ch;
+}
+.mj-invite-state p.mj-body {
+  font-size: 14.5px;
+  line-height: 1.7;
+  max-width: 40ch;
+  margin: 0;
+  color: var(--inv-ink-soft, #ddd6fe);
+}
+.mj-invite-state[data-tone="light"] p.mj-body { color: var(--mj-muted); }
+.mj-invite-state .mj-spin {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--inv-ink-rgb, 196, 181, 253), .3);
+  border-top-color: var(--inv-primary, #a78bfa);
+  animation: mj-spin .8s linear infinite;
+}
+.mj-invite-state[data-tone="light"] .mj-spin {
+  border-color: var(--mj-border-accent);
+  border-top-color: var(--mj-primary);
+}
+@keyframes mj-spin { to { transform: rotate(360deg); } }
+
+.mj-empty-note {
+  font-size: 13.5px;
+  color: #9ca3af;
+  text-align: center;
+  padding: 18px 0;
+}
+[data-tone-scope="night"] .mj-empty-note { color: var(--inv-ink-soft, #ddd6fe); opacity: .7; }
