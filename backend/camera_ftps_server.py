@@ -36,8 +36,10 @@ import threading
 import time
 from typing import Optional
 
+import posixpath
 from pyftpdlib.authorizers import AuthenticationFailed
-from pyftpdlib.handlers import TLS_FTPHandler
+from pyftpdlib.filesystems import AbstractedFS
+from pyftpdlib.handlers import TLS_FTPHandler, TLS_DTPHandler
 from pyftpdlib.servers import FTPServer
 
 import camera_ingest
@@ -50,15 +52,37 @@ BIND_PORT = int(os.environ.get("CAMERA_FTPS_BIND_PORT", "21"))
 # The server's PUBLIC address, sent to the camera for passive data connections.
 # MUST be the internet-facing IP (GCP external IP), not the VM's internal NIC.
 MASQUERADE = os.environ.get("CAMERA_FTPS_MASQUERADE_ADDRESS", "").strip()
-PASV_MIN = int(os.environ.get("CAMERA_FTPS_PASV_MIN", "30000"))
-PASV_MAX = int(os.environ.get("CAMERA_FTPS_PASV_MAX", "30009"))
-CERT_FILE = os.environ.get("CAMERA_FTPS_CERT",
-                           os.path.join(os.path.dirname(__file__), ".camera_ftps_cert.pem"))
-KEY_FILE = os.environ.get("CAMERA_FTPS_KEY",
-                          os.path.join(os.path.dirname(__file__), ".camera_ftps_key.pem"))
+
+# Canonical passive-port range: 30000-30009 (10 concurrent transfers).
+_pasv_ports = os.environ.get("CAMERA_FTPS_PASV_PORTS", "").strip()
+if "-" in _pasv_ports:
+    try:
+        _p_min, _p_max = _pasv_ports.split("-", 1)
+        PASV_MIN = int(_p_min.strip())
+        PASV_MAX = int(_p_max.strip())
+    except ValueError:
+        PASV_MIN = int(os.environ.get("CAMERA_FTPS_PASV_MIN", "30000"))
+        PASV_MAX = int(os.environ.get("CAMERA_FTPS_PASV_MAX", "30009"))
+else:
+    PASV_MIN = int(os.environ.get("CAMERA_FTPS_PASV_MIN", "30000"))
+    PASV_MAX = int(os.environ.get("CAMERA_FTPS_PASV_MAX", "30009"))
+
+CERT_FILE = (
+    os.environ.get("CAMERA_FTPS_CERTFILE")
+    or os.environ.get("CAMERA_FTPS_CERT")
+    or os.path.join(os.path.dirname(__file__), ".camera_ftps_cert.pem")
+)
+KEY_FILE = (
+    os.environ.get("CAMERA_FTPS_KEYFILE")
+    or os.environ.get("CAMERA_FTPS_KEY")
+    or os.path.join(os.path.dirname(__file__), ".camera_ftps_key.pem")
+)
 TMP_ROOT = os.environ.get("CAMERA_FTPS_TMP",
                           os.path.join(os.path.dirname(__file__), ".camera_ftps_tmp"))
-INGEST_TIMEOUT = float(os.environ.get("CAMERA_SFTP_INGEST_TIMEOUT", "120"))
+INGEST_TIMEOUT = float(
+    os.environ.get("CAMERA_FTPS_INGEST_TIMEOUT")
+    or os.environ.get("CAMERA_SFTP_INGEST_TIMEOUT", "120")
+)
 # Write-only permission set: e=cd, l=list, m=mkdir, w=store, T=set-modtime.
 # Deliberately NO r(retrieve), d(delete), f(rename).
 PERMS = "elmwT"
@@ -152,36 +176,88 @@ class _Authorizer:
         pass
 
 
+class _CameraFS(AbstractedFS):
+    """Virtual filesystem that normalizes RFC-959 paths across platforms.
+    AbstractedFS.ftpnorm in pyftpdlib checks os.path.isabs on virtual paths,
+    which falsely evaluates to False on Windows for leading-slash paths ('/foo.jpg'),
+    causing pyftpdlib to collapse uploads onto '/' (the directory) and fail with
+    550 Permission denied. _CameraFS normalizes virtual paths using POSIX semantics
+    while guaranteeing that mapped filesystem paths remain safely chrooted inside
+    the user's home directory.
+    """
+
+    def ftpnorm(self, ftppath: str) -> str:
+        clean = ftppath.replace("\\", "/")
+        if len(clean) >= 2 and clean[1] == ":":
+            clean = clean[2:]
+        if clean.startswith("/"):
+            p = posixpath.normpath(clean)
+        else:
+            p = posixpath.normpath(posixpath.join(self.cwd, clean))
+        while p.startswith("//"):
+            p = p[1:]
+        if not p.startswith("/"):
+            p = "/" + p
+        return p
+
+
+class _BoundedDTPHandler(TLS_DTPHandler):
+    """Streaming DTP handler that enforces camera_ingest.MAX_BYTES in real-time,
+    and performs synchronous durable ingest before allowing the 226 success response
+    to be returned to the camera."""
+    def handle_read(self):
+        super().handle_read()
+        if self.tot_bytes_received > camera_ingest.MAX_BYTES:
+            logger.warning("ftps: upload exceeded size limit (%s bytes), aborting connection", self.tot_bytes_received)
+            self._resp = ("552 Exceeded maximum file size.", logger.warning)
+            self.transfer_finished = False
+            self.close()
+
+    def close(self):
+        # Intercept before responding with 226 Transfer complete
+        if not self._closed and self.transfer_finished and self.receive and self.file_obj is not None:
+            filename = self.file_obj.name
+            binding = getattr(self.cmd_channel, "maja_binding", None)
+            ctx = getattr(self.cmd_channel, "maja_ctx", None)
+            ingest_ok = False
+            if binding and ctx:
+                try:
+                    if not self.file_obj.closed:
+                        self.file_obj.close()
+                    with open(filename, "rb") as f:
+                        data = f.read()
+                    fname = os.path.basename(filename)
+                    res = ctx.call(
+                        camera_ingest.ingest_bytes(ctx.db, binding, data, fname,
+                                                   client_ip=getattr(self.cmd_channel, "remote_ip", "")),
+                        timeout=INGEST_TIMEOUT)
+                    ingest_ok = bool(res and res.get("ok"))
+                except Exception:
+                    logger.exception("ftps: durable ingest failed for %s", filename)
+                    ingest_ok = False
+            if not ingest_ok:
+                self._resp = ("451 Ingestion and durable storage failed.", logger.error)
+                self.transfer_finished = False
+        super().close()
+
+
 class _Handler(TLS_FTPHandler):
+    abstracted_fs = _CameraFS
+    dtp_handler = _BoundedDTPHandler
     maja_ctx: Optional[_Ctx] = None
 
     def on_file_received(self, file):
-        binding = getattr(self, "maja_binding", None)
-        data = None
+        # File has already been durably ingested in DTPHandler before 226 was acknowledged
         try:
-            with open(file, "rb") as f:
-                data = f.read()
-        except Exception:
-            logger.exception("ftps: could not read received file")
-        finally:
-            try:
+            if os.path.exists(file):
                 os.remove(file)
-            except Exception:
-                pass
-        if not (binding and data and self.maja_ctx):
-            return
-        fname = os.path.basename(file)
-        try:
-            self.maja_ctx.call(
-                camera_ingest.ingest_bytes(self.maja_ctx.db, binding, data, fname,
-                                           client_ip=getattr(self, "remote_ip", "")),
-                timeout=INGEST_TIMEOUT)
         except Exception:
-            logger.exception("ftps: ingest failed for %s", fname)
+            pass
 
     def on_incomplete_file_received(self, file):
         try:
-            os.remove(file)
+            if os.path.exists(file):
+                os.remove(file)
         except Exception:
             pass
 

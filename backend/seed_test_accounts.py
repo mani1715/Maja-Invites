@@ -132,31 +132,42 @@ async def seed_test_accounts(db) -> None:
         await db.users.update_one({"email": TEST_USER_EMAIL},
             {"$set": {"password_hash": pw, "is_test": True, "status": "active"}})
 
-    # 2) Photographer (built from the Admin model so login works) ----------
+    # 2) Photographers (built from Admin model so /auth login works for both) --
     try:
         from models import Admin, AdminRole, AdminStatus
     except Exception as e:
         logger.warning("[test-accounts] cannot import Admin model: %s", e)
         return
 
-    studio = await db.admins.find_one({"email": TEST_STUDIO_EMAIL}, {"_id": 0})
-    if not studio:
-        adm = Admin(email=TEST_STUDIO_EMAIL, password_hash=pw, name="Test Studio",
-                    role=AdminRole.ADMIN, status=AdminStatus.ACTIVE,
-                    phone="+910000000001", self_signup=True).model_dump()
-        adm["is_test"] = True
-        adm["account_type"] = "photographer"
-        adm["directory_listed"] = True
-        adm["service_cities"] = ["hyderabad", "bengaluru"]
-        adm["bio"] = "Test studio account for owner dogfooding."
-        await db.admins.insert_one(adm)
-        studio_id = adm["id"]
-        logger.info("[test-accounts] created photographer %s", TEST_STUDIO_EMAIL)
-    else:
-        studio_id = studio["id"]
-        await db.admins.update_one({"email": TEST_STUDIO_EMAIL},
-            {"$set": {"password_hash": pw, "is_test": True, "status": "active",
-                      "directory_listed": True}})
+    for email_to_seed, name_to_seed in [
+        (TEST_STUDIO_EMAIL, "Test Studio"),
+        (TEST_USER_EMAIL, "Test User"),
+    ]:
+        studio = await db.admins.find_one({"email": email_to_seed}, {"_id": 0})
+        if not studio:
+            adm = Admin(email=email_to_seed, password_hash=pw, name=name_to_seed,
+                        role=AdminRole.ADMIN, status=AdminStatus.ACTIVE,
+                        phone="+910000000001", self_signup=True).model_dump()
+            adm["is_test"] = True
+            adm["account_type"] = "photographer"
+            adm["directory_listed"] = True
+            adm["service_cities"] = ["hyderabad", "bengaluru"]
+            adm["bio"] = f"{name_to_seed} account for owner dogfooding."
+            await db.admins.insert_one(adm)
+            studio_id = adm["id"]
+            logger.info("[test-accounts] created photographer %s", email_to_seed)
+        else:
+            studio_id = studio["id"]
+            await db.admins.update_one({"email": email_to_seed},
+                {"$set": {"password_hash": pw, "is_test": True, "status": "active",
+                          "directory_listed": True}})
+
+        await _comp_subscription(db, studio_id, "invitation", "Enterprise", now,
+                                 {"features": _INVITATION_FEATURES})
+        await _comp_subscription(db, studio_id, "storage", "Enterprise", now,
+                                 {"storage_gb": 5120})
+        await _comp_subscription(db, studio_id, "backup", "Plus", now,
+                                 {"storage_gb": 500, "features": _BACKUP_FEATURES})
 
     # comp PREMIUM portfolio plan. is_active=False so it never shows as a
     # purchasable card on the plans page (was appearing as "Studio ₹0"); the
@@ -186,14 +197,7 @@ async def seed_test_accounts(db) -> None:
             "is_test": True, "created_at": now.isoformat(),
         })
 
-    # comp the other three products too, so the test studio has EVERYTHING free
-    # (invitation features, storage, cloud backup) — not just the portfolio.
-    await _comp_subscription(db, studio_id, "invitation", "Enterprise", now,
-                             {"features": _INVITATION_FEATURES})
-    await _comp_subscription(db, studio_id, "storage", "Enterprise", now,
-                             {"storage_gb": 5120})
-    await _comp_subscription(db, studio_id, "backup", "Plus", now,
-                             {"storage_gb": 500, "features": _BACKUP_FEATURES})
+
 
     # portfolio profile so the directory has styles/services/location -------
     if not await db.portfolio_profiles.find_one({"id": studio_id}, {"_id": 0}):

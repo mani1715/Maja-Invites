@@ -42,7 +42,7 @@ export default function StudioBackup() {
   const [err, setErr] = useState(null);
 
   const { data, error, loading, reload } = useAsync(() => Promise.all([
-    api.backupStorage().then((r) => r.data).catch(() => null),
+    api.backupStorage().then((r) => r.data),
     api.backupFiles(q ? { q } : {}).then((r) => r.data).catch(() => null),
     api.backupRecycleBin().then((r) => r.data).catch(() => null),
     api.backupHistory().then((r) => r.data).catch(() => null),
@@ -124,10 +124,10 @@ export default function StudioBackup() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Used', value: loading ? '—' : bytes(st?.used_bytes) },
-        { label: 'Quota', value: loading ? '—' : (st?.quota_gb ? `${st.quota_gb} GB` : 'None') },
-        { label: 'Files', value: loading ? '—' : numberFmt.format(allFiles.length) },
-        { label: 'Last backup', value: loading ? '—' : (lastBackup ? relTime(lastBackup) : 'Never') },
+        { label: 'Used', value: loading || error ? '—' : bytes(st?.used_bytes) },
+        { label: 'Quota', value: loading || error ? '—' : (st?.quota_gb ? `${st.quota_gb} GB` : 'None') },
+        { label: 'Files', value: loading || error ? '—' : numberFmt.format(allFiles.length) },
+        { label: 'Last backup', value: loading || error ? '—' : (lastBackup ? relTime(lastBackup) : 'Never') },
       ]}
       />
 

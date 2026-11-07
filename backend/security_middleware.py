@@ -339,6 +339,7 @@ class BotDetectionMiddleware(BaseHTTPMiddleware):
             "/api/invite",                       # invitation fetch
             "/api/public",                       # public read endpoints
             "/api/uploads/",                     # served image/audio files
+            "/api/media",                        # media drive & gallery images
             "/api/ws/",                          # WebSocket connects
             "/api/rsvp",                         # guest RSVP
             "/api/payments/razorpay-webhook",    # razorpay webhook

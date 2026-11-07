@@ -31,7 +31,7 @@ export default function AdminMarketplace() {
   const [err, setErr] = useState(null);
 
   const { data, error, loading, reload } = useAsync(() => Promise.all([
-    api.adminCampaigns().then((r) => r.data).catch(() => null),
+    api.adminCampaigns().then((r) => r.data),
     api.industryAnalytics().then((r) => r.data).catch(() => null),
     api.currencyRates().then((r) => r.data).catch(() => null),
     // Push is genuinely optional — no FCM_SERVER_KEY in production means the
@@ -61,10 +61,10 @@ export default function AdminMarketplace() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Campaigns', value: loading ? '—' : numberFmt.format(camp?.totals?.campaigns ?? campaigns.length) },
-        { label: 'Open', value: loading ? '—' : numberFmt.format(camp?.totals?.open ?? 0) },
-        { label: 'Brands', value: loading ? '—' : numberFmt.format(camp?.totals?.brands ?? brands.length) },
-        { label: 'Booking revenue', value: loading ? '—' : rupees.format(ind?.revenue ?? 0) },
+        { label: 'Campaigns', value: loading || error ? '—' : numberFmt.format(camp?.totals?.campaigns ?? campaigns.length) },
+        { label: 'Open', value: loading || error ? '—' : numberFmt.format(camp?.totals?.open ?? 0) },
+        { label: 'Brands', value: loading || error ? '—' : numberFmt.format(camp?.totals?.brands ?? brands.length) },
+        { label: 'Booking revenue', value: loading || error ? '—' : rupees.format(ind?.revenue ?? 0) },
       ]}
       />
 

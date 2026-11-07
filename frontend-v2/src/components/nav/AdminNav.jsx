@@ -1,3 +1,4 @@
+import { ADMIN_NAV } from './navigation';
 import { useNavigate } from 'react-router-dom';
 import RailNav from './RailNav';
 import { useAuth } from '@/context/AuthContext';
@@ -13,40 +14,7 @@ import './nav.css';
 // and the low-frequency admin tools (Investigation lives here, not up top).
 // Every entry below is a built page in THIS app (verified against App.jsx) —
 // the console defers nothing to the legacy /super-admin/* screens.
-const DEFS = [
-  { title: 'Operations', items: [
-    ['Console', '/admin/dashboard'],
-    ['Events', '/admin/events'],
-    ['Face ops', '/admin/face-ops'],
-    ['Fulfillment', '/admin/fulfillment'],
-    ['Build queue', '/admin/build-queue'],
-    ['Delivery', '/admin/delivery'],
-    ['QR analytics', '/admin/qr-analytics'],
-  ] },
-  { title: 'Customer', items: [
-    ['Support', '/admin/support'],
-    ['Disputes', '/admin/disputes'],
-    ['Approvals', '/admin/approvals'],
-    ['Moderation', '/admin/moderation'],
-  ] },
-  { title: 'Money', items: [
-    ['Pricing hub', '/admin/pricing'],
-    ['Profitability', '/admin/profitability'],
-    ['Business intelligence', '/admin/bi'],
-    ['Marketplace', '/admin/marketplace'],
-    ['Feature wishes', '/admin/feature-wishes'],
-  ] },
-  { title: 'Platform', items: [
-    ['System health', '/admin/system-health'],
-    ['Feature flags', '/admin/feature-flags'],
-    ['Storage', '/admin/storage'],
-    ['Storage pool', '/admin/storage-pool'],
-    ['Cameras', '/admin/cameras'],
-    ['Access control', '/admin/access-control'],
-    ['Investigation', '/admin/investigation'],
-    ['Food donation', '/admin/food-donation'],
-  ] },
-];
+const DEFS = ADMIN_NAV;
 
 const THEME = {
   border: '#362b49', fg: '#e9e3f3', dim: '#c7bed5', label: '#c4b5fd',
@@ -68,8 +36,8 @@ export default function AdminNav({ active = '' }) {
     <RailNav
       className="pxg-anav"
       brandHref="/admin/dashboard"
-      brandGlyph="M"
-      brandLabel="Super Admin"
+      brandGlyph="P"
+      brandLabel="Pixora Console"
       brandColor="#c4b5fd"
       groups={groups}
       footer={{ href: '/auth', label: 'Log out', glyph: '⎙', onClick: onLogout }}

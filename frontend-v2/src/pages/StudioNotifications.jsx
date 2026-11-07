@@ -10,7 +10,7 @@ export default function StudioNotifications() {
   const [toast, flash] = useFlash();
 
   const { data, error, loading, reload } = useAsync(() =>
-    studioOps.studioNotifications().then((r) => r.data).catch(() => ({ notifications: [], unread_count: 0 }))
+    studioOps.studioNotifications().then((r) => r.data)
   );
 
   const notifications = data?.notifications || [];
@@ -65,9 +65,9 @@ export default function StudioNotifications() {
     >
       <StatRow
         items={[
-          { label: 'Unread Notifications', value: loading ? '—' : unreadCount },
-          { label: 'Total Alerts', value: loading ? '—' : notifications.length },
-          { label: 'System Status', value: 'Normal' },
+          { label: 'Unread Notifications', value: loading || error ? '—' : unreadCount },
+          { label: 'Total Alerts', value: loading || error ? '—' : notifications.length },
+          
         ]}
       />
 

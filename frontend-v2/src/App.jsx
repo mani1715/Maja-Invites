@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from '
 import { AuthProvider } from '@/context/AuthContext';
 import { RequireStudio, RequireSuperAdmin } from '@/components/RouteGuards';
 import CookieConsent from '@/components/CookieConsent';
+import PageExperience, { SkipContent } from '@/components/PageExperience';
 
 const Landing = lazy(() => import('@/pages/Landing'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
@@ -53,6 +54,7 @@ const StudioWhiteLabel = lazy(() => import('@/pages/StudioWhiteLabel'));
 const StudioCalendar = lazy(() => import('@/pages/StudioCalendar'));
 const StudioStorage = lazy(() => import('@/pages/StudioStorage'));
 const StudioInvitations = lazy(() => import('@/pages/StudioInvitations'));
+const StudioGalleryNew = lazy(() => import('@/pages/StudioGalleryNew'));
 const StudioClients = lazy(() => import('@/pages/StudioClients'));
 const StudioNotifications = lazy(() => import('@/pages/StudioNotifications'));
 const StudioMessages = lazy(() => import('@/pages/StudioMessages'));
@@ -100,6 +102,7 @@ const AdminEvents = lazy(() => import('@/pages/AdminEvents'));
 const AdminFoodDonation = lazy(() => import('@/pages/AdminFoodDonation'));
 const AdminAccessControl = lazy(() => import('@/pages/AdminAccessControl'));
 const AdminApprovals = lazy(() => import('@/pages/AdminApprovals'));
+const AdminCustomRequests = lazy(() => import('@/pages/AdminCustomRequests'));
 const Community = lazy(() => import('@/pages/Community'));
 const Reels = lazy(() => import('@/pages/Reels'));
 const PixoraProfile = lazy(() => import('@/pages/PixoraProfile'));
@@ -109,6 +112,7 @@ const CoupleAccess = lazy(() => import('@/pages/CoupleAccess'));
 const GuestArrival = lazy(() => import('@/pages/GuestArrival'));
 const ComingSoon = lazy(() => import('@/pages/ComingSoon'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
+const PublicStandaloneGallery = lazy(() => import('@/pages/PublicStandaloneGallery'));
 const Terms = lazy(() => import('@/pages/legal/Terms'));
 const Privacy = lazy(() => import('@/pages/legal/Privacy'));
 const RefundPolicy = lazy(() => import('@/pages/legal/RefundPolicy'));
@@ -116,7 +120,7 @@ const Cookies = lazy(() => import('@/pages/legal/Cookies'));
 const DataRetention = lazy(() => import('@/pages/legal/DataRetention'));
 
 function RouteLoader() {
-  return <div className="mj-loader">Loading MAJA Invites…</div>;
+  return <div className="mj-loader" role="status">Opening your workspace…</div>;
 }
 
 // Legacy /studio/profile/* URLs (the pre-v2 panel, and anything a studio
@@ -200,19 +204,22 @@ function LegacyPortfolioRedirect() {
 function ScrollManager() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
+    let timer;
     if (hash) {
       // lazy pages mount async — retry briefly until the anchor exists
-      const id = hash.slice(1);
+      let id = hash.slice(1);
+      try { id = decodeURIComponent(id); } catch { /* keep malformed anchors literal */ }
       let tries = 0;
       const seek = () => {
         const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        else if (tries++ < 60) setTimeout(seek, 50);
+        if (el) el.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+        else if (tries++ < 60) timer = setTimeout(seek, 50);
       };
       seek();
     } else {
       window.scrollTo(0, 0);
     }
+    return () => clearTimeout(timer);
   }, [pathname, hash]);
   return null;
 }
@@ -223,9 +230,9 @@ export default function App() {
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         {/* WCAG 2.4.1 bypass block — keyboard/SR users skip the nav and land on
             the page's own <main id="main-content">. Visible only on focus. */}
-        <a href="#main-content" className="mj-skip-link">Skip to content</a>
+        <SkipContent />
         <ScrollManager />
-        <Suspense fallback={<RouteLoader />}>
+        <PageExperience><Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/pricing" element={<Pricing />} />
@@ -244,6 +251,7 @@ export default function App() {
             <Route path="/invite/:slug/photos" element={<ToFindMyPhotos />} />
             <Route path="/invite/:slug/arrival" element={<GuestArrival />} />
             <Route path="/invite/:slug/:eventType" element={<InviteEventOrNumber />} />
+            <Route path="/gallery/:slug" element={<PublicStandaloneGallery />} />
             <Route path="/save-the-date/:slug" element={<SaveTheDate />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
@@ -251,10 +259,8 @@ export default function App() {
             <Route path="/admin/dashboard" element={<RequireSuperAdmin><AdminDashboard /></RequireSuperAdmin>} />
             <Route path="/studio/dashboard" element={<RequireStudio><StudioDashboard /></RequireStudio>} />
             <Route path="/studio/profile/:profileId/gallery" element={<RequireStudio><StudioProfileGallery /></RequireStudio>} />
-            {/* Event creation is a MAJA-team action (Phase 2): photographers no
-                longer self-create; the API 403s a photographer POST. Old "new"
-                links land on the dashboard, where assigned events appear. */}
-            <Route path="/studio/wedding/new" element={<Navigate to="/studio/dashboard" replace />} />
+            {/* Self-create invitations for entitled studios */}
+            <Route path="/studio/wedding/new" element={<RequireStudio><StudioWeddingWizard /></RequireStudio>} />
             <Route path="/studio/wedding/:profileId/edit" element={<RequireStudio><StudioWeddingWizard /></RequireStudio>} />
             <Route path="/studio/wedding/:id" element={<RequireStudio><StudioWeddingDetail /></RequireStudio>} />
             {/* Per-wedding management tabs (grouped; see WeddingToolbar). */}
@@ -312,6 +318,7 @@ export default function App() {
             <Route path="/studio/storage" element={<RequireStudio><StudioStorage /></RequireStudio>} />
             <Route path="/studio/studio-storage" element={<RequireStudio><StudioStorage /></RequireStudio>} />
             <Route path="/studio/invitations" element={<RequireStudio><StudioInvitations /></RequireStudio>} />
+            <Route path="/studio/galleries/new" element={<RequireStudio><StudioGalleryNew /></RequireStudio>} />
             <Route path="/studio/clients" element={<RequireStudio><StudioClients /></RequireStudio>} />
             <Route path="/studio/notifications" element={<RequireStudio><StudioNotifications /></RequireStudio>} />
             <Route path="/studio/messages" element={<RequireStudio><StudioMessages /></RequireStudio>} />
@@ -379,6 +386,7 @@ export default function App() {
             <Route path="/admin/food-donation" element={<RequireSuperAdmin><AdminFoodDonation /></RequireSuperAdmin>} />
             <Route path="/admin/access-control" element={<RequireSuperAdmin><AdminAccessControl /></RequireSuperAdmin>} />
             <Route path="/admin/approvals" element={<RequireSuperAdmin><AdminApprovals /></RequireSuperAdmin>} />
+            <Route path="/admin/custom-requests" element={<RequireSuperAdmin><AdminCustomRequests /></RequireSuperAdmin>} />
             {/* Legacy /super-admin/* console URLs -> the v2 /admin/* console.
                 These were the owner's bookmarks; without these they 404. Every
                 legacy pricing alias collapses onto the single pricing hub, as
@@ -438,7 +446,6 @@ export default function App() {
             <Route path="/browse/*" element={<BrowseDesigns />} />
             <Route path="/themes" element={<Navigate to="/browse" replace />} />
             <Route path="/themes/:themeId" element={<BrowseDesigns />} />
-            <Route path="/themes/:themeId/gallery" element={<BrowseDesigns />} />
             <Route path="/themes/:themeId/events" element={<BrowseDesigns />} />
             <Route path="/themes/:themeId/events/:event" element={<BrowseDesigns />} />
             <Route path="/themes/:themeId/gallery" element={<BrowseDesigns mode="gallery" />} />
@@ -490,6 +497,9 @@ export default function App() {
                 has before subscribing — what will my site look like — could
                 only be answered from inside a paid account. */}
             <Route path="/portfolio-samples" element={<PortfolioSamples />} />
+            <Route path="/samples" element={<Navigate to="/portfolio-samples" replace />} />
+            <Route path="/studio/gallery-new" element={<Navigate to="/studio/galleries/new" replace />} />
+            <Route path="/studio/gallery" element={<Navigate to="/studio/galleries/new" replace />} />
             <Route path="/order/pending" element={<Navigate to="/studio/orders" replace />} />
             <Route path="/refund" element={<RefundPolicy />} />
             <Route path="/cookies" element={<Cookies />} />
@@ -497,7 +507,7 @@ export default function App() {
             <Route path="/soon" element={<ComingSoon />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Suspense>
+        </Suspense></PageExperience>
         {/* GDPR/DPDP consent. Inside the router (it hides itself on guest
             invitation routes), outside <Routes> so it survives navigation. */}
         <CookieConsent />

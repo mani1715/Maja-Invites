@@ -1,3 +1,4 @@
+import { useState } from 'react';
 // Route guards for identity-protected surfaces.
 //
 // Without these, a signed-out visitor on /studio/* saw the page shell with
@@ -9,7 +10,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 function GuardLoader() {
-  return <div className="mj-loader">Checking your session…</div>;
+  return <div className="mj-loader" role="status">Checking your session…</div>;
 }
 
 /** Studio/photographer surfaces — requires the admin Bearer identity. */
@@ -17,13 +18,10 @@ export function RequireStudio({ children }) {
   const { admin, loading, token } = useAuth();
   const location = useLocation();
   if (loading) return <GuardLoader />;
-  // token-but-no-admin means /auth/me is still unresolved after boot retries;
-  // AuthContext only clears the token on a definitive 401/403, so treat a
-  // surviving token as signed-in and let the page's own error states handle
-  // a flaky backend rather than bouncing a valid session to the login page.
   if (!admin && !token) {
     return <Navigate to="/auth" replace state={{ from: location.pathname, persona: 'studio' }} />;
   }
+  if (!admin) return <SessionRecovery />;
   return children;
 }
 
@@ -38,5 +36,13 @@ export function RequireSuperAdmin({ children }) {
   if (admin && admin.role !== 'super_admin') {
     return <Navigate to="/studio/dashboard" replace />;
   }
+  if (!admin) return <SessionRecovery />;
   return children;
+}
+
+function SessionRecovery() {
+  const { refresh, logout } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('Your session could not be verified. Retry without losing your sign-in.');
+  return <main className="px-recovery"><p className="px-kicker">Connection interrupted</p><h1>Let’s reconnect your workspace.</h1><p role="status">{message}</p><div><button disabled={busy} onClick={async () => { setBusy(true); const result = await refresh(); setBusy(false); if (!result) setMessage('Still unable to connect. Please try again shortly.'); }}>{busy ? 'Connecting…' : 'Retry connection'}</button><button onClick={logout}>Sign out</button></div></main>;
 }

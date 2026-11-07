@@ -171,7 +171,7 @@ export default function PhotographerDirectory() {
       </div>
 
       <footer className="mjd-footer">
-        <p>&copy; 2026 MAJA Invites</p>
+        <p>&copy; 2026 MAJA Invites &middot; Powered by metechq</p>
       </footer>
     </div>
   );

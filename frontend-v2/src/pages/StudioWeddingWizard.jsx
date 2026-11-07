@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import MobileNav from '@/components/nav/MobileNav';
 import StudioNav from '@/components/nav/StudioNav';
 import * as weddingsApi from '@/api/weddings';
@@ -7,6 +7,7 @@ import {
   THEMES, EVENT_TYPES, LANGUAGES, SECTION_GROUPS, EXPIRY_TYPES, MAX_EVENTS,
   blankEvent, emptyWedding, fromProfile, toPayload, validateStep,
 } from '@/lib/weddingSchema';
+import ImageFrameEditor from '@/components/invitations/ImageFrameEditor';
 import './StudioWeddingWizard.css';
 
 // The wedding create/edit wizard — the entry point for the entire studio
@@ -48,13 +49,21 @@ function useViewportWidth() {
 
 export default function StudioWeddingWizard() {
   const { profileId: routeId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const vw = useViewportWidth();
   const isMobile = vw < 900;
 
+  const initialTheme = searchParams.get('theme') || searchParams.get('design_id');
   const isNew = !routeId;
   const [profileId, setProfileId] = useState(routeId || null);
-  const [w, setW] = useState(emptyWedding);
+  const [w, setW] = useState(() => {
+    const base = emptyWedding();
+    if (isNew && initialTheme && THEMES.some((t) => t.id === initialTheme)) {
+      return { ...base, design_id: initialTheme };
+    }
+    return base;
+  });
   const [stepIdx, setStepIdx] = useState(0);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(!isNew);
@@ -126,9 +135,16 @@ export default function StudioWeddingWizard() {
       }
       const { data } = await weddingsApi.update(profileId, toPayload(w, { forCreate: false }));
       setServerProfile(data);
+      if (typeof data.version === 'number') {
+        setW((prev) => ({ ...prev, version: data.version }));
+      }
       setSavedAt(Date.now());
       return profileId;
     } catch (e) {
+      if (e?.response?.status === 409) {
+        setSaveError('Conflict: This invitation was updated in another session or window. Please refresh to load the latest changes.');
+        return null;
+      }
       const detail = e?.response?.data?.detail;
       setSaveError(
         Array.isArray(detail)
@@ -141,6 +157,33 @@ export default function StudioWeddingWizard() {
       setSaving(false);
     }
   }, [profileId, w, navigate]);
+
+  // Debounced autosave for drafts (step 1 saved, so profileId exists)
+  useEffect(() => {
+    if (!profileId || saving) return;
+    const timer = setTimeout(() => {
+      // Validate couple step before background autosave to avoid saving incomplete couple info
+      const e = validateStep('couple', w);
+      if (Object.keys(e).length === 0) {
+        weddingsApi.update(profileId, toPayload(w, { forCreate: false }))
+          .then(({ data }) => {
+            setServerProfile(data);
+            if (typeof data.version === 'number') {
+              setW((prev) => ({ ...prev, version: data.version }));
+            }
+            setSavedAt(Date.now());
+            setSaveError(null);
+          })
+          .catch((err) => {
+            if (err?.response?.status === 409) {
+              setSaveError('Conflict: Changes made elsewhere. Please refresh to keep in sync.');
+            }
+          });
+      }
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [profileId, w]);
 
   const goNext = async () => {
     const e = validateStep(step.id, w);
@@ -261,6 +304,16 @@ export default function StudioWeddingWizard() {
         <div className="wzd-head-side">
           {isPublished && <span className="wzd-pill wzd-pill--live">Published</span>}
           {!isPublished && profileId && <span className="wzd-pill">Draft</span>}
+          {profileId && (
+            <Link
+              to={`/studio/invitations?tab=custom&profile_id=${profileId}`}
+              className="wzd-btn wzd-btn--ghost"
+              style={{ fontSize: 12, padding: '4px 10px', textDecoration: 'none' }}
+              title="Request design help for this invitation"
+            >
+              Need Design Help?
+            </Link>
+          )}
           <SaveState saving={saving} savedAt={savedAt} />
         </div>
       </header>
@@ -483,12 +536,45 @@ function StepCouple({ w, set, errors }) {
 }
 
 function StepStory({ w, set, errors, profileId }) {
+  const updateTransform = (slotKey, transformData) => {
+    set({
+      frame_transforms: {
+        ...(w.frame_transforms || {}),
+        [slotKey]: transformData,
+      },
+    });
+  };
+
   return (
     <>
       <div className="wzd-photos">
-        <PhotoSlot label="Bride" profileId={profileId} url={w.bride_photo_url} onChange={(u) => set({ bride_photo_url: u })} />
-        <PhotoSlot label="Groom" profileId={profileId} url={w.groom_photo_url} onChange={(u) => set({ groom_photo_url: u })} />
-        <PhotoSlot label="Couple" profileId={profileId} url={w.couple_photo_url} onChange={(u) => set({ couple_photo_url: u })} />
+        <PhotoSlot
+          label="Bride"
+          slotKey="bride"
+          profileId={profileId}
+          url={w.bride_photo_url}
+          transform={w.frame_transforms?.bride}
+          onTransformChange={(t) => updateTransform('bride', t)}
+          onChange={(u) => set({ bride_photo_url: u })}
+        />
+        <PhotoSlot
+          label="Groom"
+          slotKey="groom"
+          profileId={profileId}
+          url={w.groom_photo_url}
+          transform={w.frame_transforms?.groom}
+          onTransformChange={(t) => updateTransform('groom', t)}
+          onChange={(u) => set({ groom_photo_url: u })}
+        />
+        <PhotoSlot
+          label="Couple"
+          slotKey="couple"
+          profileId={profileId}
+          url={w.couple_photo_url}
+          transform={w.frame_transforms?.couple}
+          onTransformChange={(t) => updateTransform('couple', t)}
+          onChange={(u) => set({ couple_photo_url: u })}
+        />
       </div>
 
       <div className="wzd-grid">
@@ -512,9 +598,10 @@ function StepStory({ w, set, errors, profileId }) {
   );
 }
 
-function PhotoSlot({ label, profileId, url, onChange }) {
+function PhotoSlot({ label, slotKey, profileId, url, transform, onTransformChange, onChange }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [editingFrame, setEditingFrame] = useState(false);
   const inputRef = useRef(null);
   const inputId = `photo-${label.toLowerCase()}`;
 
@@ -539,12 +626,30 @@ function PhotoSlot({ label, profileId, url, onChange }) {
     }
   };
 
+  const x = transform?.desktop?.x ?? transform?.x ?? 50;
+  const y = transform?.desktop?.y ?? transform?.y ?? 50;
+  const scale = transform?.desktop?.scale ?? transform?.scale ?? 1;
+  const rotate = transform?.desktop?.rotate ?? transform?.rotate ?? 0;
+  const fit = transform?.desktop?.fit ?? transform?.fit ?? 'cover';
+
   return (
     <div className="wzd-photo">
       <p className="wzd-photo-label">{label}</p>
-      <div className="wzd-photo-frame">
+      <div className="wzd-photo-frame" style={{ overflow: 'hidden' }}>
         {url ? (
-          <img src={url} alt={`${label} portrait`} />
+          <img
+            src={url}
+            alt={`${label} portrait`}
+            style={{
+              objectFit: fit,
+              objectPosition: `${x}% ${y}%`,
+              transform: `scale(${scale}) rotate(${rotate}deg)`,
+              transformOrigin: `${x}% ${y}%`,
+              width: '100%',
+              height: '100%',
+              display: 'block',
+            }}
+          />
         ) : (
           <span className="wzd-photo-empty">No photo yet</span>
         )}
@@ -564,12 +669,32 @@ function PhotoSlot({ label, profileId, url, onChange }) {
           />
         </label>
         {url && (
-          <button type="button" className="wzd-btn wzd-btn--ghost wzd-btn--sm" onClick={() => onChange('')}>
-            Remove
-          </button>
+          <>
+            <button
+              type="button"
+              className="wzd-btn wzd-btn--ghost wzd-btn--sm"
+              onClick={() => setEditingFrame(true)}
+              title="Crop, zoom, pan and rotate"
+            >
+              Adjust Frame
+            </button>
+            <button type="button" className="wzd-btn wzd-btn--ghost wzd-btn--sm" onClick={() => onChange('')}>
+              Remove
+            </button>
+          </>
         )}
       </div>
       {err && <p className="wzd-err" role="alert">{err}</p>}
+
+      {editingFrame && url && (
+        <ImageFrameEditor
+          imageUrl={url}
+          title={`Adjust ${label} Photo Frame`}
+          initialTransform={transform}
+          onSave={onTransformChange}
+          onClose={() => setEditingFrame(false)}
+        />
+      )}
     </div>
   );
 }

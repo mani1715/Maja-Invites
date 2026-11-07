@@ -162,21 +162,40 @@ class _WriteHandle(paramiko.SFTPHandle):
         self._iface = iface
         self._vname = vname
         self._tmp_path = tmp_path
+        self._bytes_written = 0
+        self._aborted = False
         self.writefile = open(tmp_path, "wb")   # paramiko writes via self.writefile
 
+    def write(self, offset, data):
+        self._bytes_written += len(data or b"")
+        if self._bytes_written > camera_ingest.MAX_BYTES:
+            self._aborted = True
+            return paramiko.SFTP_FAILURE
+        try:
+            self.writefile.seek(offset)
+            self.writefile.write(data)
+            return paramiko.SFTP_OK
+        except Exception:
+            self._aborted = True
+            return paramiko.SFTP_FAILURE
+
     def close(self):
+        ok = False
         try:
             try:
                 self.writefile.close()
             except Exception:
                 pass
-            self._iface._ingest_tmp(self._vname, self._tmp_path)
+            if not self._aborted:
+                ok = self._iface._ingest_tmp(self._vname, self._tmp_path)
         finally:
             try:
                 if os.path.exists(self._tmp_path):
                     os.remove(self._tmp_path)
             except Exception:
                 pass
+        if not ok:
+            raise OSError("Durable ingestion and storage failed")
         return paramiko.SFTP_OK
 
 
@@ -208,20 +227,22 @@ class _SFTPIface(paramiko.SFTPServerInterface):
             logger.exception("open failed")
             return paramiko.SFTP_FAILURE
 
-    def _ingest_tmp(self, vname: str, tmp_path: str):
+    def _ingest_tmp(self, vname: str, tmp_path: str) -> bool:
         try:
             with open(tmp_path, "rb") as f:
                 data = f.read()
         except Exception:
             logger.exception("could not read staged upload")
-            return
+            return False
         try:
-            self.ctx.call(
+            res = self.ctx.call(
                 camera_ingest.ingest_bytes(self.ctx.db, self.binding, data, vname,
                                            client_ip=self._peer_ip),
                 timeout=INGEST_TIMEOUT)
+            return bool(res and res.get("ok"))
         except Exception:
             logger.exception("ingest failed for %s", vname)
+            return False
 
     # -- stat/list: enough for a camera to probe the remote dir -----------
     def _dir_attr(self):

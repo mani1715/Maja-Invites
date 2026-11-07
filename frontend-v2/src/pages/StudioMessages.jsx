@@ -27,7 +27,7 @@ export default function StudioMessages() {
   const endRef = useRef(null);
 
   const { data, error, loading, reload } = useAsync(
-    () => dm.threads().then((r) => r.data).catch(() => ({ threads: [] })),
+    () => dm.threads().then((r) => r.data),
   );
 
   const threads = data?.threads || data?.items || (Array.isArray(data) ? data : []);

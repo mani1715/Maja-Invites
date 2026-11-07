@@ -1,25 +1,6 @@
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import Placeholder from './_Placeholder';
-
-// Shared target for nav items whose screen isn't built yet in this P0 app
-// (see nav/RailNav.jsx `soon()` and pages/MANIFEST.md). Keeps every menu
-// item clickable and visible instead of hiding it. Label comes from the
-// `f` query param the nav links set, or route state if a caller prefers that.
+import { Link, useSearchParams } from 'react-router-dom';
+import MarketingNav from '@/components/nav/MarketingNav';
 export default function ComingSoon() {
-  const { state } = useLocation();
   const [params] = useSearchParams();
-  const label = state?.label || params.get('f') || 'This page';
-  return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, display: 'flex' }}>
-        <Placeholder title={label} route="Not built yet in this preview." />
-      </div>
-      <Link
-        to="/"
-        style={{ margin: '0 auto 40px', fontSize: 13.5, color: 'var(--mj-primary)', textDecoration: 'none' }}
-      >
-        ← Back home
-      </Link>
-    </div>
-  );
+  return <><MarketingNav /><main className="px-recovery"><p className="px-kicker">Not available yet</p><h1>{params.get('f') || 'Something new is taking shape.'}</h1><p>This feature isn’t available yet. You can explore the current tools or ask our team for help.</p><div><Link to="/features">Explore features</Link><Link to="/support">Contact support</Link></div></main></>;
 }

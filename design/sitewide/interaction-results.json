@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "mobile dialog Escape restores focus; admin Cameras searchable",
+    "admin desktop/mobile navigation parity",
+    "studio navigation filtering, active state and route change",
+    "unverified admin session is closed without losing token",
+    "session retry restores authenticated workspace",
+    "ordinary studio account cannot open admin console",
+    "signed out protected route opens sign-in",
+    "404 navigation and skip-to-content focus",
+    "marketing Escape focus return"
+  ],
+  "page_errors": []
+}

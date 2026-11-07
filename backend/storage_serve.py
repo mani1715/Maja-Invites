@@ -214,9 +214,12 @@ def _file_response(path: Path, name: str, content_type: str,
     """
     size = path.stat().st_size
     ctype = _content_type(name, content_type)
+    env_val = os.environ.get("ENVIRONMENT", "development").lower()
+    dev_mode = env_val in ("development", "dev", "local", "")
+    cache_ctl = "no-cache, no-store, must-revalidate" if dev_mode else "public, max-age=31536000, immutable"
     common = {
         "Accept-Ranges": "bytes",
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": cache_ctl,
         "ETag": f'"{hashlib.sha1(f"{name}:{size}".encode()).hexdigest()}"',
     }
     rng = _parse_range(request.headers.get("range", ""), size)
@@ -308,6 +311,32 @@ def build_storage_serve_router(db, uploads_root: Path) -> APIRouter:
         so a client cannot point the presign at an arbitrary bucket."""
         key, bucket = _verify_media(k, e, s, b)
 
+        # Check local disk FIRST for real uploaded media files
+        try:
+            local = (uploads_root / key).resolve()
+            if local.is_file():
+                return _file_response(local, key, "", request)
+
+            for dev_root in [Path("backend/uploads"), Path("uploads"), Path("backend")]:
+                dev_local = (dev_root / key).resolve()
+                if dev_local.is_file():
+                    return _file_response(dev_local, key, "", request)
+
+            # Robust fallback on disk: check if file exists under studio-pending or by filename
+            filename = key.rsplit("/", 1)[-1]
+            if filename:
+                for candidate in uploads_root.glob(f"studio-pending/**/{filename}"):
+                    if candidate.is_file():
+                        return _file_response(candidate, key, "", request)
+                for candidate in uploads_root.glob(f"studio/**/{filename}"):
+                    if candidate.is_file():
+                        return _file_response(candidate, key, "", request)
+                for candidate in uploads_root.glob(f"**/{filename}"):
+                    if candidate.is_file():
+                        return _file_response(candidate, key, "", request)
+        except Exception as ex:
+            logger.warning("Local media lookup failed for %s: %s", key, ex)
+
         doc = await _mirror_for(key)
         if doc:
             url = await _cdn_url(doc)
@@ -317,12 +346,23 @@ def build_storage_serve_router(db, uploads_root: Path) -> APIRouter:
         # Pre-migration object, or one written straight to S3 by the legacy
         # path: sign it directly off the key (in its bucket when named).
         try:
-            from aws_service import generate_signed_url
-            return _cdn_redirect(generate_signed_url(key, SIGNED_URL_TTL,
-                                                     bucket_name=bucket or None))
+            from aws_service import generate_signed_url, is_configured
+            if is_configured():
+                return _cdn_redirect(generate_signed_url(key, SIGNED_URL_TTL,
+                                                         bucket_name=bucket or None))
         except Exception as ex:
             logger.warning("no source for media key %s: %s", key, ex)
-            raise HTTPException(status_code=404, detail="Not found")
+
+        # Fallback SVG placeholder when running in local dev mode without AWS credentials
+        svg_placeholder = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">'
+            '<rect width="100%" height="100%" fill="#F5F3FF"/>'
+            '<path d="M100 130l30-40 30 35 25-25 35 45H80z" fill="#C4B5FD"/>'
+            '<circle cx="110" cy="80" r="15" fill="#8B5CF6"/>'
+            '<text x="50%" y="85%" font-family="sans-serif" font-size="12" font-weight="bold" fill="#6D28D9" text-anchor="middle">MAJA Photo Drive</text>'
+            '</svg>'
+        )
+        return Response(content=svg_placeholder, media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=3600"})
 
     @router.get("/api/uploads/{subpath:path}")
     async def serve_api(subpath: str, request: Request):

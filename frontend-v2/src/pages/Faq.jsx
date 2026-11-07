@@ -203,7 +203,7 @@ export default function Faq() {
       </div>
 
       <footer className="mjq-footer">
-        <p>&copy; 2026 MAJA Invites</p>
+        <p>&copy; 2026 MAJA Invites &middot; Powered by metechq</p>
         <div className="mjq-footer-links">
           <Link to="/#story" data-mj-link>Our story</Link>
           <Link to={LINK.terms} data-mj-link>Terms</Link>

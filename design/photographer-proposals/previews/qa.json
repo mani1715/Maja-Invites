@@ -1,0 +1,110 @@
+[
+  {
+    "concept": "cinematic",
+    "viewport": "desktop",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "cinematic",
+    "viewport": "mobile",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "cinematic",
+    "viewport": "tablet",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "editorial",
+    "viewport": "desktop",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "editorial",
+    "viewport": "mobile",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "editorial",
+    "viewport": "tablet",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "gallery",
+    "viewport": "desktop",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "gallery",
+    "viewport": "mobile",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "gallery",
+    "viewport": "tablet",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "studio",
+    "viewport": "desktop",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "studio",
+    "viewport": "mobile",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  },
+  {
+    "concept": "studio",
+    "viewport": "tablet",
+    "broken_images": 0,
+    "overflow": false,
+    "errors": [],
+    "lightbox": true,
+    "demo_form": true
+  }
+]

@@ -1,3 +1,5 @@
+import LegacyPortfolioV2 from '../portfolio/LegacyPortfolioV2';
+import PortfolioRenderer from '@/portfolio/PortfolioRenderer';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import * as publicPortfolio from '@/api/publicPortfolio';
@@ -72,9 +74,10 @@ export default function PhotographerPublic() {
     const prevTitle = document.title;
     const brand = state.data?.white_label?.entitled
       ? (state.data.white_label.brand_name || null) : null;
+    const specialty = state.data?.renderer_version === 3 ? 'Photography Portfolio' : 'Wedding Photography Portfolio';
     document.title = brand
-      ? `${studioName} — Wedding Photography Portfolio · ${brand}`
-      : `${studioName} — Wedding Photography Portfolio · MAJA`;
+      ? `${studioName} — ${specialty} · ${brand}`
+      : `${studioName} — ${specialty} · MAJA`;
     return () => { document.title = prevTitle; };
   }, [state.data]);
 
@@ -98,6 +101,9 @@ export default function PhotographerPublic() {
       </div>
     );
   }
+
+  if (state.data.renderer_version === 2) return <LegacyPortfolioV2 data={state.data}/>;
+  if (state.data.renderer_version === 3) return <PortfolioRenderer data={state.data}/>;
 
   const { studio, profile, works, testimonials, rating, review_count, tier, sections, design_id } = state.data;
   // The portfolio response already carries white_label — the page just never
@@ -258,7 +264,7 @@ export default function PhotographerPublic() {
               `wl` is already null otherwise. */}
           {wl?.hide_maja_branding
             ? (wl.brand_name ? <span>{wl.brand_name}</span> : null)
-            : <span>Powered by MAJA Invites</span>}
+            : <span>Powered by metechq</span>}
         </div>
       </div>
     </div>

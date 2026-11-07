@@ -70,17 +70,32 @@ async def ingest_bytes(db, binding: Dict[str, Any], data: bytes,
     if not gc.get("enabled"):
         return await _reject("gallery_not_enabled")
 
+    # Re-verify credential validity at ingestion time to immediately prevent
+    # disabled or revoked sessions from committing transfers.
+    transfer = await db.camera_transfers.find_one({"id": transfer_id}, {"_id": 0})
+    if transfer and not cts.is_usable(transfer):
+        return await _reject("transfer_disabled_or_expired")
+
+    # Destination album snapshot: snapshot at ingest time, verifying album belongs to gallery
+    target_album_id = (transfer.get("target_album_id") if transfer else None) or binding.get("target_album_id")
+    if target_album_id:
+        alb = await db.gallery_albums.find_one({"id": target_album_id, "profile_id": profile_id}, {"_id": 0})
+        if not alb:
+            # Album was removed or unavailable -> route to main gallery root
+            target_album_id = None
+
     try:
         res = await gf._ingest_photo_bytes(
             db, profile, gc, data, fname, "",
             method=cts.UPLOAD_METHOD, uploader=f"camera:{transfer_id}",
-            max_bytes=MAX_BYTES)
+            max_bytes=MAX_BYTES, album_id=target_album_id)
     except Exception as e:      # pragma: no cover - defensive
         return await _reject(f"ingest_error:{str(e)[:120]}")
 
     if not res.get("ok"):
-        # photo_guard rejected it (not a photo / oversize / decode fail).
-        return await _reject(res.get("error") or res.get("message") or "not_a_photo")
+        # photo_guard rejected it (not a photo / oversize / decode fail / RAW).
+        reason = res.get("message") or res.get("error") or "not_a_photo"
+        return await _reject(reason)
 
     result = "duplicate" if res.get("duplicate") else "stored"
     photo_id = res.get("id")

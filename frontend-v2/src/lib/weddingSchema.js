@@ -168,6 +168,9 @@ export function emptyWedding() {
     link_expiry_type: 'days',
     link_expiry_value: 30,
     invitation_category: 'wedding',
+    frame_transforms: {},
+    background_settings: {},
+    version: 1,
   };
 }
 
@@ -292,7 +295,13 @@ export function toPayload(w, { forCreate }) {
     link_expiry_value:
       w.link_expiry_type === 'days' ? Number(w.link_expiry_value) || 30 : null,
     invitation_category: 'wedding',
+    frame_transforms: w.frame_transforms || {},
+    background_settings: w.background_settings || {},
   };
+
+  if (!forCreate && typeof w.version === 'number') {
+    body.version = w.version;
+  }
 
   if (forCreate) {
     // ProfileCreate has no Optional[] on these — send the model defaults.

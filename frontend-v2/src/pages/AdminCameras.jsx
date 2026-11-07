@@ -17,7 +17,7 @@ export default function AdminCameras() {
 
   const { data, error, loading, reload } = useAsync(
     () => Promise.all([
-      api.cameraTransfers().then((r) => r.data).catch(() => null),
+      api.cameraTransfers().then((r) => r.data),
       api.cameraEventsGlobal(100).then((r) => r.data).catch(() => null),
     ]).then(([transfers, events]) => ({ transfers, events })),
   );
@@ -43,10 +43,10 @@ export default function AdminCameras() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Active credentials', value: loading ? '—' : numberFmt.format(active) },
-        { label: 'Total (non-revoked)', value: loading ? '—' : numberFmt.format(transfers.length) },
-        { label: 'Recent events', value: loading ? '—' : numberFmt.format(events.length) },
-        { label: 'Rejected', value: loading ? '—' : numberFmt.format(rejected), hint: rejected ? 'Files that failed validation' : 'None' },
+        { label: 'Active credentials', value: loading || error ? '—' : numberFmt.format(active) },
+        { label: 'Total (non-revoked)', value: loading || error ? '—' : numberFmt.format(transfers.length) },
+        { label: 'Recent events', value: loading || error ? '—' : numberFmt.format(events.length) },
+        { label: 'Rejected', value: loading || error ? '—' : numberFmt.format(rejected), hint: rejected ? 'Files that failed validation' : 'None' },
       ]}
       />
 

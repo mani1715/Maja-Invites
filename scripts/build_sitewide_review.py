@@ -1,0 +1,25 @@
+"""Build a local, searchable screenshot review. No hosted publication."""
+import json,html
+from pathlib import Path
+from PIL import Image,ImageDraw
+ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'design/sitewide'
+rows=json.loads((OUT/'audit-results.json').read_text());routes=json.loads((OUT/'routes.json').read_text())
+by={}
+for r in rows:by.setdefault(r['component'],{})[r['width']]=r
+cards=[]
+for name,shots in sorted(by.items()):
+ r=next(iter(shots.values()));family=r['guard'] if r['guard']!='public' else ('community' if any(x in r['path'] for x in ['community','photographer','/p/']) else 'public')
+ images=''.join(f'<a href="{x["screenshot"]}" target="_blank"><img loading="lazy" src="{x["screenshot"]}" alt="{html.escape(name)} at {w}px"><span>{w}px · full capture ↗</span></a>' for w,x in sorted(shots.items(),reverse=True))
+ cards.append(f'<article data-name="{name.lower()} {r["path"].lower()}" data-family="{family}"><header><h2>{html.escape(name)}</h2><code>{html.escape(r["path"])}</code></header><div class="shots">{images}</div><p>Static / service-unavailable audit. Dynamic IDs are test identifiers.</p></article>')
+page='''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pixora — site-wide review</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f8f5fb;color:#292333;font:15px/1.6 system-ui}main{max-width:1500px;margin:auto;padding:48px 5%}h1{font:400 clamp(40px,5vw,72px)/1.08 Georgia;margin:20px 0;letter-spacing:-.04em}h2{font-size:18px;margin:0}p{max-width:80ch;color:#655e70}a{color:#6638a0}nav{position:sticky;top:0;background:#f8f5bff0;padding:16px 0;z-index:2;display:flex;gap:12px;flex-wrap:wrap}input,select{padding:14px;font:inherit;border:1px solid #d8cce5;border-radius:8px;background:white}input{flex:1;min-width:200px}section{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}article{border:1px solid #e4dce9;border-radius:16px;background:white;overflow:hidden}article header,article>p{padding:18px;margin:0}code{font-size:12px;overflow-wrap:anywhere}.shots{display:grid;grid-template-columns:3fr 1fr;gap:8px;background:#e9e2ef;padding:8px}.shots a{display:flex;flex-direction:column;min-width:0;font-size:11px;text-decoration:none}.shots img{width:100%;height:280px;object-fit:cover;object-position:top;background:white}.shots a:last-child img{object-fit:contain;object-position:top}.shots span{padding:8px 0}article[hidden]{display:none}.note{padding:24px;background:#eee5f7;border-radius:14px;margin:24px 0}.note p{margin:0}label{display:flex;align-items:center;gap:8px}@media(max-width:800px){section{grid-template-columns:1fr}.shots img{height:240px}}:focus-visible{outline:3px solid #6638a0;outline-offset:3px}
+</style><main><small>PIXORA / MAJA INVITES · LOCAL REVIEW</small><h1>One product.<br>A clearer experience.</h1><p>Lavender editorial public pages, focused sign-in, quieter studio and admin tools, searchable navigation and clearer recovery states.</p><div class="note"><p><strong>What these previews show:</strong> actual local application screenshots at desktop and mobile widths. APIs deliberately return unavailable responses, so most business screens show recovery states. These are not populated production-account previews or proof of end-to-end service correctness.</p></div><p><a href="../homepage/review.html">Animated homepage review ↗</a> · <a href="../photographer-proposals/ten-designs.html">Ten photographer designs ↗</a> · <a href="REVIEW.md">Changes and verification limits ↗</a></p><nav><input type="search" aria-label="Find a page" placeholder="Find a page or route…"><label>Area <select><option value="all">All areas</option><option>public</option><option>community</option><option>studio</option><option>admin</option></select></label></nav><p id="count" role="status"></p><section>'''+''.join(cards)+'''</section><script>const search=document.querySelector('input'),select=document.querySelector('select'),cards=[...document.querySelectorAll('article')];function filter(){let count=0;cards.forEach(c=>{c.hidden=!(c.dataset.name.includes(search.value.toLowerCase())&&(select.value==='all'||select.value===c.dataset.family));if(!c.hidden)count++});document.querySelector('#count').textContent=count+' page entries · desktop and mobile'}search.oninput=filter;select.onchange=filter;filter();</script></main></html>'''
+(OUT/'review.html').write_text(page,encoding='utf-8')
+for width in [1440,390]:
+ group=sorted([r for r in rows if r['width']==width],key=lambda r:r['component'])
+ for j in range(0,len(group),12):
+  canvas=Image.new('RGB',(1440,1360),'#eeeaf1');draw=ImageDraw.Draw(canvas)
+  for i,row in enumerate(group[j:j+12]):
+   im=Image.open(OUT/row['screenshot']);im=im.crop((0,0,im.width,min(im.height,1000)));im.thumbnail((470,300));x=i%3*480;y=i//3*340;canvas.paste(im,(x,y+28));draw.text((x+8,y+6),row['component'],fill='black')
+  canvas.save(OUT/f'final-atlas-{width}-{j//12+1}.jpg')
+print('Review generated:',len(by),'entries,',len(rows),'captures')

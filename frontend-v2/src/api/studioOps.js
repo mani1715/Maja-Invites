@@ -93,8 +93,16 @@ export const backupUpload = (file, folderId, config = {}) => {
 export const backupDownloadZip = (payload) =>
   client.post('/api/cloud-backup/download-zip', payload, { responseType: 'blob' });
 
-export const presignUpload = (payload) => client.post('/api/uploads/presign', payload);
-export const commitUpload = (payload) => client.post('/api/uploads/commit', payload);
+export const presignUpload = (payload) =>
+  client.post('/api/uploads/presign', { area: 'cloud_storage', ...payload });
+export const commitUpload = (payload) =>
+  client.post('/api/uploads/commit', {
+    area: 'cloud_storage',
+    key: payload.key || payload.s3_key,
+    ...payload,
+  });
+export const requestEnterpriseQuote = (payload) =>
+  client.post('/api/admin/studio-storage/enterprise-request', payload);
 
 // ---- paid studio storage -------------------------------------------------
 export const storageStatus = () => client.get('/api/admin/studio-storage/status');
@@ -164,8 +172,18 @@ export const setAvailability = (availableNow) =>
 // ---- storage dashboard, folders & compression --------------------------------
 export const storageDashboard = () => client.get('/api/admin/studio-storage/dashboard');
 export const storageCompress = (payload) => client.post('/api/admin/studio-storage/compress', payload);
-export const createStorageFolder = (name) => client.post('/api/admin/studio-storage/folders', { name });
+export const createStorageFolder = (payload) =>
+  client.post('/api/admin/studio-storage/folders', typeof payload === 'string' ? { name: payload } : payload);
+export const storageFolders = (params = {}) => client.get('/api/admin/studio-storage/folders', { params });
 export const deleteStorageFolder = (folderId) => client.delete(`/api/admin/studio-storage/folders/${folderId}`);
+export const updateStorageFile = (fileId, patch) => client.patch(`/api/admin/studio-storage/files/${fileId}`, patch);
+export const toggleFavoriteStorageFile = (fileId) => client.post(`/api/admin/studio-storage/files/${fileId}/favorite`);
+export const bulkStorageFiles = (payload) => client.post('/api/admin/studio-storage/bulk', payload);
+export const getStorageClients = () => client.get('/api/admin/studio-storage/clients');
+export const getStorageEvents = () => client.get('/api/admin/studio-storage/events');
+export const storageTrash = () => client.get('/api/admin/studio-storage/trash');
+export const trashStorageFile = (fileId) => client.post(`/api/admin/studio-storage/trash/${fileId}`);
+export const restoreStorageFile = (fileId) => client.post(`/api/admin/studio-storage/restore/${fileId}`);
 
 // ---- studio notifications ----------------------------------------------------
 export const studioNotifications = (params = {}) => client.get('/api/studio/notifications', { params });

@@ -14,7 +14,7 @@ function pct(n, d) {
 export default function AdminDelivery() {
   const { data, error, loading, reload } = useAsync(
     () => Promise.all([
-      api.deliveryStats().then((r) => r.data).catch(() => null),
+      api.deliveryStats().then((r) => r.data),
       api.deliveryRecent({ limit: 50 }).then((r) => r.data).catch(() => null),
     ]).then(([stats, recent]) => ({ stats, recent })),
   );
@@ -35,10 +35,10 @@ export default function AdminDelivery() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Sent', value: loading ? '—' : numberFmt.format(sent) },
-        { label: 'Delivered', value: loading ? '—' : numberFmt.format(delivered), hint: pct(delivered, sent) != null ? `${pct(delivered, sent)}%` : undefined },
-        { label: 'Failed', value: loading ? '—' : numberFmt.format(failed), hint: pct(failed, sent) != null ? `${pct(failed, sent)}%` : undefined },
-        { label: 'Channels live', value: loading ? '—' : numberFmt.format(Object.keys(channels).length) },
+        { label: 'Sent', value: loading || error ? '—' : numberFmt.format(sent) },
+        { label: 'Delivered', value: loading || error ? '—' : numberFmt.format(delivered), hint: pct(delivered, sent) != null ? `${pct(delivered, sent)}%` : undefined },
+        { label: 'Failed', value: loading || error ? '—' : numberFmt.format(failed), hint: pct(failed, sent) != null ? `${pct(failed, sent)}%` : undefined },
+        { label: 'Channels live', value: loading || error ? '—' : numberFmt.format(Object.keys(channels).length) },
       ]}
       />
 

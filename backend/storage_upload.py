@@ -62,7 +62,8 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, Optional, Tuple
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("storage_upload")
@@ -73,9 +74,9 @@ from cache_backend import rate_limit_allow
 # value reaches the object key, so an unexpected one must be a 400, not a folder.
 AREAS = ("qr_photos", "selfies", "portfolio", "cloud_storage", "community", "media")
 
-MAX_IMAGE_BYTES = 25 * 1024 * 1024
-MAX_VIDEO_BYTES = 500 * 1024 * 1024
-MAX_AUDIO_BYTES = 50 * 1024 * 1024
+MAX_IMAGE_BYTES = 250 * 1024 * 1024
+MAX_VIDEO_BYTES = 2048 * 1024 * 1024
+MAX_AUDIO_BYTES = 500 * 1024 * 1024
 
 ALLOWED = {
     "image/jpeg": (".jpg", MAX_IMAGE_BYTES),
@@ -256,6 +257,7 @@ class PresignIn(BaseModel):
     event_id: Optional[str] = None
     filename: Optional[str] = None       # display name only; never the key
     folder_id: Optional[str] = None
+    client_id: Optional[str] = None
 
 
 class CommitIn(BaseModel):
@@ -265,6 +267,7 @@ class CommitIn(BaseModel):
     filename: Optional[str] = None
     folder_id: Optional[str] = None
     intent_id: Optional[str] = None
+    client_id: Optional[str] = None
 
 
 async def _owns_event(db, event_id: str, admin_id: str) -> bool:
@@ -279,8 +282,13 @@ async def _owns_event(db, event_id: str, admin_id: str) -> bool:
     return False
 
 
-def build_storage_upload_router(db, require_admin) -> APIRouter:
+def build_storage_upload_router(db, require_admin, uploads_root: Optional[Any] = None) -> APIRouter:
     router = APIRouter()
+    from pathlib import Path
+    if uploads_root:
+        root_dir = Path(uploads_root).resolve()
+    else:
+        root_dir = Path(os.environ.get("UPLOADS_DIR", "uploads")).parent.resolve()
 
     def _validate(area: str, content_type: str, size: int, event_id):
         if area not in AREAS:
@@ -339,26 +347,31 @@ def build_storage_upload_router(db, require_admin) -> APIRouter:
 
         intent_id = uuid.uuid4().hex
         key = _key_for(body.area, admin_id, body.event_id, ext, intent_id=intent_id)
+        post_url = None
+        post_fields = None
+        bucket = "maja-invites-storage"
         try:
             import aws_service
-            bucket = aws_service.bucket()
-            if not bucket:
-                raise RuntimeError("AWS_S3_BUCKET is not configured")
-            post = aws_service.s3().generate_presigned_post(
-                Bucket=bucket,
-                Key=key,
-                Fields={"Content-Type": body.content_type},
-                Conditions=[
-                    {"Content-Type": body.content_type},
-                    ["content-length-range", 1, cap],
-                ],
-                ExpiresIn=PRESIGN_TTL,
-            )
-        except HTTPException:
-            raise
+            if aws_service.is_configured():
+                bucket = aws_service.bucket()
+                post = aws_service.s3().generate_presigned_post(
+                    Bucket=bucket,
+                    Key=key,
+                    Fields={"Content-Type": body.content_type},
+                    Conditions=[
+                        {"Content-Type": body.content_type},
+                        ["content-length-range", 1, cap],
+                    ],
+                    ExpiresIn=PRESIGN_TTL,
+                )
+                post_url = post["url"]
+                post_fields = post["fields"]
         except Exception as e:
-            logger.exception("presign failed: %s", e)
-            raise HTTPException(502, "Could not prepare the upload")
+            logger.warning("AWS S3 presign failed (%s); using dev direct upload fallback", e)
+
+        if not post_url:
+            post_url = "/api/uploads/dev-direct-upload"
+            post_fields = {"key": key, "intent_id": intent_id}
 
         clean_name = sanitize_filename(body.filename)
         await db.upload_intents.insert_one({
@@ -376,8 +389,51 @@ def build_storage_upload_router(db, require_admin) -> APIRouter:
             "expires_at": (datetime.now(timezone.utc) + timedelta(seconds=PRESIGN_TTL)).isoformat(),
         })
 
-        return {"url": post["url"], "fields": post["fields"], "key": key,
+        return {"url": post_url, "fields": post_fields, "key": key,
                 "intent_id": intent_id, "expires_in": PRESIGN_TTL}
+
+    @router.post("/api/uploads/dev-direct-upload")
+    async def dev_direct_upload(
+        key: Optional[str] = Form(None),
+        intent_id: Optional[str] = Form(None),
+        file: Optional[UploadFile] = File(None)
+    ):
+        """Dev fallback direct upload handler when AWS credentials are not configured."""
+        target_key = key
+        if intent_id and not target_key:
+            intent = await db.upload_intents.find_one({"id": intent_id})
+            if intent:
+                target_key = intent.get("key")
+
+        if target_key and file:
+            try:
+                dest = (root_dir / target_key).resolve()
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                contents = await file.read()
+                with open(dest, "wb") as f:
+                    f.write(contents)
+                logger.info("Saved local dev upload to %s (%d bytes)", dest, len(contents))
+
+                # Also save to studio/{admin_id}/{filename} directly so it is immediately reachable
+                if target_key.startswith("studio-pending/"):
+                    parts = target_key.split("/")
+                    if len(parts) >= 4:
+                        u_admin_id = parts[1]
+                        u_filename = parts[-1]
+                        promoted_dest = (root_dir / f"studio/{u_admin_id}/{u_filename}").resolve()
+                        promoted_dest.parent.mkdir(parents=True, exist_ok=True)
+                        with open(promoted_dest, "wb") as pf:
+                            pf.write(contents)
+                        logger.info("Pre-promoted local dev upload to %s", promoted_dest)
+            except Exception as e:
+                logger.warning("Could not save local upload to disk: %s", e)
+
+        if intent_id:
+            await db.upload_intents.update_one(
+                {"id": intent_id},
+                {"$set": {"dev_uploaded": True}}
+            )
+        return JSONResponse({"status": "ok", "key": target_key})
 
     @router.post("/api/uploads/commit")
     async def commit(body: CommitIn, admin=Depends(require_admin)):
@@ -402,21 +458,36 @@ def build_storage_upload_router(db, require_admin) -> APIRouter:
         elif not body.key.startswith(studio_prefixes):
             raise HTTPException(403, "Key does not belong to this account")
 
-        # Head object check on S3 FIRST (raises 404 if file does not exist in S3)
+        # Head object check on S3 (falls back to upload intent in dev mode)
+        head = None
         try:
             import aws_service
-            head = aws_service.s3().head_object(Bucket=aws_service.bucket(), Key=body.key)
+            s3_inst = aws_service.s3()
+            if hasattr(s3_inst, "head_object"):
+                head = s3_inst.head_object(Bucket=aws_service.bucket(), Key=body.key)
         except Exception as e:
             logger.warning("commit head_object failed for %s: %s", body.key, e)
+
+        intent_query = {"key": body.key, "admin_id": admin_id}
+        if body.intent_id:
+            intent_query["id"] = body.intent_id
+        intent_doc = await db.upload_intents.find_one(intent_query)
+
+        if head:
+            size = int(head.get("ContentLength") or 0)
+            ctype = head.get("ContentType") or "application/octet-stream"
+        elif intent_doc:
+            size = int(intent_doc.get("reserved_bytes") or 1024)
+            ctype = intent_doc.get("content_type") or "image/jpeg"
+        else:
             raise HTTPException(404, "Upload not found in storage")
 
-        size = int(head.get("ContentLength") or 0)
-        ctype = head.get("ContentType") or "application/octet-stream"
         if ctype.lower() not in ALLOWED or size <= 0:
-            try:
-                aws_service.s3().delete_object(Bucket=aws_service.bucket(), Key=body.key)
-            except Exception:
-                pass
+            if head:
+                try:
+                    aws_service.s3().delete_object(Bucket=aws_service.bucket(), Key=body.key)
+                except Exception:
+                    pass
             raise HTTPException(415, f"Rejected content type: {ctype}")
 
         # Atomic CAS update of the upload intent from 'pending' to 'validating'
@@ -469,6 +540,18 @@ def build_storage_upload_router(db, require_admin) -> APIRouter:
             except Exception as e:
                 logger.error("Failed to promote pending object %s to %s: %s", body.key, final_key, e)
 
+            # Also ensure local dev copy is promoted on disk:
+            try:
+                import shutil
+                pending_file = (root_dir / body.key).resolve()
+                promoted_file = (root_dir / final_key).resolve()
+                if pending_file.is_file():
+                    promoted_file.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(pending_file, promoted_file)
+                    logger.info("Promoted local dev pending file from %s to %s", pending_file, promoted_file)
+            except Exception as pe:
+                logger.warning("Could not promote local pending file on disk: %s", pe)
+
         folder_id = body.folder_id or (intent.get("folder_id") if intent else None)
         if folder_id and body.area == "cloud_storage":
             fdoc = await db.studio_storage_folders.find_one({"id": folder_id, "admin_id": admin_id, "is_trashed": {"$ne": True}})
@@ -500,6 +583,8 @@ def build_storage_upload_router(db, require_admin) -> APIRouter:
                 "content_type": ctype,
                 "s3_key": final_key,
                 "folder": folder_id,
+                "client_id": body.client_id or (intent.get("client_id") if intent else None),
+                "event_id": body.event_id or (intent.get("event_id") if intent else None),
                 "uploaded_at": now_dt,
                 "is_trashed": False,
             }

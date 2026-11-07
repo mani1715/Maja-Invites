@@ -30,10 +30,17 @@ class EnableCameraPayload(BaseModel):
     # the per-event key, so a custom one must be unique across events.
     username: Optional[str] = None
     password: Optional[str] = None
+    target_album_id: Optional[str] = None
+
+
+class CameraAlbumPayload(BaseModel):
+    target_album_id: Optional[str] = None
 
 
 def _connection_block(camera_key: str, username: Optional[str] = None,
-                      profile_id: Optional[str] = None) -> dict:
+                      profile_id: Optional[str] = None,
+                      target_album_id: Optional[str] = None,
+                      target_album_name: Optional[str] = None) -> dict:
     """Everything the photographer types into the camera EXCEPT the password.
 
     Protocol-aware: the Sony a7 IV (and other FTP cameras) use FTPES; generic
@@ -66,6 +73,8 @@ def _connection_block(camera_key: str, username: Optional[str] = None,
         "port": port,
         "username": username,
         "remote_directory": "/",
+        "target_album_id": target_album_id,
+        "target_album_name": target_album_name,
         "host_key_fingerprint": fingerprint,
         "tls_note": ("Self-signed TLS — if the camera reports a root-certificate "
                      "error, choose to connect anyway; the link is still encrypted."
@@ -101,9 +110,25 @@ def build_camera_router(db, get_current_admin, require_super_admin):
         st = await cts.status(db, profile)
         camera_key = (st.get("transfer") or {}).get("camera_key") or camera_profiles.DEFAULT_PROFILE_KEY
         username = (st.get("transfer") or {}).get("username")
-        st["connection"] = _connection_block(camera_key, username, profile["id"])
+        st["connection"] = _connection_block(camera_key, username, profile["id"],
+                                             target_album_id=st.get("target_album_id"),
+                                             target_album_name=st.get("target_album_name"))
         st["gallery_enabled"] = bool((profile.get("gallery_config") or {}).get("enabled"))
         return st
+
+    @router.post("/admin/profiles/{profile_id}/camera/album")
+    async def camera_set_album(profile_id: str, payload: CameraAlbumPayload,
+                              admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, profile_id, admin_id)
+        target_id = (payload.target_album_id or "").strip() or None
+        if target_id:
+            alb = await db.gallery_albums.find_one({"id": target_id, "profile_id": profile["id"]}, {"_id": 0})
+            if not alb:
+                raise HTTPException(status_code=400, detail="Destination album not found in this gallery.")
+        view = await cts.set_target_album(db, profile["id"], target_id)
+        if not view:
+            raise HTTPException(status_code=404, detail="Camera transfer not configured for this gallery.")
+        return {"success": True, "transfer": view}
 
     @router.post("/admin/profiles/{profile_id}/camera/enable")
     async def camera_enable(profile_id: str, payload: EnableCameraPayload,
@@ -117,10 +142,16 @@ def build_camera_router(db, get_current_admin, require_super_admin):
                 status_code=400,
                 detail="Enable the photo gallery (AI Face Match) for this event first, "
                        "then enable camera transfer.")
+        target_id = (payload.target_album_id or "").strip() or None
+        if target_id:
+            alb = await db.gallery_albums.find_one({"id": target_id, "profile_id": profile["id"]}, {"_id": 0})
+            if not alb:
+                raise HTTPException(status_code=400, detail="Destination album not found in this gallery.")
         try:
             view = await cts.enable_transfer(
                 db, profile, admin_id, payload.camera_key,
-                username=(payload.username or None), password=(payload.password or None))
+                username=(payload.username or None), password=(payload.password or None),
+                target_album_id=target_id)
         except cts.CredentialError as e:
             raise HTTPException(status_code=409 if e.taken else 400, detail=str(e))
         password = view.pop("password", None)
@@ -128,7 +159,8 @@ def build_camera_router(db, get_current_admin, require_super_admin):
             "success": True,
             "transfer": view,
             "credentials": {                 # shown ONCE — not retrievable again
-                **_connection_block(view.get("camera_key"), view.get("username"), profile["id"]),
+                **_connection_block(view.get("camera_key"), view.get("username"), profile["id"],
+                                    target_album_id=target_id),
                 "password": password,
                 "connection_code": _connection_code(view.get("username"), password, view.get("camera_key")),
             },
@@ -142,8 +174,15 @@ def build_camera_router(db, get_current_admin, require_super_admin):
         if not view:
             raise HTTPException(status_code=404, detail="Camera transfer not set up for this event")
         password = view.pop("password", None)
+        target_name = None
+        if view.get("target_album_id"):
+            alb = await db.gallery_albums.find_one({"id": view["target_album_id"], "profile_id": profile["id"]}, {"_id": 0, "name": 1})
+            if alb:
+                target_name = alb.get("name")
         return {"success": True, "transfer": view,
-                "credentials": {**_connection_block(view.get("camera_key"), view.get("username"), profile["id"]),
+                "credentials": {**_connection_block(view.get("camera_key"), view.get("username"), profile["id"],
+                                                    target_album_id=view.get("target_album_id"),
+                                                    target_album_name=target_name),
                                 "password": password,
                                 "connection_code": _connection_code(view.get("username"), password, view.get("camera_key"))}}
 
@@ -164,8 +203,15 @@ def build_camera_router(db, get_current_admin, require_super_admin):
         if not row:
             raise HTTPException(status_code=404, detail="Camera transfer not set up for this event")
         view = cts.public_view(row)
+        target_name = None
+        if view.get("target_album_id"):
+            alb = await db.gallery_albums.find_one({"id": view["target_album_id"], "profile_id": profile["id"]}, {"_id": 0, "name": 1})
+            if alb:
+                target_name = alb.get("name")
         return {"transfer": view,
-                "connection": _connection_block(view.get("camera_key"), view.get("username"), profile["id"])}
+                "connection": _connection_block(view.get("camera_key"), view.get("username"), profile["id"],
+                                                target_album_id=view.get("target_album_id"),
+                                                target_album_name=target_name)}
 
     @router.get("/admin/profiles/{profile_id}/camera/events")
     async def camera_events(profile_id: str, limit: int = 50,

@@ -114,13 +114,15 @@ export const cameraConfig = (profileId) =>
 // Returns the ONE-TIME plaintext password inside `credentials` — show once.
 // username/password optional (blank -> auto-generated). Re-calling on an enabled
 // event updates the login.
-export const cameraEnable = (profileId, { cameraKey, username, password } = {}) =>
+export const cameraEnable = (profileId, { cameraKey, username, password, targetAlbumId } = {}) =>
   client.post(`/api/admin/profiles/${profileId}/camera/enable`,
-    { camera_key: cameraKey, username: username || undefined, password: password || undefined });
+    { camera_key: cameraKey, username: username || undefined, password: password || undefined, target_album_id: targetAlbumId || null });
 export const cameraRotate = (profileId) =>
   client.post(`/api/admin/profiles/${profileId}/camera/rotate`);
 export const cameraDisable = (profileId) =>
   client.post(`/api/admin/profiles/${profileId}/camera/disable`);
+export const cameraUpdateAlbum = (profileId, targetAlbumId) =>
+  client.post(`/api/admin/profiles/${profileId}/camera/album`, { target_album_id: targetAlbumId || null });
 export const cameraEvents = (profileId, limit = 50) =>
   client.get(`/api/admin/profiles/${profileId}/camera/events`, { params: { limit } });
 

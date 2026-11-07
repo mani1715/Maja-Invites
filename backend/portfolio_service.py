@@ -810,6 +810,9 @@ async def _settle_build_help(db, order_id: str, payment_id: str,
 def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRouter:
     router = APIRouter(tags=["portfolio"])
 
+    from portfolio_publication import build_publication_router, guard_legacy_write
+    router.include_router(build_publication_router(db, require_admin))
+
     # ---- catalog constants -------------------------------------------------
     @router.get("/api/portfolio/meta")
     async def meta():
@@ -828,6 +831,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.put("/api/portfolio/profile")
     async def put_profile(payload: ProfileIn, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         existing = await db.portfolio_profiles.find_one({"id": sid}, {"_id": 0})
         # exclude_unset: write ONLY the fields the caller actually sent.
         # `model_dump()` emits every field of ProfileIn — including ones the client
@@ -865,6 +869,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.post("/api/portfolio/albums")
     async def create_album(payload: AlbumIn, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         doc = {"id": f"alb_{uuid.uuid4().hex[:16]}", "studio_id": sid,
                **payload.model_dump(), "work_count": 0, "created_at": _now()}
         await db.portfolio_albums.insert_one(doc)
@@ -879,6 +884,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.delete("/api/portfolio/albums/{album_id}")
     async def delete_album(album_id: str, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         await db.portfolio_albums.delete_one({"id": album_id, "studio_id": sid})
         await db.portfolio_works.delete_many({"album_id": album_id, "studio_id": sid})
         return {"deleted": True}
@@ -894,6 +900,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.put("/api/portfolio/albums/{album_id}")
     async def update_album(album_id: str, payload: AlbumUpdateIn, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         fields = payload.model_dump(exclude_unset=True)
         if not fields:
             raise HTTPException(400, "Nothing to update")
@@ -916,6 +923,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
         stays in create_work, which receives the returned size_bytes.
         """
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         import storage_accounting
         if not storage_accounting.allow_upload(sid, 30):
             raise HTTPException(429, "Too many uploads — please wait a minute and try again.")
@@ -986,6 +994,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.post("/api/portfolio/works")
     async def create_work(payload: WorkIn, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         import storage_accounting
         # Server-authoritative size: attach the uploaded files from the registry and sum
         # their REAL measured sizes — the client's size_bytes is ignored (was a bypass).
@@ -1024,6 +1033,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.put("/api/portfolio/works/{work_id}")
     async def update_work(work_id: str, payload: WorkIn, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         import storage_accounting
         w = await db.portfolio_works.find_one({"id": work_id, "studio_id": sid}, {"_id": 0})
         if not w:
@@ -1069,6 +1079,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.delete("/api/portfolio/works/{work_id}")
     async def delete_work(work_id: str, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         import storage_accounting
         w = await db.portfolio_works.find_one({"id": work_id, "studio_id": sid}, {"_id": 0})
         await db.portfolio_works.delete_one({"id": work_id, "studio_id": sid})
@@ -1081,6 +1092,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.post("/api/portfolio/testimonials")
     async def add_testimonial(payload: TestimonialIn, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         doc = {"id": f"tst_{uuid.uuid4().hex[:16]}", "studio_id": sid,
                **payload.model_dump(), "created_at": _now()}
         await db.portfolio_testimonials.insert_one(doc)
@@ -1095,6 +1107,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.delete("/api/portfolio/testimonials/{tid}")
     async def delete_testimonial(tid: str, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         await db.portfolio_testimonials.delete_one({"id": tid, "studio_id": sid})
         return {"deleted": True}
 
@@ -1129,6 +1142,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
         # content-type quirk or a stray null can't turn a real design pick into a
         # spurious 422 — which was silently blocking every design from applying.
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         design_id = None
         try:
             body = await request.json()
@@ -1162,6 +1176,7 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     @router.put("/api/portfolio/team")
     async def set_team(payload: _TeamIn, admin: dict = Depends(require_admin)):
         sid = admin["admin_id"]
+        await guard_legacy_write(db, sid)
         if await _portfolio_tier(db, sid) != "premium":
             raise HTTPException(403, "Team members are a premium portfolio feature. Upgrade to Premium.")
         members = []
@@ -1362,6 +1377,12 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
     async def public_portfolio(studio_id: str):
         # {studio_id} may be a real id OR a pretty slug (mani-studio) — resolve both.
         sid, raw = await _resolve_studio(db, studio_id)
+        from portfolio_publication import managed
+        publication = await managed(db, sid)
+        if publication and not publication.get('published_version') and not publication.get('legacy_visible'):
+            raise HTTPException(404, 'Portfolio has not been published')
+        if (raw or {}).get('renderer_version', 1) >= 2 and (raw or {}).get('is_published') is False:
+            raise HTTPException(404, 'Portfolio is private')
         admin = await db.admins.find_one({"id": sid}, {"_id": 0})
         if not raw and not admin:
             raise HTTPException(404, "Photographer not found")
@@ -1423,6 +1444,9 @@ def build_portfolio_router(db, require_admin, require_super_admin=None) -> APIRo
             "white_label": white_label,
             "tier": tier,
             "sections": sections,
+            "packages": (raw or {}).get("portfolio_showcase", {}).get("packages", []),
+            "highlights": (raw or {}).get("portfolio_showcase", {}).get("highlights", []),
+            "renderer_version": (raw or {}).get("renderer_version", 1),
             "design_id": (raw or {}).get("design_id"),
             "profile": profile,
             "albums": albums,

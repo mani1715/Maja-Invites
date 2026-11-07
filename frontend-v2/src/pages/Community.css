@@ -4,10 +4,10 @@
 @media (min-width: 640px) { .pxc-hero { padding: 68px 24px 52px; } }
 @media (min-width: 860px) { .pxc-hero { padding: 88px 28px 60px; } }
 .pxc-hero-inner { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
-.pxc-eyebrow { font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--mj-primary); margin: 0 0 18px; font-weight: 600; }
-.pxc-h1 { font-family: var(--mj-font-display); font-weight: 500; font-size: clamp(28px,5vw,48px); line-height: 1.14; margin: 0 0 18px; color: var(--mj-ink); }
-.pxc-h1 span { color: var(--mj-primary); }
-.pxc-sub { font-size: clamp(14px,1.3vw,16px); color: var(--mj-muted); max-width: 52ch; margin: 0 auto 28px; line-height: 1.7; }
+.pxc-eyebrow { font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: #713fc4; margin: 0 0 16px; font-weight: 700; }
+.pxc-h1 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: clamp(32px,5vw,50px); line-height: 1.14; margin: 0 0 18px; color: #2c203f; letter-spacing: -0.04em; }
+.pxc-h1 span { color: #713fc4; font-style: italic; }
+.pxc-sub { font-size: clamp(14px,1.3vw,16px); color: #6d5b7a; max-width: 54ch; margin: 0 auto 28px; line-height: 1.7; }
 .pxc-hero-cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 
 .pxc-btn {

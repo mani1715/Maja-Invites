@@ -23,6 +23,7 @@ import HoneymoonFundSection from '@/components/invitation/HoneymoonFundSection';
 import TravelSection from '@/components/invitation/TravelSection';
 import AmbientMusicPlayer from '@/components/invitation/AmbientMusicPlayer';
 import AddToCalendarButton from '@/components/invitation/AddToCalendarButton';
+import FramedPhoto from '@/components/invitations/FramedPhoto';
 import FoodDonationTeaser from '@/components/invitation/FoodDonationTeaser';
 import '@/styles/inviteShared.css';
 import './GuestInvitation.css';
@@ -186,7 +187,34 @@ export function GuestInvitationReady({ slug, env, preview = false, gateOpen, nee
       )}
 
       {/* HERO */}
-      <header className="px-night gi-hero">
+      <header className="px-night gi-hero" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Optional opening photo / couple background with frame transforms & overlay */}
+        {(invite.couple_photo_url || invite.opening_photo_url) && (
+          <div
+            className="gi-hero-bg-media"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 0,
+              pointerEvents: 'none',
+              opacity: (invite.background_settings || {}).opacity ?? 0.35,
+            }}
+          >
+            <FramedPhoto
+              src={resolveMediaUrl(invite.couple_photo_url || invite.opening_photo_url)}
+              transform={(invite.frame_transforms || {}).couple}
+              style={{ width: '100%', height: '100%' }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: (invite.background_settings || {}).overlay_gradient ||
+                  'linear-gradient(180deg, rgba(17,24,39,0.7) 0%, rgba(17,24,39,0.92) 100%)',
+              }}
+            />
+          </div>
+        )}
         {effects && <span className="gi-hero-glow gi-hero-glow--a" aria-hidden="true" />}
         {effects && <span className="gi-hero-glow gi-hero-glow--b" aria-hidden="true" />}
         {effects && ['9%', '31%', '66%', '88%'].map((left, i) => (
@@ -408,7 +436,7 @@ export function GuestInvitationReady({ slug, env, preview = false, gateOpen, nee
           <a href={`/invite/${slug}/live-gallery`}>Live photo wall</a>
           {showShagunSection && <a href="#gifts">Digital shagun</a>}
         </div>
-        <p className="gi-footer-credit">Invitation by MAJA</p>
+        <p className="gi-footer-credit">Invitation by MAJA &middot; Powered by metechq</p>
       </footer>
 
       {/* AMBIENT MUSIC — user-initiated only, never autoplay-with-sound. */}

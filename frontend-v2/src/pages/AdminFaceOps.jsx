@@ -18,9 +18,9 @@ export default function AdminFaceOps() {
 
   const { data, error, loading, reload } = useAsync(
     () => Promise.all([
-      api.faceOverview().then((r) => r.data).catch(() => null),
-      api.faceDeadLetters().then((r) => r.data).catch(() => null),
-      api.providers().then((r) => r.data).catch(() => null),
+      api.faceOverview().then((r) => r.data),
+      api.faceDeadLetters().then((r) => r.data),
+      api.providers().then((r) => r.data),
     ]).then(([overview, dl, providers]) => ({ overview, dl, providers })),
   );
 
@@ -48,10 +48,10 @@ export default function AdminFaceOps() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Photos indexed', value: loading ? '—' : numberFmt.format(overview.indexed_photos ?? overview.total_photos ?? 0) },
-        { label: 'Queue depth', value: loading ? '—' : numberFmt.format(overview.queue_depth ?? 0), hint: 'Waiting to be processed' },
-        { label: 'Dead letters', value: loading ? '—' : numberFmt.format(deadLetters.length), hint: deadLetters.length ? 'Needs a requeue' : 'Nothing stuck' },
-        { label: 'Searches (24h)', value: loading ? '—' : numberFmt.format(overview.searches_24h ?? 0) },
+        { label: 'Photos indexed', value: loading || error ? '—' : numberFmt.format(overview.indexed_photos ?? overview.total_photos ?? 0) },
+        { label: 'Queue depth', value: loading || error ? '—' : numberFmt.format(overview.queue_depth ?? 0), hint: 'Waiting to be processed' },
+        { label: 'Dead letters', value: loading || error ? '—' : numberFmt.format(deadLetters.length), hint: deadLetters.length ? 'Needs a requeue' : 'Nothing stuck' },
+        { label: 'Searches (24h)', value: loading || error ? '—' : numberFmt.format(overview.searches_24h ?? 0) },
       ]}
       />
 

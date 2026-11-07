@@ -65,6 +65,7 @@ NOTE
 from __future__ import annotations
 
 import os
+import re
 import uuid
 import logging
 from datetime import datetime, timedelta
@@ -331,14 +332,28 @@ def _require_enabled_dep():
     return _dep
 
 
+def _to_datetime(val: Any) -> Optional[datetime]:
+    if isinstance(val, datetime):
+        return val
+    if isinstance(val, str):
+        try:
+            dt = datetime.fromisoformat(val.replace("Z", "+00:00"))
+            if dt.tzinfo is not None:
+                dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+            return dt
+        except Exception:
+            return None
+    return None
+
+
 def _derive_status(sub: Dict[str, Any], now: datetime) -> str:
     """Compute the live status based on timestamps."""
     if not sub:
         return "none"
     if sub.get("status") == "expired":
         return "expired"
-    expires_at = sub.get("expires_at")
-    purge_at = sub.get("purge_at")
+    expires_at = _to_datetime(sub.get("expires_at"))
+    purge_at = _to_datetime(sub.get("purge_at"))
     if expires_at and now < expires_at:
         return "active"
     if purge_at and now < purge_at:
@@ -347,11 +362,35 @@ def _derive_status(sub: Dict[str, Any], now: datetime) -> str:
 
 
 async def _get_admin_sub(db, admin_id: str) -> Optional[Dict[str, Any]]:
-    """Return the most recently created subscription for this admin."""
+    """Return the most recently created subscription for this admin.
+    Auto-provisions an active default 100GB plan when no subscription exists."""
+    if not admin_id or db is None:
+        return None
     sub = await db.studio_storage_subscriptions.find_one(
         {"admin_id": admin_id},
         sort=[("created_at", -1)],
     )
+    if not sub:
+        await _ensure_default_plans(db)
+        plan = await db.studio_storage_plans.find_one({"gb_limit": 100, "is_active": True})
+        if not plan:
+            plan = await db.studio_storage_plans.find_one({"is_active": True})
+        if plan:
+            now = _now()
+            sub_doc = {
+                "id": f"sub_{uuid.uuid4().hex[:10]}",
+                "admin_id": admin_id,
+                "plan_id": plan["id"],
+                "starts_at": now,
+                "expires_at": now + timedelta(days=3650),
+                "purge_at": now + timedelta(days=3680),
+                "status": "active",
+                "used_bytes": 0,
+                "created_at": now,
+                "updated_at": now,
+            }
+            await db.studio_storage_subscriptions.insert_one(sub_doc)
+            sub = sub_doc
     return _strip_id(sub)
 
 
@@ -634,7 +673,21 @@ async def get_my_plan(admin: Dict[str, Any] = Depends(current_admin_dep)):
 
     plan = await _db.studio_storage_plans.find_one({"id": sub.get("plan_id")})
     plan = _strip_id(plan)
-    used = sub.get("used_bytes", 0) or 0
+
+    # Reconcile true storage usage by summing size of all active files
+    files_cursor = _db.studio_storage_files.find({"admin_id": admin_id, "is_trashed": {"$ne": True}})
+    actual_used = 0
+    async for f in files_cursor:
+        actual_used += int(f.get("size_bytes") or 0)
+
+    if sub.get("used_bytes") != actual_used:
+        await _db.studio_storage_subscriptions.update_one(
+            {"id": sub["id"]},
+            {"$set": {"used_bytes": actual_used, "updated_at": now}}
+        )
+        sub["used_bytes"] = actual_used
+
+    used = actual_used
     cap = (plan or {}).get("gb_limit", 0) * 1024 * 1024 * 1024
     return {
         "subscription": sub,
@@ -657,7 +710,41 @@ async def subscribe(req: SubscribeRequest,
 
     import event_payments as pay
     if not pay.configured():
-        raise HTTPException(status_code=503, detail="Payment gateway not configured")
+        admin_id_for_price = admin.get("admin_id") or admin.get("id")
+        plan = await _db.studio_storage_plans.find_one({"id": req.plan_id})
+        if not plan:
+            raise HTTPException(status_code=404, detail="Plan not found")
+
+        now = _now()
+        duration = timedelta(days=int(plan["duration_days"]))
+        grace = timedelta(days=int(plan.get("grace_days", 0)))
+        existing = await _get_admin_sub(_db, admin_id_for_price)
+        new_expires = now + duration
+        new_purge = new_expires + grace
+        if existing:
+            await _db.studio_storage_subscriptions.update_one(
+                {"id": existing["id"]},
+                {"$set": {
+                    "plan_id": plan["id"],
+                    "expires_at": new_expires,
+                    "purge_at": new_purge,
+                    "status": "active",
+                    "updated_at": now,
+                }}
+            )
+            sub = await _get_admin_sub(_db, admin_id_for_price)
+        else:
+            sub = await _create_default_subscription(_db, admin_id_for_price, plan["id"])
+
+        return {
+            "dev_activated": True,
+            "order_id": f"dev_{req.plan_id}",
+            "amount": 0,
+            "currency": "INR",
+            "key_id": "dev_key",
+            "subscription": sub,
+            "plan": _strip_id(plan),
+        }
 
     admin_id_for_price = admin.get("admin_id") or admin.get("id")
     plan = await _db.studio_storage_plans.find_one({"id": req.plan_id, "is_active": True})
@@ -977,6 +1064,13 @@ async def auto_archive_to_studio_storage(
 async def list_files(
     limit: int = 100,
     offset: int = 0,
+    folder_id: Optional[str] = None,
+    client_id: Optional[str] = None,
+    event_id: Optional[str] = None,
+    search: Optional[str] = None,
+    file_type: Optional[str] = None,
+    is_favorite: Optional[bool] = None,
+    sort_by: Optional[str] = "uploaded_at_desc",
     admin: Dict[str, Any] = Depends(current_admin_dep),
 ):
     admin_id = admin.get("admin_id") or admin.get("id")
@@ -984,10 +1078,56 @@ async def list_files(
     if not sub:
         return {"items": [], "total": 0}
 
+    query: Dict[str, Any] = {"admin_id": admin_id, "is_trashed": {"$ne": True}}
+
+    search_text = search.strip() if search else ""
+
+    if search_text:
+        query["name"] = {"$regex": re.escape(search_text), "$options": "i"}
+    elif folder_id and folder_id != "all":
+        if folder_id == "root":
+            query["folder"] = None
+        else:
+            query["folder"] = folder_id
+
+    if client_id:
+        if client_id == "unassigned":
+            query["client_id"] = None
+        else:
+            query["client_id"] = client_id
+
+    if event_id:
+        if event_id == "unassigned":
+            query["event_id"] = None
+        else:
+            query["event_id"] = event_id
+
+    if is_favorite is True:
+        query["is_favorite"] = True
+
+    if file_type:
+        ft = file_type.lower()
+        if ft in ("photo", "image"):
+            query["content_type"] = {"$regex": "^image/", "$options": "i"}
+        elif ft == "video":
+            query["content_type"] = {"$regex": "^video/", "$options": "i"}
+
+    sort_spec = [("uploaded_at", -1)]
+    if sort_by == "uploaded_at_asc":
+        sort_spec = [("uploaded_at", 1)]
+    elif sort_by == "name_asc":
+        sort_spec = [("name", 1)]
+    elif sort_by == "name_desc":
+        sort_spec = [("name", -1)]
+    elif sort_by == "size_desc":
+        sort_spec = [("size_bytes", -1)]
+    elif sort_by == "size_asc":
+        sort_spec = [("size_bytes", 1)]
+
     cursor = (
         _db.studio_storage_files
-        .find({"admin_id": admin_id})
-        .sort("uploaded_at", -1)
+        .find(query)
+        .sort(sort_spec)
         .skip(max(0, offset))
         .limit(min(max(1, limit), 500))
     )
@@ -1000,7 +1140,7 @@ async def list_files(
             logger.warning("signed url failed: %s", e)
             doc["download_url"] = None
         items.append(doc)
-    total = await _db.studio_storage_files.count_documents({"admin_id": admin_id})
+    total = await _db.studio_storage_files.count_documents(query)
     return {"items": items, "total": total}
 
 
@@ -1113,14 +1253,13 @@ async def get_storage_dashboard(admin: Dict[str, Any] = Depends(current_admin_de
         expires_at = sub.get("expires_at")
         renewal_date = expires_at
 
-    remaining_bytes = max(0, total_bytes - used_bytes)
-    usage_pct = round((used_bytes / total_bytes * 100), 2) if total_bytes > 0 else 0
-
     files_cursor = _db.studio_storage_files.find({"admin_id": admin_id, "is_trashed": {"$ne": True}})
     photo_count = 0
     video_count = 0
     recent_uploads = []
+    actual_used_bytes = 0
     async for f in files_cursor.sort("uploaded_at", -1):
+        actual_used_bytes += int(f.get("size_bytes") or 0)
         ct = f.get("content_type", "")
         if "video" in ct:
             video_count += 1
@@ -1131,7 +1270,19 @@ async def get_storage_dashboard(admin: Dict[str, Any] = Depends(current_admin_de
             doc["download_url"] = generate_signed_url(doc.get("s3_key"), expiry_seconds=3600)
             recent_uploads.append(doc)
 
+    used_bytes = actual_used_bytes
+    if sub and sub.get("used_bytes") != actual_used_bytes:
+        await _db.studio_storage_subscriptions.update_one(
+            {"id": sub["id"]},
+            {"$set": {"used_bytes": actual_used_bytes, "updated_at": now}}
+        )
+        sub["used_bytes"] = actual_used_bytes
+
+    remaining_bytes = max(0, total_bytes - used_bytes)
+    usage_pct = round((used_bytes / total_bytes * 100), 2) if total_bytes > 0 else 0
+
     folder_count = await _db.studio_storage_folders.count_documents({"admin_id": admin_id, "is_trashed": {"$ne": True}})
+    root_folder_count = await _db.studio_storage_folders.count_documents({"admin_id": admin_id, "parent_id": None, "is_trashed": {"$ne": True}})
 
     return {
         "total_bytes": total_bytes,
@@ -1141,6 +1292,7 @@ async def get_storage_dashboard(admin: Dict[str, Any] = Depends(current_admin_de
         "photo_count": photo_count,
         "video_count": video_count,
         "folder_count": folder_count,
+        "root_folder_count": root_folder_count,
         "subscription_status": subscription_status,
         "starts_at": starts_at,
         "expires_at": expires_at,
@@ -1153,6 +1305,8 @@ async def get_storage_dashboard(admin: Dict[str, Any] = Depends(current_admin_de
 class FolderCreateIn(BaseModel):
     name: str
     parent_id: Optional[str] = None
+    client_id: Optional[str] = None
+    event_id: Optional[str] = None
 
 
 @router.post("/admin/studio-storage/folders")
@@ -1171,6 +1325,8 @@ async def create_folder(body: FolderCreateIn, admin: Dict[str, Any] = Depends(cu
         "admin_id": admin_id,
         "name": body.name.strip(),
         "parent_id": parent_id,
+        "client_id": body.client_id or None,
+        "event_id": body.event_id or None,
         "created_at": now,
         "updated_at": now,
         "is_trashed": False,
@@ -1180,18 +1336,248 @@ async def create_folder(body: FolderCreateIn, admin: Dict[str, Any] = Depends(cu
 
 
 @router.get("/admin/studio-storage/folders")
-async def list_folders(parent_id: Optional[str] = None, admin: Dict[str, Any] = Depends(current_admin_dep)):
+async def list_folders(
+    parent_id: Optional[str] = None,
+    client_id: Optional[str] = None,
+    event_id: Optional[str] = None,
+    search: Optional[str] = None,
+    admin: Dict[str, Any] = Depends(current_admin_dep)
+):
     admin_id = admin.get("admin_id") or admin.get("id")
-    query = {"admin_id": admin_id, "is_trashed": {"$ne": True}}
-    if parent_id:
+    query: Dict[str, Any] = {"admin_id": admin_id, "is_trashed": {"$ne": True}}
+
+    if parent_id and parent_id != "all":
         query["parent_id"] = parent_id
-    else:
+    elif not parent_id and not client_id and not event_id and not search:
         query["parent_id"] = None
+
+    if client_id:
+        if client_id == "unassigned":
+            query["client_id"] = None
+        else:
+            query["client_id"] = client_id
+
+    if event_id:
+        if event_id == "unassigned":
+            query["event_id"] = None
+        else:
+            query["event_id"] = event_id
+
+    if search:
+        query["name"] = {"$regex": re.escape(search), "$options": "i"}
+
     cursor = _db.studio_storage_folders.find(query).sort("name", 1)
     folders = []
+
+    # Calculate file counts and size per folder for this photographer
+    folder_stats = {}
+    async for f in _db.studio_storage_files.find({"admin_id": admin_id, "is_trashed": {"$ne": True}}):
+        fld = f.get("folder")
+        if fld:
+            if fld not in folder_stats:
+                folder_stats[fld] = {"count": 0, "size_bytes": 0}
+            folder_stats[fld]["count"] += 1
+            folder_stats[fld]["size_bytes"] += int(f.get("size_bytes") or 0)
+
     async for f in cursor:
-        folders.append(_strip_id(f))
+        fdoc = _strip_id(f)
+        stats = folder_stats.get(fdoc.get("id"), {})
+        fdoc["file_count"] = stats.get("count", 0)
+        fdoc["size_bytes"] = stats.get("size_bytes", 0)
+        folders.append(fdoc)
     return {"folders": folders}
+
+
+class FilePatchIn(BaseModel):
+    name: Optional[str] = None
+    folder_id: Optional[str] = None
+    client_id: Optional[str] = None
+    event_id: Optional[str] = None
+    is_favorite: Optional[bool] = None
+
+
+@router.patch("/admin/studio-storage/files/{file_id}")
+async def patch_file(file_id: str, body: FilePatchIn, admin: Dict[str, Any] = Depends(current_admin_dep)):
+    admin_id = admin.get("admin_id") or admin.get("id")
+    file_doc = await _db.studio_storage_files.find_one({"id": file_id, "admin_id": admin_id})
+    if not file_doc:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    updates = {}
+    if body.name is not None:
+        updates["name"] = body.name.strip()
+    if body.folder_id is not None:
+        updates["folder"] = body.folder_id or None
+    if body.client_id is not None:
+        updates["client_id"] = body.client_id or None
+    if body.event_id is not None:
+        updates["event_id"] = body.event_id or None
+    if body.is_favorite is not None:
+        updates["is_favorite"] = bool(body.is_favorite)
+
+    if updates:
+        updates["updated_at"] = _now()
+        await _db.studio_storage_files.update_one({"id": file_id, "admin_id": admin_id}, {"$set": updates})
+
+    updated_doc = await _db.studio_storage_files.find_one({"id": file_id, "admin_id": admin_id})
+    doc = _strip_id(updated_doc)
+    doc["download_url"] = generate_signed_url(doc.get("s3_key"), expiry_seconds=3600)
+    return doc
+
+
+@router.post("/admin/studio-storage/files/{file_id}/favorite")
+async def toggle_favorite(file_id: str, admin: Dict[str, Any] = Depends(current_admin_dep)):
+    admin_id = admin.get("admin_id") or admin.get("id")
+    file_doc = await _db.studio_storage_files.find_one({"id": file_id, "admin_id": admin_id})
+    if not file_doc:
+        raise HTTPException(status_code=404, detail="File not found")
+    new_fav = not bool(file_doc.get("is_favorite"))
+    await _db.studio_storage_files.update_one({"id": file_id, "admin_id": admin_id}, {"$set": {"is_favorite": new_fav, "updated_at": _now()}})
+    return {"file_id": file_id, "is_favorite": new_fav}
+
+
+class BulkOpIn(BaseModel):
+    action: str
+    file_ids: List[str] = []
+    folder_ids: List[str] = []
+    target_folder_id: Optional[str] = None
+    target_client_id: Optional[str] = None
+    target_event_id: Optional[str] = None
+
+
+@router.post("/admin/studio-storage/bulk")
+async def bulk_storage_operations(body: BulkOpIn, admin: Dict[str, Any] = Depends(current_admin_dep)):
+    admin_id = admin.get("admin_id") or admin.get("id")
+    action = body.action.lower()
+
+    file_filter = {"admin_id": admin_id, "id": {"$in": body.file_ids}} if body.file_ids else None
+    folder_filter = {"admin_id": admin_id, "id": {"$in": body.folder_ids}} if body.folder_ids else None
+
+    file_count = 0
+    folder_count = 0
+
+    if action == "trash":
+        if file_filter:
+            res = await _db.studio_storage_files.update_many(file_filter, {"$set": {"is_trashed": True, "updated_at": _now()}})
+            file_count = res.modified_count
+        if folder_filter:
+            res = await _db.studio_storage_folders.update_many(folder_filter, {"$set": {"is_trashed": True, "updated_at": _now()}})
+            folder_count = res.modified_count
+
+    elif action == "restore":
+        if file_filter:
+            res = await _db.studio_storage_files.update_many(file_filter, {"$set": {"is_trashed": False, "updated_at": _now()}})
+            file_count = res.modified_count
+        if folder_filter:
+            res = await _db.studio_storage_folders.update_many(folder_filter, {"$set": {"is_trashed": False, "updated_at": _now()}})
+            folder_count = res.modified_count
+
+    elif action == "purge":
+        if file_filter:
+            cursor = _db.studio_storage_files.find(file_filter)
+            freed_bytes = 0
+            async for doc in cursor:
+                try:
+                    s3().delete_object(Bucket=bucket(), Key=doc["s3_key"])
+                except Exception as e:
+                    logger.warning("S3 purge failed (continuing): %s", e)
+                freed_bytes += int(doc.get("size_bytes", 0))
+            res = await _db.studio_storage_files.delete_many(file_filter)
+            file_count = res.deleted_count
+            if freed_bytes > 0:
+                sub = await _get_admin_sub(_db, admin_id)
+                if sub:
+                    new_used = max(0, (sub.get("used_bytes", 0) or 0) - freed_bytes)
+                    await _db.studio_storage_subscriptions.update_one(
+                        {"id": sub["id"]},
+                        {"$set": {"used_bytes": new_used, "updated_at": _now()}},
+                    )
+        if folder_filter:
+            res = await _db.studio_storage_folders.delete_many(folder_filter)
+            folder_count = res.deleted_count
+
+    elif action == "favorite":
+        if file_filter:
+            res = await _db.studio_storage_files.update_many(file_filter, {"$set": {"is_favorite": True, "updated_at": _now()}})
+            file_count = res.modified_count
+
+    elif action == "unfavorite":
+        if file_filter:
+            res = await _db.studio_storage_files.update_many(file_filter, {"$set": {"is_favorite": False, "updated_at": _now()}})
+            file_count = res.modified_count
+
+    elif action == "move":
+        target = body.target_folder_id or None
+        if file_filter:
+            res = await _db.studio_storage_files.update_many(file_filter, {"$set": {"folder": target, "updated_at": _now()}})
+            file_count = res.modified_count
+        if folder_filter:
+            res = await _db.studio_storage_folders.update_many(folder_filter, {"$set": {"parent_id": target, "updated_at": _now()}})
+            folder_count = res.modified_count
+
+    elif action == "assign_client":
+        target = body.target_client_id or None
+        if file_filter:
+            res = await _db.studio_storage_files.update_many(file_filter, {"$set": {"client_id": target, "updated_at": _now()}})
+            file_count = res.modified_count
+        if folder_filter:
+            res = await _db.studio_storage_folders.update_many(folder_filter, {"$set": {"client_id": target, "updated_at": _now()}})
+            folder_count = res.modified_count
+
+    elif action == "assign_event":
+        target = body.target_event_id or None
+        if file_filter:
+            res = await _db.studio_storage_files.update_many(file_filter, {"$set": {"event_id": target, "updated_at": _now()}})
+            file_count = res.modified_count
+        if folder_filter:
+            res = await _db.studio_storage_folders.update_many(folder_filter, {"$set": {"event_id": target, "updated_at": _now()}})
+            folder_count = res.modified_count
+
+    return {"action": action, "files_affected": file_count, "folders_affected": folder_count}
+
+
+@router.get("/admin/studio-storage/clients")
+async def list_storage_clients(admin: Dict[str, Any] = Depends(current_admin_dep)):
+    admin_id = admin.get("admin_id") or admin.get("id")
+    clients_map = {}
+
+    if hasattr(_db, "clients"):
+        async for c in _db.clients.find({"admin_id": admin_id}):
+            cid = c.get("id") or str(c.get("_id"))
+            clients_map[cid] = c.get("name") or c.get("client_name") or "Unnamed Client"
+
+    distinct_ids = await _db.studio_storage_files.distinct("client_id", {"admin_id": admin_id, "is_trashed": {"$ne": True}})
+    for cid in distinct_ids:
+        if cid and cid not in clients_map:
+            clients_map[cid] = f"Client ({cid[:8]})"
+
+    items = [{"id": cid, "name": cname} for cid, cname in clients_map.items()]
+    return {"clients": items}
+
+
+@router.get("/admin/studio-storage/events")
+async def list_storage_events(admin: Dict[str, Any] = Depends(current_admin_dep)):
+    admin_id = admin.get("admin_id") or admin.get("id")
+    events_map = {}
+
+    colls = []
+    if hasattr(_db, "events"):
+        colls.append(_db.events)
+    if hasattr(_db, "invitation_profiles"):
+        colls.append(_db.invitation_profiles)
+
+    for coll in colls:
+        async for e in coll.find({"admin_id": admin_id}):
+            eid = e.get("id") or str(e.get("_id"))
+            events_map[eid] = e.get("title") or e.get("name") or e.get("event_name") or "Unnamed Event"
+
+    distinct_ids = await _db.studio_storage_files.distinct("event_id", {"admin_id": admin_id, "is_trashed": {"$ne": True}})
+    for eid in distinct_ids:
+        if eid and eid not in events_map:
+            events_map[eid] = f"Event ({eid[:8]})"
+
+    items = [{"id": eid, "name": ename} for eid, ename in events_map.items()]
+    return {"events": items}
 
 
 @router.delete("/admin/studio-storage/folders/{folder_id}")
@@ -1406,4 +1792,34 @@ async def sync_gallery_photos(body: SyncGalleryRequest, admin: Dict[str, Any] = 
         synced += 1
 
     return {"synced": synced}
+
+
+class EnterpriseRequestIn(BaseModel):
+    storage_needed_gb: int
+    monthly_uploads_approx: Optional[str] = None
+    expected_downloads: Optional[str] = None
+    studio_name: str
+    phone: str
+    email: str
+    notes: Optional[str] = None
+
+
+@router.post("/admin/studio-storage/enterprise-request")
+async def request_enterprise_quote(body: EnterpriseRequestIn, admin: Dict[str, Any] = Depends(current_admin_dep)):
+    admin_id = admin.get("admin_id") or admin.get("id")
+    doc = {
+        "id": f"req_{uuid.uuid4().hex[:10]}",
+        "admin_id": admin_id,
+        "storage_needed_gb": body.storage_needed_gb,
+        "monthly_uploads_approx": body.monthly_uploads_approx,
+        "expected_downloads": body.expected_downloads,
+        "studio_name": body.studio_name,
+        "phone": body.phone,
+        "email": body.email,
+        "notes": body.notes,
+        "created_at": _now(),
+        "status": "pending",
+    }
+    await _db.studio_storage_enterprise_requests.insert_one(doc)
+    return {"success": True, "request_id": doc["id"]}
 

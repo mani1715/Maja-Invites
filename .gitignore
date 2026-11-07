@@ -3,9 +3,11 @@
 # Runtime user media — NEVER commit. The running app writes guest photos, live
 # galleries and wedding uploads here; they belong on disk / S3, not in git
 # (privacy + repo bloat). This stops `git add -A` on the server from sweeping
-# them in. (A few legacy files under uploads/ were committed before this rule
+# them in. (A few legacy files under uploads/
+backend/weddings/ were committed before this rule
 # and remain tracked; untrack them separately if desired.)
 uploads/
+backend/weddings/
 
 # Camera daemon runtime — the persisted SFTP host key + FTPES TLS cert/key
 # (secrets), and the per-connection upload scratch dirs.

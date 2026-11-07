@@ -170,7 +170,7 @@ export default function AdminEvents() {
   // super-admin token returns every studio's events. The three count calls are
   // page_size:1 (we only read `total`), so they are cheap.
   const { data, error, loading, reload } = useAsync(() => Promise.all([
-    listPaginated({ status: status || 'all', q, page_size: 100, sort: 'newest' }).then((r) => r.data).catch(() => null),
+    listPaginated({ status: status || 'all', q, page_size: 100, sort: 'newest' }).then((r) => r.data),
     listPaginated({ status: 'all', page_size: 1 }).then((r) => r.data?.total ?? 0).catch(() => 0),
     listPaginated({ status: 'published', page_size: 1 }).then((r) => r.data?.total ?? 0).catch(() => 0),
     listPaginated({ status: 'draft', page_size: 1 }).then((r) => r.data?.total ?? 0).catch(() => 0),
@@ -210,10 +210,10 @@ export default function AdminEvents() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Total', value: loading ? '—' : numberFmt.format(data?.total ?? 0) },
-        { label: 'Published', value: loading ? '—' : numberFmt.format(data?.published ?? 0) },
-        { label: 'Draft', value: loading ? '—' : numberFmt.format(data?.draft ?? 0) },
-        { label: 'Showing', value: loading ? '—' : numberFmt.format(rows.length) },
+        { label: 'Total', value: loading || error ? '—' : numberFmt.format(data?.total ?? 0) },
+        { label: 'Published', value: loading || error ? '—' : numberFmt.format(data?.published ?? 0) },
+        { label: 'Draft', value: loading || error ? '—' : numberFmt.format(data?.draft ?? 0) },
+        { label: 'Showing', value: loading || error ? '—' : numberFmt.format(rows.length) },
       ]}
       />
 

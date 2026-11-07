@@ -75,3 +75,68 @@ export const getAllPhotos = (slug, { limit = 200, offset = 0, deviceToken } = {}
 // 'face' → { photo_id, mobile, session_id }. Returns { url, remaining, cap }.
 export const grantDownload = (slug, payload, deviceHeader = {}) =>
   client.post(`/api/public/gallery/${slug}/download`, payload, { headers: deviceHeader });
+
+// ---- Standalone & Integrated Gallery Management ----------------
+export const getCommercialOptions = () =>
+  client.get('/api/subscriptions/commercial-options');
+
+export const createGallery = (payload) =>
+  client.post('/api/admin/galleries', payload);
+
+export const listGalleries = (params) =>
+  client.get('/api/admin/galleries', { params });
+
+export const getGallery = (galleryId) =>
+  client.get(`/api/admin/galleries/${galleryId}`);
+
+export const updateGallery = (galleryId, payload) =>
+  client.patch(`/api/admin/galleries/${galleryId}`, payload);
+
+export const attachInvitation = (galleryId, invitationId) =>
+  client.post(`/api/admin/galleries/${galleryId}/attach-invitation`, { invitation_id: invitationId });
+
+export const detachInvitation = (galleryId) =>
+  client.post(`/api/admin/galleries/${galleryId}/detach-invitation`);
+
+export const publishGallery = (galleryId) =>
+  client.post(`/api/admin/galleries/${galleryId}/publish`);
+
+export const unpublishGallery = (galleryId) =>
+  client.post(`/api/admin/galleries/${galleryId}/unpublish`);
+
+export const setGalleryCover = (galleryId, photoId, positionY = 50) =>
+  client.post(`/api/admin/galleries/${galleryId}/cover`, { photo_id: photoId, position_y: positionY });
+
+export const getPublicGalleryView = (slug, preview = false) =>
+  client.get(`/api/public/gallery/${slug}/view`, { params: preview ? { preview: 1 } : {} });
+
+// ---- Album Management ----------------
+export const listAlbums = (profileId) =>
+  client.get(`/api/admin/profiles/${profileId}/gallery/albums`);
+
+export const createAlbum = (profileId, payload) =>
+  client.post(`/api/admin/profiles/${profileId}/gallery/albums`, payload);
+
+export const updateAlbum = (profileId, albumId, payload) =>
+  client.patch(`/api/admin/profiles/${profileId}/gallery/albums/${albumId}`, payload);
+
+export const deleteAlbum = (profileId, albumId) =>
+  client.delete(`/api/admin/profiles/${profileId}/gallery/albums/${albumId}`);
+
+export const movePhotos = (profileId, photoIds, targetAlbumId) =>
+  client.post(`/api/admin/profiles/${profileId}/gallery/photos/move-album`, {
+    photo_ids: photoIds,
+    target_album_id: targetAlbumId,
+  });
+
+export const listPhotos = (profileId, params) =>
+  client.get(`/api/admin/profiles/${profileId}/gallery/photos`, { params });
+
+export const deletePhoto = (profileId, photoId) =>
+  client.delete(`/api/admin/profiles/${profileId}/gallery/photos/${photoId}`);
+
+export const bulkUploadPhotos = (profileId, formData, onProgress) =>
+  client.post(`/api/admin/profiles/${profileId}/gallery/bulk-upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: onProgress,
+  });

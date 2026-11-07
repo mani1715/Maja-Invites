@@ -1,0 +1,11 @@
+{
+  "route_entries": 111,
+  "captures": 222,
+  "unhandled_page_errors": 0,
+  "unresolved_overflow_candidates": [],
+  "mode": "static and service-unavailable local fixtures",
+  "production_build": "passed",
+  "navigation_checks": 9,
+  "recovery_checks": 9,
+  "homepage_responsive_content_cases": 16
+}

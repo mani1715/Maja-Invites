@@ -202,11 +202,11 @@ try:
             _sess.auth = razorpay_client.auth
         razorpay_client.session = _sess
     except Exception as _rzp_sess_err:
-        print(f"⚠️  Razorpay timeout session not applied: {_rzp_sess_err}")
-    print("✅ Razorpay client initialized successfully")
+        print(f"[WARN] Razorpay timeout session not applied: {_rzp_sess_err}")
+    print("[OK] Razorpay client initialized successfully")
 except Exception as e:
-    print(f"⚠️  Razorpay client initialization failed: {e}")
-    print("⚠️  Payment features will not work until valid credentials are provided")
+    print(f"[WARN] Razorpay client initialization failed: {e}")
+    print("[WARN] Payment features will not work until valid credentials are provided")
     razorpay_client = None
 
 
@@ -2315,37 +2315,46 @@ async def get_all_profiles(admin_data: dict = Depends(require_admin)):
     return profiles
 
 
+from subscription_service import is_studio_invitation_entitled, is_studio_gallery_entitled
+
+
 @api_router.post("/admin/profiles", response_model=ProfileResponse)
 async def create_profile(
     profile_data: ProfileCreate,
     on_behalf_of: Optional[str] = None,
     admin_data: dict = Depends(require_admin),
 ):
-    """Create new profile - PHASE 35: Auto-assign admin_id.
+    """Create new profile - Auto-assign admin_id.
     Super-admins may pass ?on_behalf_of=<photographer_admin_id> to create
     an invitation under that photographer's account.
+    Photographers with an active Annual Invitation Subscription can self-create.
     """
     admin_id = admin_data['admin_id']
 
-    # Event creation is a MAJA-team action (2026-08-21 business rule): only a
-    # super-admin creates an invitation, optionally assigning it to a
-    # photographer via ?on_behalf_of=. Photographers receive events ASSIGNED to
-    # them and never self-create. Enforced here at the API so the guard does not
-    # depend on the studio UI hiding a button (Phase 2 authz).
-    if admin_data.get('role') != 'super_admin':
-        raise HTTPException(
-            status_code=403,
-            detail="Only the MAJA team can create events. Ask your MAJA admin to "
-                   "create the event and assign it to your studio.",
-        )
-
-    # Optional assignment: create the invitation under a specific photographer's
-    # account (the "create & assign" flow). Role is already guaranteed super here.
-    if on_behalf_of:
-        target = await db.admins.find_one({"id": on_behalf_of, "role": "admin"}, {"_id": 0, "id": 1})
-        if not target:
-            raise HTTPException(status_code=404, detail="Photographer not found")
-        admin_id = on_behalf_of
+    is_super = admin_data.get('role') == 'super_admin'
+    if not is_super:
+        if getattr(profile_data, 'is_gallery_only', False):
+            entitled = await is_studio_gallery_entitled(db, admin_data)
+            if not entitled:
+                raise HTTPException(
+                    status_code=403,
+                    detail="An active Gallery subscription (Gallery Only or Invitation + Gallery Bundle) is required to create galleries."
+                )
+        else:
+            entitled = await is_studio_invitation_entitled(db, admin_data)
+            if not entitled:
+                raise HTTPException(
+                    status_code=403,
+                    detail="An active Annual Invitation Subscription is required to create new invitations. Please subscribe to an annual plan."
+                )
+        if on_behalf_of and on_behalf_of != admin_id:
+            raise HTTPException(status_code=403, detail="Photographers cannot assign events to another studio.")
+    else:
+        if on_behalf_of:
+            target = await db.admins.find_one({"id": on_behalf_of, "role": "admin"}, {"_id": 0, "id": 1})
+            if not target:
+                raise HTTPException(status_code=404, detail="Photographer not found")
+            admin_id = on_behalf_of
     
     # Generate unique slug
     slug = generate_slug(profile_data.groom_name, profile_data.bride_name)
@@ -2419,10 +2428,19 @@ async def create_profile(
         link_expiry_value=profile_data.link_expiry_value,
         link_expiry_date=expiry_date,
         expires_at=invitation_expires_at,
+        invitation_expires_at=getattr(profile_data, 'invitation_expires_at', None) or invitation_expires_at,
+        gallery_expires_at=getattr(profile_data, 'gallery_expires_at', None),
         # 2026 — Universal Invitation Categories
         invitation_category=getattr(profile_data, 'invitation_category', None) or "wedding",
         celebrant_info=getattr(profile_data, 'celebrant_info', None),
         design_selections=getattr(profile_data, 'design_selections', None) or {},
+        frame_transforms=getattr(profile_data, 'frame_transforms', None) or {},
+        background_settings=getattr(profile_data, 'background_settings', None) or {},
+        version=1,
+        status=WeddingStatus.DRAFT,
+        selected_design_key=getattr(profile_data, 'selected_design_key', None) or profile_data.design_id,
+        is_gallery_only=getattr(profile_data, 'is_gallery_only', False) or False,
+        has_ai_addon=getattr(profile_data, 'has_ai_addon', False) or False,
     )
     
     # Convert to dict and serialize dates
@@ -2430,10 +2448,14 @@ async def create_profile(
     doc['event_date'] = doc['event_date'].isoformat()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['updated_at'] = doc['updated_at'].isoformat()
-    if doc['link_expiry_date']:
+    if doc.get('link_expiry_date'):
         doc['link_expiry_date'] = doc['link_expiry_date'].isoformat()
-    if doc['expires_at']:
+    if doc.get('expires_at'):
         doc['expires_at'] = doc['expires_at'].isoformat()
+    if doc.get('invitation_expires_at'):
+        doc['invitation_expires_at'] = doc['invitation_expires_at'].isoformat()
+    if doc.get('gallery_expires_at'):
+        doc['gallery_expires_at'] = doc['gallery_expires_at'].isoformat()
     
     # Sequential PUBLIC number (00001, 00002, …) + cosmetic name slug, assigned
     # atomically. Public id only — access is still gated by the resolver.
@@ -2547,13 +2569,28 @@ async def update_profile(
     if 'groom_about' in update_dict and update_dict['groom_about']:
         update_dict['groom_about'] = sanitize_html(update_dict['groom_about'])
     
+    # Optimistic locking: check version if client provided it
+    client_version = update_dict.get('version')
+    current_version = existing_profile.get('version', 1)
+    if client_version is not None and client_version < current_version:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Conflict: Invitation was updated by another session (version {current_version} vs {client_version}). Please reload to review changes."
+        )
+    update_dict['version'] = current_version + 1
+
+    # Protect slug from accidental change if already published
+    if existing_profile.get('status') in ('PUBLISHED', 'published') and 'slug' in update_dict:
+        if update_dict['slug'] != existing_profile.get('slug') and role != 'super_admin':
+            update_dict.pop('slug', None)
+
     # Recalculate expiry if changed
     if 'link_expiry_type' in update_dict or 'link_expiry_value' in update_dict:
-        expiry_type = update_dict.get('link_expiry_type', existing_profile['link_expiry_type'])
-        expiry_value = update_dict.get('link_expiry_value', existing_profile.get('link_expiry_value'))
+        expiry_type = update_dict.get('link_expiry_type', existing_profile.get('link_expiry_type', 'days'))
+        expiry_value = update_dict.get('link_expiry_value', existing_profile.get('link_expiry_value', 30))
         update_dict['link_expiry_date'] = calculate_expiry_date(expiry_type, expiry_value)
     
-    # PHASE 12: Recalculate invitation expiry if event_date or expires_at changed
+    # Recalculate invitation expiry if event_date or expires_at changed
     if 'event_date' in update_dict or 'expires_at' in update_dict:
         event_date_for_calc = update_dict.get('event_date', existing_profile.get('event_date'))
         if isinstance(event_date_for_calc, str):
@@ -2565,18 +2602,49 @@ async def update_profile(
     update_dict['updated_at'] = datetime.now(timezone.utc)
     
     # Serialize dates
-    if 'event_date' in update_dict:
+    if 'event_date' in update_dict and hasattr(update_dict['event_date'], 'isoformat'):
         update_dict['event_date'] = update_dict['event_date'].isoformat()
     update_dict['updated_at'] = update_dict['updated_at'].isoformat()
-    if 'link_expiry_date' in update_dict and update_dict['link_expiry_date']:
+    if 'link_expiry_date' in update_dict and hasattr(update_dict['link_expiry_date'], 'isoformat'):
         update_dict['link_expiry_date'] = update_dict['link_expiry_date'].isoformat()
-    if 'expires_at' in update_dict and update_dict['expires_at']:
+    if 'expires_at' in update_dict and hasattr(update_dict['expires_at'], 'isoformat'):
         update_dict['expires_at'] = update_dict['expires_at'].isoformat()
+    if 'invitation_expires_at' in update_dict and hasattr(update_dict['invitation_expires_at'], 'isoformat'):
+        update_dict['invitation_expires_at'] = update_dict['invitation_expires_at'].isoformat()
+    if 'gallery_expires_at' in update_dict and hasattr(update_dict['gallery_expires_at'], 'isoformat'):
+        update_dict['gallery_expires_at'] = update_dict['gallery_expires_at'].isoformat()
+    if 'archived_at' in update_dict and hasattr(update_dict['archived_at'], 'isoformat'):
+        update_dict['archived_at'] = update_dict['archived_at'].isoformat()
     
-    await db.profiles.update_one(
-        {"id": profile_id},
+    # Record revision snapshot before updating (keep up to 30 revisions per profile)
+    try:
+        rev_doc = {
+            "id": f"rev_{uuid.uuid4().hex[:16]}",
+            "profile_id": profile_id,
+            "admin_id": admin_id,
+            "role": role,
+            "version": current_version,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "snapshot": existing_profile,
+        }
+        await db.profile_revisions.insert_one(rev_doc)
+    except Exception as e:
+        logger.warning("Failed to store profile revision: %s", e)
+
+    # Atomic update with conditional version check
+    update_filter = {"id": profile_id}
+    if client_version is not None:
+        update_filter["version"] = client_version
+
+    res = await db.profiles.update_one(
+        update_filter,
         {"$set": update_dict}
     )
+    if res.matched_count == 0:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Conflict: Invitation was updated by another concurrent session. Please refresh to load the latest changes."
+        )
     
     # Get updated profile
     updated_profile = await db.profiles.find_one({"id": profile_id}, {"_id": 0})
@@ -15659,6 +15727,18 @@ except Exception as e:
     )
 
 # =====================================================================
+# Custom Design Requests & Revisions Router
+# =====================================================================
+try:
+    import logging as _logging
+    from custom_design_service import build_custom_design_router
+    app.include_router(build_custom_design_router(db, require_admin, require_super_admin))
+    _logging.getLogger("custom_design_mount").info("[startup] custom_design_service router mounted")
+except Exception as e:
+    import logging as _logging
+    _logging.getLogger("custom_design_mount").exception("[startup] custom_design_service router failed to mount: %s", e)
+
+# =====================================================================
 # Public-user Auth — normal end-users (wedding guests) signup/login + Google
 # =====================================================================
 from user_auth import build_user_auth_router
@@ -15943,7 +16023,7 @@ app.include_router(build_drafts_router(db, require_admin))
 # pushing a 5,000-photo event competes with every guest opening an invitation.
 # These two endpoints move the bytes out of the app tier entirely.
 from storage_upload import build_storage_upload_router
-app.include_router(build_storage_upload_router(db, require_admin))
+app.include_router(build_storage_upload_router(db, require_admin, uploads_root=UPLOADS_DIR.parent))
 
 # Direct-to-S3 media upload sessions (canonical 4-bucket layout, multipart for
 # large files, resumable, server-verified completion). Control plane only — a
@@ -16480,6 +16560,17 @@ async def _ensure_financial_safety_indexes():
         logger.info("[indexes] subscriptions pending-uniqueness index ready")
     except Exception as e:
         logger.warning("[indexes] subscriptions pending-uniqueness index failed (existing pending dupes?): %s", e)
+
+    try:
+        # Gallery photo checksum uniqueness per profile (atomic concurrent deduplication)
+        await db.gallery_photos.create_index(
+            [("profile_id", 1), ("checksum", 1)],
+            unique=True,
+            name="uniq_gallery_photo_profile_checksum",
+        )
+        logger.info("[indexes] gallery_photos.(profile_id,checksum) unique index ready")
+    except Exception as e:
+        logger.warning("[indexes] gallery_photos checksum index failed (existing dupes?): %s", e)
 
     # ── PHOTOGRAPHER DASHBOARD PERFORMANCE INDEXES ───────────────────
     # The dashboard query is:

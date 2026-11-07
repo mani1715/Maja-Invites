@@ -53,20 +53,19 @@ if (-not (Test-Path $venvPy))             { Fail "Backend venv missing. Run: pyt
 if (-not (Test-Path $vite))               { Fail "Frontend deps missing. Run: cd frontend-v2 ; yarn install" }
 if (-not (Test-Path "$root\backend\.env")) { Fail "backend\.env missing. Copy backend\.env.example and set SUPABASE_DB_URL + JWT_SECRET_KEY." }
 
-Write-Host "[1/3] Postgres :5434..." -ForegroundColor Cyan
-if (PortUp 5434) {
-    # Something holds 5434. If it is not OUR cluster (no local data dir) then
-    # it is another install - commonly a PostgreSQL Windows service - and the
-    # backend would try to authenticate against a database we did not create
-    # and do not have the password for. Say so instead of failing later with a
-    # confusing auth error.
-    if (-not (Test-Path (Join-Path $pgData "PG_VERSION"))) {
-        Fail ("Port 5434 is in use but $pgData has no cluster - something else " +
-              "owns that port (check: Get-Service postgresql*). Stop it, or " +
-              "point backend\.env SUPABASE_DB_URL at whichever database you " +
-              "actually want and start the backend yourself.")
+$targetPgPort = 5432
+if (Test-Path "$root\backend\.env") {
+    $envRaw = Get-Content "$root\backend\.env" -Raw
+    if ($envRaw -match 'SUPABASE_DB_URL=.*?:(\d+)/') {
+        $targetPgPort = [int]$matches[1]
     }
+}
+
+Write-Host "[1/3] Postgres :$targetPgPort..." -ForegroundColor Cyan
+if (PortUp $targetPgPort) {
     Write-Host "      already running" -ForegroundColor DarkGray
+} elseif (PortUp 5434) {
+    Write-Host "      cluster on :5434 already running" -ForegroundColor DarkGray
 } else {
     # First run on this machine: build our own cluster. initdb creates it from
     # scratch under a password we choose, so no pre-existing cluster's
@@ -88,14 +87,14 @@ if (PortUp 5434) {
     if (Test-Path $stalePid) { Remove-Item $stalePid -Force -ErrorAction SilentlyContinue }
     # Do NOT redirect pg_ctl output (detached postgres inherits the handle and
     # the call blocks forever) - -l already routes server output to the log.
-    & "$pgBin\pg_ctl.exe" -D $pgData -l $pgLog -o "-p 5434" start
+    & "$pgBin\pg_ctl.exe" -D $pgData -l $pgLog -o "-p $targetPgPort" start
     $up = $false
-    foreach ($i in 1..10) { Start-Sleep -Seconds 1; if (PortUp 5434) { $up = $true; break } }
+    foreach ($i in 1..10) { Start-Sleep -Seconds 1; if (PortUp $targetPgPort) { $up = $true; break } }
     if (-not $up) { Fail "Postgres failed to start (see $pgLog)." }
     # The `maja` database is what SUPABASE_DB_URL points at; initdb only makes
     # `postgres`. Harmless to re-run - "already exists" is ignored.
     if ($freshCluster) {
-        & "$pgBin\psql.exe" -U postgres -h 127.0.0.1 -p 5434 -w -q -c "CREATE DATABASE maja;" 2>&1 | Out-Null
+        & "$pgBin\psql.exe" -U postgres -h 127.0.0.1 -p $targetPgPort -w -q -c "CREATE DATABASE maja;" 2>&1 | Out-Null
         Write-Host "      created database 'maja'" -ForegroundColor DarkGray
     }
     Write-Host "      started" -ForegroundColor Green
@@ -106,20 +105,8 @@ $pids = @()
 if (PortUp 8001) {
     Write-Host "      already running" -ForegroundColor DarkGray
 } else {
-    # SUPABASE_DB_URL is deliberately NOT set here. python-dotenv does not
-    # override variables that already exist in the environment, so setting it
-    # would silently beat backend\.env and point the app at a database the
-    # user did not choose. backend\.env is the single source of truth; the
-    # matching value for this cluster is:
-    #   SUPABASE_DB_URL=postgresql://postgres@127.0.0.1:5433/maja
-    $beCmd = "Set-Location '$root\backend'; " +
-             "`$env:PYTHONIOENCODING='utf-8'; " +
-             "`$env:ENVIRONMENT='development'; " +
-             "`$env:CORS_ORIGINS='http://localhost:8127,http://localhost:3100'; " +
-             "`$env:SEED_TEST_ACCOUNTS='0'; " +
-             "if (-not `$env:JWT_SECRET_KEY) { `$env:JWT_SECRET_KEY='dev_local_only_change_me_0123456789abcdef' }; " +
-             "& '$venvPy' -m uvicorn server:app --host 127.0.0.1 --port 8001"
-    $be = Start-Process powershell -ArgumentList "-NoExit","-Command",$beCmd -PassThru
+    $beScript = Join-Path $root "backend\start.ps1"
+    $be = Start-Process powershell -ArgumentList "-NoExit","-ExecutionPolicy","Bypass","-File",$beScript -PassThru
     $pids += $be.Id
     Write-Host "      launching (pid $($be.Id))" -ForegroundColor Green
 }
@@ -128,9 +115,8 @@ Write-Host "[3/3] Frontend (vite :8127, proxies /api -> :8001)..." -ForegroundCo
 if (PortUp 8127) {
     Write-Host "      already running" -ForegroundColor DarkGray
 } else {
-    $feCmd = "Set-Location '$root\frontend-v2'; " +
-             "node node_modules\vite\bin\vite.js --port 8127 --strictPort"
-    $fe = Start-Process powershell -ArgumentList "-NoExit","-Command",$feCmd -PassThru
+    $feScript = Join-Path $root "frontend-v2\start.ps1"
+    $fe = Start-Process powershell -ArgumentList "-NoExit","-ExecutionPolicy","Bypass","-File",$feScript -PassThru
     $pids += $fe.Id
     Write-Host "      launching (pid $($fe.Id))" -ForegroundColor Green
 }

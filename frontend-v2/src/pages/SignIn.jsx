@@ -96,12 +96,12 @@ export default function SignIn() {
     <div className="mjWash mj-auth-grid">
       <div className="mj-auth-panel">
         <div className="px-ripple" aria-hidden="true" />
-        <Link to="/" className="mj-auth-brand" data-mj-link>MAJA Invites</Link>
+        <Link to="/" className="mj-auth-brand" data-mj-link>Pixora / MAJA Invites</Link>
         <div style={{ position: 'relative' }}>
-          <p className="mj-auth-quote">&ldquo;It didn&rsquo;t feel like a form. It felt like someone was actually listening.&rdquo;</p>
-          <p className="mj-auth-quote-by">Ananya &amp; Rohan, married in Udaipur</p>
+          <p className="mj-auth-quote">Make space for your best work.</p>
+          <p className="mj-auth-quote-by">Your photographs. Your clients. Your creative business.</p>
         </div>
-        <div className="mj-auth-frame">wedding photograph</div>
+        <p className="px-auth-caption">One workspace for your studio, portfolios and celebrations.</p>
       </div>
 
       <div className="mj-auth-form-col">

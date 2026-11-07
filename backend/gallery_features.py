@@ -61,6 +61,7 @@ from face_providers import get_face_provider
 # the Drive pool once a file is mirrored. Swapping here rather than at each
 # call site keeps the guest-privacy model identical.
 from storage_serve import media_url as generate_signed_url  # noqa: E402
+from subscription_service import is_studio_gallery_entitled
 
 import face_queue
 from cache_backend import kv_get_json, kv_set_json, client_ip, rate_limit_allow
@@ -169,6 +170,7 @@ class CommitUploadIn(BaseModel):
     s3_key: str
     original_name: Optional[str] = None
     reservation_id: Optional[str] = None
+    album_id: Optional[str] = None
 
 
 # Multipart lane — same direct-to-S3 staging + commit as the single-PUT flow,
@@ -198,6 +200,32 @@ class MultipartCompleteIn(BaseModel):
     parts: List[MultipartPartIn] = Field(default_factory=list)
     original_name: Optional[str] = None
     reservation_id: Optional[str] = None
+    album_id: Optional[str] = None
+
+
+class StandaloneGalleryCreateIn(BaseModel):
+    title: str = Field(min_length=2, max_length=200)
+    client_name: Optional[str] = None
+    event_date: Optional[str] = None
+    cover_photo_id: Optional[str] = None
+    branding: Optional[Dict[str, Any]] = None
+    expiry_days: Optional[int] = 365
+    gallery_expires_at: Optional[str] = None
+    initial_albums: Optional[List[str]] = Field(default_factory=list)
+    invitation_id: Optional[str] = None
+    cover_position_y: Optional[int] = 50
+
+
+class StandaloneGalleryUpdateIn(BaseModel):
+    title: Optional[str] = None
+    client_name: Optional[str] = None
+    event_date: Optional[str] = None
+    cover_photo_id: Optional[str] = None
+    cover_position_y: Optional[int] = None
+    branding: Optional[Dict[str, Any]] = None
+    gallery_expires_at: Optional[str] = None
+    status: Optional[str] = None
+    invitation_id: Optional[str] = None
 
 
 class MultipartAbortIn(BaseModel):
@@ -251,6 +279,7 @@ def _photo_keys(profile_id: str, photo_id: str) -> Dict[str, str]:
     return {
         "preview": f"{pref}photos/{photo_id}/preview.jpg",
         "thumb":   f"{pref}photos/{photo_id}/thumb.webp",
+        "display": f"{pref}photos/{photo_id}/display.webp",
     }
 
 
@@ -374,9 +403,13 @@ async def _require_owned_profile(db, profile_id_or_slug: str, admin_id: str) -> 
     return profile
 
 
-def _compute_auto_delete_at(profile: dict) -> datetime:
-    """1 DAY after profile.link_expiry_date (or event_date + 7 days)."""
-    expiry = profile.get("link_expiry_date") or profile.get("expires_at")
+def _compute_auto_delete_at(profile: dict, retention_days: Optional[int] = None) -> datetime:
+    """Computes auto_delete_at based on independent gallery_expires_at + retention grace period."""
+    gc = profile.get("gallery_config") or {}
+    expiry = gc.get("expires_at") or profile.get("gallery_expires_at")
+    if not expiry:
+        # Fallback to invitation link expiry only when gallery expiry is not set
+        expiry = profile.get("link_expiry_date") or profile.get("expires_at")
     if expiry:
         if isinstance(expiry, str):
             try:
@@ -393,7 +426,13 @@ def _compute_auto_delete_at(profile: dict) -> datetime:
         expiry = (ev or _now()) + timedelta(days=7)
     if expiry.tzinfo is None:
         expiry = expiry.replace(tzinfo=timezone.utc)
-    return expiry + timedelta(days=1)
+
+    if retention_days is None:
+        try:
+            retention_days = int(os.environ.get("GALLERY_RETENTION_GRACE_DAYS", "30"))
+        except Exception:
+            retention_days = 30
+    return expiry + timedelta(days=retention_days)
 
 
 def _issue_live_token(profile_id: str) -> str:
@@ -511,15 +550,19 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
         profile = await _require_owned_profile(db, profile_id, admin_id)
 
         collection_id = _profile_collection_id(profile["id"])
-        if payload.enabled:
-            get_face_provider().create_collection(collection_id)
+        has_ai = await has_ai_face_entitlement(db, profile["id"])
+        if payload.enabled and has_ai:
+            try:
+                get_face_provider().create_collection(collection_id)
+            except Exception as e:
+                logger.warning("create_collection failed: %s", e)
 
         gc = profile.get("gallery_config") or {}
         gc.update({
             "enabled": payload.enabled,
-            "face_search_enabled": True,
+            "face_search_enabled": bool(has_ai and payload.enabled),
             "confidence_threshold": _clamp_threshold(payload.confidence_threshold),
-            "aws_collection_id": collection_id,
+            "aws_collection_id": collection_id if has_ai else None,
             "upload_methods": (payload.upload_methods.model_dump()
                                 if payload.upload_methods else UploadMethods().model_dump()),
             "live_upload_token": _issue_live_token(profile["id"]),
@@ -540,6 +583,38 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
         gc["updated_at"] = _now().isoformat()
         await db.profiles.update_one({"id": profile["id"]}, {"$set": {"gallery_config": gc}})
         return {"success": True, "upload_methods": gc["upload_methods"]}
+
+    @router.patch("/admin/profiles/{profile_id}/gallery/config")
+    async def update_gallery_config(profile_id: str, payload: Dict[str, Any],
+                                    admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, profile_id, admin_id)
+        gc = profile.get("gallery_config") or {}
+        if "expires_at" in payload:
+            gc["expires_at"] = payload["expires_at"]
+        if "retention_days" in payload:
+            gc["retention_days"] = payload["retention_days"]
+        if "face_search_enabled" in payload:
+            has_ai = await has_ai_face_entitlement(db, profile["id"])
+            gc["face_search_enabled"] = bool(payload["face_search_enabled"] and has_ai)
+        if "confidence_threshold" in payload:
+            gc["confidence_threshold"] = _clamp_threshold(payload["confidence_threshold"])
+        gc["auto_delete_at"] = _compute_auto_delete_at(profile, gc.get("retention_days")).isoformat()
+        gc["updated_at"] = _now().isoformat()
+        await db.profiles.update_one({"id": profile["id"]}, {"$set": {"gallery_config": gc}})
+        return {"success": True, "gallery_config": _redact(gc)}
+
+    @router.post("/admin/profiles/{profile_id}/gallery/ai-index-backlog")
+    async def ai_index_backlog(profile_id: str,
+                               admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, profile_id, admin_id)
+        limit = await resolve_face_photo_limit(db, profile["id"])
+        if limit == 0:
+            raise HTTPException(
+                status_code=403,
+                detail="AI face matching add-on has not been purchased for this gallery."
+            )
+        res = await trigger_backlog_face_indexing(db, profile["id"])
+        return res
 
     @router.post("/admin/profiles/{profile_id}/gallery/regenerate-token")
     async def regen_token(profile_id: str,
@@ -614,11 +689,14 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
     @router.get("/admin/profiles/{profile_id}/gallery/photos")
     async def list_photos(profile_id: str, limit: int = 200, offset: int = 0,
                            event_invitation_id: Optional[str] = Query(None),
+                           album_id: Optional[str] = Query(None),
                            admin_id: str = Depends(get_current_admin)):
         profile = await _require_owned_profile(db, profile_id, admin_id)
         query: Dict[str, Any] = {"profile_id": profile["id"]}
         if event_invitation_id:
             query["event_invitation_id"] = event_invitation_id
+        if album_id and album_id != "all":
+            query["album_id"] = album_id
         cursor = db.gallery_photos.find(
             query, {"_id": 0}
         ).sort("created_at", -1).skip(offset).limit(min(limit, 500))
@@ -632,8 +710,10 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
                                  "failed" if p.get("index_error") else
                                  "missing" if p.get("storage_status") == "missing" else
                                  "indexing")
+            disp_key = p.get("display_s3_key") or p.get("preview_s3_key") or p.get("s3_key")
             out.append({
                 "id": p["id"],
+                "album_id": p.get("album_id"),
                 "upload_method": p.get("upload_method"),
                 "event_invitation_id": p.get("event_invitation_id"),
                 "face_count": p.get("face_count", 0),
@@ -643,6 +723,7 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
                 "created_at": p.get("created_at"),
                 "processing_status": processing_status,
                 "thumb_url": generate_signed_url(p["thumb_s3_key"], 3600),
+                "display_url": generate_signed_url(disp_key, 3600),
                 "original_url": generate_signed_url(p.get("original_s3_key") or p["s3_key"], 3600),
             })
         return {"photos": out, "total": len(out)}
@@ -747,6 +828,534 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
         return {"success": True, "deleted": len(found), "requested": len(ids)}
 
     # --------------------------------------------------------
+    #  Albums Management
+    # --------------------------------------------------------
+    @router.get("/admin/profiles/{profile_id}/gallery/albums")
+    async def list_gallery_albums(profile_id: str, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, profile_id, admin_id)
+        albums = await db.gallery_albums.find(
+            {"profile_id": profile["id"]}, {"_id": 0}
+        ).sort("sort_order", 1).to_list(100)
+        out = []
+        for a in albums:
+            count = await db.gallery_photos.count_documents(
+                {"profile_id": profile["id"], "album_id": a["id"]}
+            )
+            cover_url = None
+            if a.get("cover_photo_id"):
+                cp = await db.gallery_photos.find_one(
+                    {"profile_id": profile["id"], "id": a["cover_photo_id"]}, {"_id": 0}
+                )
+                if cp:
+                    cover_url = generate_signed_url(cp.get("thumb_s3_key"), 3600)
+            out.append({
+                "id": a["id"],
+                "name": a.get("name", "Untitled Album"),
+                "cover_photo_id": a.get("cover_photo_id"),
+                "cover_url": cover_url,
+                "photo_count": count,
+                "sort_order": a.get("sort_order", 0),
+                "created_at": a.get("created_at"),
+            })
+        return {"albums": out, "total": len(out)}
+
+    @router.post("/admin/profiles/{profile_id}/gallery/albums")
+    async def create_gallery_album(profile_id: str, payload: dict, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, profile_id, admin_id)
+        name = (payload.get("name") or "").strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="Album name is required")
+        album_id = f"alb_{uuid.uuid4().hex[:12]}"
+        now_iso = _now().isoformat()
+        highest = await db.gallery_albums.find_one(
+            {"profile_id": profile["id"]}, sort=[("sort_order", -1)], projection={"_id": 0, "sort_order": 1}
+        )
+        sort_order = (highest.get("sort_order", 0) + 1) if highest else 1
+        doc = {
+            "id": album_id,
+            "profile_id": profile["id"],
+            "admin_id": profile.get("admin_id") or admin_id,
+            "name": name,
+            "cover_photo_id": payload.get("cover_photo_id"),
+            "sort_order": sort_order,
+            "created_at": now_iso,
+            "updated_at": now_iso,
+        }
+        await db.gallery_albums.insert_one(doc)
+        doc.pop("_id", None)
+        return doc
+
+    @router.patch("/admin/profiles/{profile_id}/gallery/albums/{album_id}")
+    async def update_gallery_album(profile_id: str, album_id: str, payload: dict, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, profile_id, admin_id)
+        album = await db.gallery_albums.find_one({"id": album_id, "profile_id": profile["id"]}, {"_id": 0})
+        if not album:
+            raise HTTPException(status_code=404, detail="Album not found")
+        updates = {"updated_at": _now().isoformat()}
+        if "name" in payload and str(payload["name"]).strip():
+            updates["name"] = str(payload["name"]).strip()
+        if "cover_photo_id" in payload:
+            updates["cover_photo_id"] = payload["cover_photo_id"]
+        if "sort_order" in payload and isinstance(payload["sort_order"], int):
+            updates["sort_order"] = payload["sort_order"]
+        await db.gallery_albums.update_one({"id": album_id, "profile_id": profile["id"]}, {"$set": updates})
+        updated = await db.gallery_albums.find_one({"id": album_id}, {"_id": 0})
+        return updated
+
+    @router.delete("/admin/profiles/{profile_id}/gallery/albums/{album_id}")
+    async def delete_gallery_album(profile_id: str, album_id: str, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, profile_id, admin_id)
+        # Unset album_id on any photos in this album so photos are not orphaned
+        await db.gallery_photos.update_many(
+            {"profile_id": profile["id"], "album_id": album_id},
+            {"$set": {"album_id": None}}
+        )
+        await db.gallery_albums.delete_one({"id": album_id, "profile_id": profile["id"]})
+        return {"success": True}
+
+    @router.post("/admin/profiles/{profile_id}/gallery/photos/move-album")
+    async def move_photos_album(profile_id: str, payload: dict, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, profile_id, admin_id)
+        photo_ids = payload.get("photo_ids") or []
+        target_album_id = payload.get("target_album_id")
+        if not photo_ids:
+            raise HTTPException(status_code=400, detail="No photo IDs provided")
+        if target_album_id:
+            alb = await db.gallery_albums.find_one({"id": target_album_id, "profile_id": profile["id"]}, {"_id": 0})
+            if not alb:
+                raise HTTPException(status_code=404, detail="Target album not found")
+        await db.gallery_photos.update_many(
+            {"profile_id": profile["id"], "id": {"$in": photo_ids}},
+            {"$set": {"album_id": target_album_id}}
+        )
+        return {"success": True, "moved_count": len(photo_ids)}
+
+    # --------------------------------------------------------
+    #  Standalone & Integrated Gallery Management
+    # --------------------------------------------------------
+    @router.post("/admin/galleries")
+    async def create_standalone_gallery(payload: StandaloneGalleryCreateIn,
+                                         admin_id: str = Depends(get_current_admin)):
+        admin = await db.admins.find_one({"id": admin_id}, {"_id": 0})
+        if not admin:
+            raise HTTPException(status_code=404, detail="Admin not found")
+        if not await is_studio_gallery_entitled(db, admin):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "STORAGE_SUBSCRIPTION_REQUIRED",
+                    "message": "A Gallery Storage or Combined subscription is required to create galleries."
+                }
+            )
+
+        title = payload.title.strip()
+        slug_base = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+        if not slug_base:
+            slug_base = "gallery"
+        slug = f"g-{slug_base}-{uuid.uuid4().hex[:6]}"
+        while await db.profiles.find_one({"slug": slug}):
+            slug = f"g-{slug_base}-{uuid.uuid4().hex[:6]}"
+
+        gallery_id = f"gal_{uuid.uuid4().hex[:12]}"
+        now_dt = _now()
+        now_iso = now_dt.isoformat()
+
+        # Handle expiry
+        if payload.gallery_expires_at:
+            expires_at_iso = payload.gallery_expires_at
+            try:
+                exp_dt = datetime.fromisoformat(expires_at_iso.replace("Z", "+00:00"))
+            except Exception:
+                exp_dt = now_dt + timedelta(days=payload.expiry_days or 365)
+                expires_at_iso = exp_dt.isoformat()
+        else:
+            exp_dt = now_dt + timedelta(days=payload.expiry_days or 365)
+            expires_at_iso = exp_dt.isoformat()
+
+        auto_del_dt = exp_dt + timedelta(days=30)
+        auto_del_iso = auto_del_dt.isoformat()
+
+        # Check invitation if attaching
+        linked_inv_id = None
+        if payload.invitation_id:
+            inv = await db.profiles.find_one(
+                {"id": payload.invitation_id, "admin_id": admin_id}, {"_id": 0, "id": 1}
+            )
+            if inv:
+                linked_inv_id = inv["id"]
+
+        branding = payload.branding or {
+            "studio_name": admin.get("studio_name") or admin.get("full_name") or "Studio",
+            "watermark_text": admin.get("watermark_text") or admin.get("studio_name") or "MAJA INVITES",
+            "logo_url": admin.get("logo_url"),
+        }
+
+        doc = {
+            "id": gallery_id,
+            "slug": slug,
+            "admin_id": admin_id,
+            "title": title,
+            "client_name": payload.client_name,
+            "event_date": payload.event_date,
+            "is_gallery_only": True,
+            "cover_photo_id": payload.cover_photo_id,
+            "cover_position_y": payload.cover_position_y if payload.cover_position_y is not None else 50,
+            "studio_branding": branding,
+            "gallery_status": "draft",
+            "gallery_expires_at": expires_at_iso,
+            "linked_invitation_id": linked_inv_id,
+            "gallery_config": {
+                "enabled": True,
+                "total_photos": 0,
+                "face_search_enabled": False,
+                "upload_methods": UploadMethods().model_dump(),
+                "live_upload_token": _issue_live_token(gallery_id),
+                "live_upload_expires_at": (now_dt + timedelta(hours=LIVE_TOKEN_EXPIRY_HOURS)).isoformat(),
+                "expires_at": expires_at_iso,
+                "auto_delete_at": auto_del_iso,
+                "created_at": now_iso,
+                "updated_at": now_iso,
+            },
+            "created_at": now_iso,
+            "updated_at": now_iso,
+        }
+        await db.profiles.insert_one(doc)
+
+        # Seed initial albums if provided
+        initial_names = payload.initial_albums if payload.initial_albums is not None else []
+        created_albums = []
+        for idx, a_name in enumerate(initial_names):
+            if a_name and str(a_name).strip():
+                alb_id = f"alb_{uuid.uuid4().hex[:12]}"
+                alb_doc = {
+                    "id": alb_id,
+                    "profile_id": gallery_id,
+                    "admin_id": admin_id,
+                    "name": str(a_name).strip(),
+                    "cover_photo_id": None,
+                    "sort_order": idx + 1,
+                    "created_at": now_iso,
+                    "updated_at": now_iso,
+                }
+                await db.gallery_albums.insert_one(alb_doc)
+                alb_doc.pop("_id", None)
+                created_albums.append(alb_doc)
+
+        doc.pop("_id", None)
+        return {
+            "gallery": doc,
+            "albums": created_albums,
+            "public_url": f"/gallery/{slug}",
+        }
+
+    @router.get("/admin/galleries")
+    async def list_galleries(status: Optional[str] = Query(None),
+                             admin_id: str = Depends(get_current_admin)):
+        admin = await db.admins.find_one({"id": admin_id}, {"_id": 0, "role": 1})
+        is_super = admin and admin.get("role") == "super_admin"
+
+        query: Dict[str, Any] = {}
+        if not is_super:
+            query["admin_id"] = admin_id
+
+        query["$or"] = [
+            {"is_gallery_only": True},
+            {"gallery_config.enabled": True}
+        ]
+
+        now_iso = _now().isoformat()
+        cursor = db.profiles.find(query, {"_id": 0}).sort("created_at", -1).limit(300)
+        out = []
+        async for p in cursor:
+            gid = p["id"]
+            gc = p.get("gallery_config") or {}
+            g_status = p.get("gallery_status") or ("active" if gc.get("enabled") else "draft")
+            exp = p.get("gallery_expires_at") or gc.get("expires_at")
+            if exp and exp < now_iso:
+                g_status = "expired"
+
+            if status and status != "all":
+                if status == "active" and g_status != "active":
+                    continue
+                if status == "draft" and g_status != "draft":
+                    continue
+                if status == "expired" and g_status != "expired":
+                    continue
+                if status == "standalone" and not p.get("is_gallery_only"):
+                    continue
+                if status == "linked" and not p.get("linked_invitation_id"):
+                    continue
+
+            photo_count = await db.gallery_photos.count_documents({"profile_id": gid})
+            album_count = await db.gallery_albums.count_documents({"profile_id": gid})
+
+            total_bytes = 0
+            async for ag in db.gallery_photos.aggregate([
+                {"$match": {"profile_id": gid}},
+                {"$group": {"_id": None, "bytes": {"$sum": "$original_bytes"}}}
+            ]):
+                total_bytes = ag.get("bytes") or 0
+
+            cover_url = None
+            if p.get("cover_photo_id"):
+                cp = await db.gallery_photos.find_one({"id": p["cover_photo_id"], "profile_id": gid}, {"_id": 0, "thumb_s3_key": 1, "display_s3_key": 1})
+                if cp:
+                    cover_url = generate_signed_url(cp.get("thumb_s3_key") or cp.get("display_s3_key"), 3600)
+            if not cover_url:
+                first_p = await db.gallery_photos.find_one({"profile_id": gid}, {"_id": 0, "thumb_s3_key": 1, "display_s3_key": 1})
+                if first_p:
+                    cover_url = generate_signed_url(first_p.get("thumb_s3_key") or first_p.get("display_s3_key"), 3600)
+
+            out.append({
+                "id": gid,
+                "slug": p.get("slug"),
+                "title": p.get("title") or (p.get("groom_name", "") + " & " + p.get("bride_name", "")).strip(" &") or "Wedding Gallery",
+                "client_name": p.get("client_name"),
+                "event_date": p.get("event_date"),
+                "is_standalone": bool(p.get("is_gallery_only")),
+                "is_linked": bool(p.get("linked_invitation_id")),
+                "linked_invitation_id": p.get("linked_invitation_id"),
+                "cover_url": cover_url,
+                "cover_photo_id": p.get("cover_photo_id"),
+                "photo_count": photo_count,
+                "album_count": album_count,
+                "storage_bytes": total_bytes,
+                "status": g_status,
+                "expires_at": exp,
+                "branding": p.get("studio_branding"),
+                "public_url": f"/gallery/{p.get('slug')}",
+                "created_at": p.get("created_at"),
+                "updated_at": p.get("updated_at"),
+            })
+        return {"galleries": out, "total": len(out)}
+
+    @router.get("/admin/galleries/{gallery_id}")
+    async def get_gallery_details(gallery_id: str, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, gallery_id, admin_id)
+        gid = profile["id"]
+        albums = await db.gallery_albums.find(
+            {"profile_id": gid}, {"_id": 0}
+        ).sort("sort_order", 1).to_list(100)
+
+        album_res = []
+        for alb in albums:
+            cnt = await db.gallery_photos.count_documents({"profile_id": gid, "album_id": alb["id"]})
+            alb_cover = None
+            if alb.get("cover_photo_id"):
+                cp = await db.gallery_photos.find_one({"id": alb["cover_photo_id"], "profile_id": gid}, {"_id": 0, "thumb_s3_key": 1, "display_s3_key": 1})
+                if cp:
+                    alb_cover = generate_signed_url(cp.get("thumb_s3_key") or cp.get("display_s3_key"), 3600)
+            if not alb_cover and cnt > 0:
+                fp = await db.gallery_photos.find_one({"profile_id": gid, "album_id": alb["id"]}, {"_id": 0, "thumb_s3_key": 1, "display_s3_key": 1})
+                if fp:
+                    alb_cover = generate_signed_url(fp.get("thumb_s3_key") or fp.get("display_s3_key"), 3600)
+            album_res.append({
+                **alb,
+                "photo_count": cnt,
+                "cover_url": alb_cover,
+            })
+
+        photo_count = await db.gallery_photos.count_documents({"profile_id": gid})
+        total_bytes = 0
+        async for ag in db.gallery_photos.aggregate([
+            {"$match": {"profile_id": gid}},
+            {"$group": {"_id": None, "bytes": {"$sum": "$original_bytes"}}}
+        ]):
+            total_bytes = ag.get("bytes") or 0
+
+        linked_inv = None
+        if profile.get("linked_invitation_id"):
+            inv = await db.profiles.find_one(
+                {"id": profile["linked_invitation_id"]},
+                {"_id": 0, "id": 1, "slug": 1, "title": 1, "groom_name": 1, "bride_name": 1, "event_date": 1}
+            )
+            if inv:
+                linked_inv = {
+                    "id": inv["id"],
+                    "slug": inv.get("slug"),
+                    "title": inv.get("title") or f"{inv.get('groom_name', '')} & {inv.get('bride_name', '')}",
+                    "event_date": inv.get("event_date"),
+                }
+
+        gc = profile.get("gallery_config") or {}
+        g_status = profile.get("gallery_status") or ("active" if gc.get("enabled") else "draft")
+        exp = profile.get("gallery_expires_at") or gc.get("expires_at")
+        if exp and exp < _now().isoformat():
+            g_status = "expired"
+
+        indexing = await _indexing_progress(db, gid)
+        has_ai = await has_ai_face_entitlement(db, gid)
+
+        # Resolve cover URL (watermarked display derivative)
+        cover_url = None
+        if profile.get("cover_photo_id"):
+            cp = await db.gallery_photos.find_one({"id": profile["cover_photo_id"], "profile_id": gid}, {"_id": 0, "thumb_s3_key": 1, "display_s3_key": 1})
+            if cp:
+                cover_url = generate_signed_url(cp.get("display_s3_key") or cp.get("thumb_s3_key"), 3600)
+        elif gc.get("cover_photo_key"):
+            cover_url = generate_signed_url(gc["cover_photo_key"], 3600)
+
+        return {
+            "gallery": {
+                "id": gid,
+                "slug": profile.get("slug"),
+                "title": profile.get("title") or "Wedding Gallery",
+                "client_name": profile.get("client_name"),
+                "event_date": profile.get("event_date"),
+                "cover_photo_id": profile.get("cover_photo_id"),
+                "cover_url": cover_url,
+                "cover_position_y": profile.get("cover_position_y", 50),
+                "branding": profile.get("studio_branding"),
+                "is_standalone": bool(profile.get("is_gallery_only")),
+                "is_linked": bool(profile.get("linked_invitation_id")),
+                "linked_invitation": linked_inv,
+                "status": g_status,
+                "expires_at": exp,
+                "photo_count": photo_count,
+                "album_count": len(album_res),
+                "storage_bytes": total_bytes,
+                "public_url": f"/gallery/{profile.get('slug')}",
+                "live_upload_token_preview": _redact(gc).get("live_upload_token_preview"),
+                "has_ai_face_entitlement": has_ai,
+                "created_at": profile.get("created_at"),
+                "updated_at": profile.get("updated_at"),
+            },
+            "albums": album_res,
+            "indexing": indexing,
+        }
+
+    @router.patch("/admin/galleries/{gallery_id}")
+    async def update_gallery_details(gallery_id: str, payload: StandaloneGalleryUpdateIn,
+                                     admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, gallery_id, admin_id)
+        updates: Dict[str, Any] = {"updated_at": _now().isoformat()}
+        if payload.title is not None and payload.title.strip():
+            updates["title"] = payload.title.strip()
+        if payload.client_name is not None:
+            updates["client_name"] = payload.client_name.strip()
+        if payload.event_date is not None:
+            updates["event_date"] = payload.event_date
+        if payload.cover_photo_id is not None:
+            if payload.cover_photo_id == "":
+                updates["cover_photo_id"] = None
+            else:
+                photo = await db.gallery_photos.find_one({"id": payload.cover_photo_id, "profile_id": profile["id"]})
+                if photo:
+                    updates["cover_photo_id"] = payload.cover_photo_id
+        if payload.cover_position_y is not None:
+            updates["cover_position_y"] = max(0, min(100, int(payload.cover_position_y)))
+        if payload.branding is not None:
+            cur_branding = profile.get("studio_branding") or {}
+            cur_branding.update(payload.branding)
+            updates["studio_branding"] = cur_branding
+        if payload.gallery_expires_at is not None:
+            updates["gallery_expires_at"] = payload.gallery_expires_at
+            updates["gallery_config.expires_at"] = payload.gallery_expires_at
+            try:
+                exp_dt = datetime.fromisoformat(payload.gallery_expires_at.replace("Z", "+00:00"))
+                updates["gallery_config.auto_delete_at"] = (exp_dt + timedelta(days=30)).isoformat()
+            except Exception:
+                pass
+        if payload.status is not None:
+            updates["gallery_status"] = payload.status
+            if payload.status == "active":
+                updates["is_published"] = True
+                updates["published_at"] = _now().isoformat()
+        if payload.invitation_id is not None:
+            if payload.invitation_id == "":
+                updates["linked_invitation_id"] = None
+            else:
+                inv = await db.profiles.find_one({"id": payload.invitation_id, "admin_id": admin_id}, {"_id": 0, "id": 1})
+                if inv:
+                    updates["linked_invitation_id"] = inv["id"]
+
+        await db.profiles.update_one({"id": profile["id"]}, {"$set": updates})
+        return {"success": True}
+
+    @router.post("/admin/galleries/{gallery_id}/cover")
+    async def set_gallery_cover(gallery_id: str, payload: dict,
+                                admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, gallery_id, admin_id)
+        photo_id = payload.get("photo_id")
+        position_y = payload.get("position_y")
+        updates: Dict[str, Any] = {"updated_at": _now().isoformat()}
+        if photo_id is not None:
+            if photo_id == "":
+                updates["cover_photo_id"] = None
+            else:
+                photo = await db.gallery_photos.find_one({"id": photo_id, "profile_id": profile["id"]})
+                if not photo:
+                    raise HTTPException(status_code=404, detail="Photo not found in this gallery")
+                updates["cover_photo_id"] = photo_id
+        if position_y is not None:
+            updates["cover_position_y"] = max(0, min(100, int(position_y)))
+        await db.profiles.update_one({"id": profile["id"]}, {"$set": updates})
+        return {
+            "success": True,
+            "cover_photo_id": updates.get("cover_photo_id", profile.get("cover_photo_id")),
+            "cover_position_y": updates.get("cover_position_y", profile.get("cover_position_y", 50)),
+        }
+
+    @router.post("/admin/galleries/{gallery_id}/attach-invitation")
+    async def attach_invitation(gallery_id: str, payload: dict, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, gallery_id, admin_id)
+        inv_id = payload.get("invitation_id")
+        if not inv_id:
+            raise HTTPException(status_code=400, detail="invitation_id is required")
+        inv = await db.profiles.find_one({"id": inv_id, "admin_id": admin_id}, {"_id": 0, "id": 1})
+        if not inv:
+            raise HTTPException(status_code=404, detail="Invitation not found or not owned by you")
+        await db.profiles.update_one(
+            {"id": profile["id"]},
+            {"$set": {"linked_invitation_id": inv["id"], "updated_at": _now().isoformat()}}
+        )
+        return {"success": True, "linked_invitation_id": inv["id"]}
+
+    @router.post("/admin/galleries/{gallery_id}/detach-invitation")
+    async def detach_invitation(gallery_id: str, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, gallery_id, admin_id)
+        await db.profiles.update_one(
+            {"id": profile["id"]},
+            {"$set": {"linked_invitation_id": None, "updated_at": _now().isoformat()}}
+        )
+        return {"success": True}
+
+    @router.post("/admin/galleries/{gallery_id}/publish")
+    async def publish_gallery(gallery_id: str, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, gallery_id, admin_id)
+        now_iso = _now().isoformat()
+        await db.profiles.update_one(
+            {"id": profile["id"]},
+            {"$set": {
+                "gallery_status": "active",
+                "is_published": True,
+                "published_at": now_iso,
+                "gallery_config.enabled": True,
+                "updated_at": now_iso
+            }}
+        )
+        return {
+            "success": True,
+            "status": "active",
+            "slug": profile.get("slug"),
+            "public_url": f"/gallery/{profile.get('slug')}"
+        }
+
+    @router.post("/admin/galleries/{gallery_id}/unpublish")
+    async def unpublish_gallery(gallery_id: str, admin_id: str = Depends(get_current_admin)):
+        profile = await _require_owned_profile(db, gallery_id, admin_id)
+        now_iso = _now().isoformat()
+        await db.profiles.update_one(
+            {"id": profile["id"]},
+            {"$set": {
+                "gallery_status": "draft",
+                "is_published": False,
+                "updated_at": now_iso
+            }}
+        )
+        return {"success": True, "status": "draft"}
+
+    # --------------------------------------------------------
     #  AI face-match photo quota — allocation, holds, extension
     # --------------------------------------------------------
     @router.get("/admin/profiles/{profile_id}/gallery/quota")
@@ -800,6 +1409,7 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
     @router.post("/admin/profiles/{profile_id}/gallery/bulk-upload")
     async def bulk_upload(profile_id: str, files: List[UploadFile] = File(...),
                            event_invitation_id: Optional[str] = Form(None),
+                           album_id: Optional[str] = Form(None),
                            archive_to_storage: bool = Form(False),
                            admin_id: str = Depends(get_current_admin)):
         profile = await _require_owned_profile(db, profile_id, admin_id)
@@ -839,7 +1449,8 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
             db, profile, gc, f, method="bulk", uploader="photographer",
             event_invitation_id=event_invitation_id,
             archive_fn=archive_fn if want_archive else None,
-            studio_id=studio_id, folder_name=folder_name))
+            studio_id=studio_id, folder_name=folder_name,
+            album_id=album_id))
 
         # Commit exactly the photos that became NEW rows. A duplicate matched an
         # existing photo and inserted nothing, so it consumed no quota; the
@@ -962,7 +1573,8 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
             db, profile, gc, data,
             filename=body.original_name or body.s3_key.rsplit("/", 1)[-1],
             content_type=content_type, method="presign", uploader="photographer",
-            max_bytes=MAX_PRESIGN_BYTES, store_original_fn=_store_original)
+            max_bytes=MAX_PRESIGN_BYTES, store_original_fn=_store_original,
+            album_id=body.album_id)
 
         # A new row means one purchased slot is now spent. A dedup hit inserted
         # nothing, so it must NOT consume quota.
@@ -1100,7 +1712,8 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
             db, profile, gc, data,
             filename=body.original_name or body.s3_key.rsplit("/", 1)[-1],
             content_type=content_type, method="presign-multipart", uploader="photographer",
-            max_bytes=MAX_PRESIGN_BYTES, store_original_fn=_store_original)
+            max_bytes=MAX_PRESIGN_BYTES, store_original_fn=_store_original,
+            album_id=body.album_id)
 
         if result.get("ok") and not result.get("duplicate"):
             await face_quota.commit(db, reservation_id, 1)
@@ -1200,8 +1813,122 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
         }
 
     # --------------------------------------------------------
-    #  Public — face search / photo grid / ZIP
+    #  Public — face search / photo grid / ZIP / Standalone View
     # --------------------------------------------------------
+    @router.get("/public/gallery/{slug}/view")
+    async def public_gallery_view(slug: str, preview: Optional[int] = Query(None)):
+        """Public standalone gallery view data: clean white background, 2-column layout,
+        albums, and watermarked display derivatives only. Originals are never exposed."""
+        profile = await _get_profile(db, slug)
+        if not profile:
+            raise HTTPException(status_code=404, detail="Gallery not found")
+
+        gc = profile.get("gallery_config") or {}
+        g_status = profile.get("gallery_status") or ("active" if gc.get("enabled") else "draft")
+        exp = profile.get("gallery_expires_at") or gc.get("expires_at")
+        now_iso = _now().isoformat()
+        is_expired = bool(exp and exp < now_iso)
+
+        if g_status == "draft" and not preview:
+            raise HTTPException(status_code=404, detail="This gallery has not been published yet.")
+
+        # Albums
+        albums = await db.gallery_albums.find(
+            {"profile_id": profile["id"]}, {"_id": 0}
+        ).sort("sort_order", 1).to_list(100)
+
+        album_res = []
+        for alb in albums:
+            cnt = await db.gallery_photos.count_documents(
+                {"profile_id": profile["id"], "album_id": alb["id"]}
+            )
+            alb_cover = None
+            if alb.get("cover_photo_id"):
+                cp = await db.gallery_photos.find_one(
+                    {"id": alb["cover_photo_id"], "profile_id": profile["id"]},
+                    {"_id": 0, "thumb_s3_key": 1, "display_s3_key": 1}
+                )
+                if cp:
+                    alb_cover = generate_signed_url(cp.get("thumb_s3_key") or cp.get("display_s3_key"), 3600)
+            if not alb_cover and cnt > 0:
+                fp = await db.gallery_photos.find_one(
+                    {"profile_id": profile["id"], "album_id": alb["id"]},
+                    {"_id": 0, "thumb_s3_key": 1, "display_s3_key": 1}
+                )
+                if fp:
+                    alb_cover = generate_signed_url(fp.get("thumb_s3_key") or fp.get("display_s3_key"), 3600)
+            album_res.append({
+                "id": alb["id"],
+                "name": alb.get("name", "Untitled Album"),
+                "photo_count": cnt,
+                "cover_url": alb_cover,
+            })
+
+        # Photos — ALWAYS derivatives, NEVER originals!
+        photos_cursor = db.gallery_photos.find(
+            {"profile_id": profile["id"]}, {"_id": 0}
+        ).sort("created_at", -1).limit(1000)
+
+        seen_photo_ids = set()
+        photos_list = []
+        async for p in photos_cursor:
+            pid = p.get("id")
+            if not pid or pid in seen_photo_ids:
+                continue
+            seen_photo_ids.add(pid)
+            disp_key = p.get("display_s3_key") or p.get("preview_s3_key") or p.get("s3_key")
+            photos_list.append({
+                "id": pid,
+                "album_id": p.get("album_id"),
+                "thumb_url": generate_signed_url(p["thumb_s3_key"], 3600),
+                "display_url": generate_signed_url(disp_key, 3600),
+                "width": p.get("width"),
+                "height": p.get("height"),
+                "created_at": p.get("created_at"),
+            })
+
+        # Cover — only returned when explicitly selected. Never auto-fallback to unrelated photo.
+        cover_url = None
+        if profile.get("cover_photo_id"):
+            cp = await db.gallery_photos.find_one(
+                {"id": profile["cover_photo_id"], "profile_id": profile["id"]},
+                {"_id": 0, "thumb_s3_key": 1, "display_s3_key": 1}
+            )
+            if cp:
+                cover_url = generate_signed_url(cp.get("display_s3_key") or cp.get("thumb_s3_key"), 3600)
+        elif gc.get("cover_photo_key"):
+            cover_url = generate_signed_url(gc["cover_photo_key"], 3600)
+
+        branding = profile.get("studio_branding") or {}
+        has_ai = await has_ai_face_entitlement(db, profile["id"])
+
+        return {
+            "gallery": {
+                "id": profile["id"],
+                "slug": profile.get("slug"),
+                "title": profile.get("title") or (profile.get("groom_name", "") + " & " + profile.get("bride_name", "")).strip(" &") or "Wedding Gallery",
+                "client_name": profile.get("client_name"),
+                "event_date": profile.get("event_date"),
+                "cover_url": cover_url,
+                "cover_photo_id": profile.get("cover_photo_id"),
+                "cover_position_y": profile.get("cover_position_y", 50),
+                "branding": {
+                    "studio_name": branding.get("studio_name") or "MAJA Invites",
+                    "watermark_text": branding.get("watermark_text") or "MAJA INVITES",
+                    "logo_url": branding.get("logo_url"),
+                },
+                "total_photos": len(photos_list),
+                "status": "expired" if is_expired else g_status,
+                "is_expired": is_expired,
+                "expires_at": exp,
+                "ai_face_enabled": bool(gc.get("face_search_enabled") and has_ai),
+                "layout": "2-column",
+                "background": "#ffffff",
+            },
+            "albums": album_res,
+            "photos": photos_list,
+        }
+
     @router.get("/public/gallery/{slug}/info")
     async def public_info(slug: str):
         profile = await _get_profile(db, slug)
@@ -1228,6 +1955,8 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
         # never the album — so the album passcode (enforce_gallery_access) does
         # not apply here; it stays on the all-photos routes. The single gallery
         # control on this path is the face-match on/off flag.
+        if not await has_ai_face_entitlement(db, profile["id"]):
+            raise HTTPException(status_code=403, detail="AI face match is not enabled or purchased for this gallery")
         privacy = profile.get("gallery_privacy") or {}
         if privacy.get("enabled") and not privacy.get("ai_face_match_enabled", True):
             raise HTTPException(status_code=403, detail="AI face match is disabled for this gallery")
@@ -1647,95 +2376,92 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
 
     @router.get("/public/gallery/{slug}/download-zip")
     async def public_zip_manifest(slug: str, session_id: str = Query(...), request: Request = None):
-        """Manifest of signed download URLs for a face-search session's
-        matches — see download_all_photos_manifest for why this stopped
-        proxying bytes through the app server."""
+        """Guest ZIP downloads are disabled. Originals remain private to the studio."""
+        raise HTTPException(
+            status_code=403,
+            detail="Guest downloads are disabled. Original photos remain private and secure."
+        )
+
+    # --------------------------------------------------------
+    #  Public — whole-album browse (PIN-free with shared link) & Albums
+    # --------------------------------------------------------
+    @router.get("/public/gallery/{slug}/albums")
+    async def public_albums(slug: str):
         profile = await _get_profile(db, slug)
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
-        # No album PIN — a face-match session's own matches only. Keep the
-        # downloads-allowed switch; the per-guest cap is enforced below.
-        privacy = profile.get("gallery_privacy") or {}
-        if privacy.get("enabled") and not privacy.get("allow_downloads", True):
-            raise HTTPException(status_code=403, detail="Downloads are disabled for this gallery")
-        session = await db.face_search_sessions.find_one(
-            {"id": session_id, "profile_id": profile["id"]}, {"_id": 0})
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found")
-        if _session_is_expired(session):
-            raise HTTPException(status_code=410, detail={"error": "session_expired"})
-        ids = session.get("matched_photo_ids") or []
-        if not ids:
-            raise HTTPException(status_code=404, detail="No photos in session")
-        photos = []
-        async for p in db.gallery_photos.find(
-            {"profile_id": profile["id"], "id": {"$in": ids}}, {"_id": 0}):
-            photos.append(p)
-        # Cap the legacy bulk manifest to the same per-guest ceiling as the
-        # per-photo grant path, so this route can't be used to exceed it. The
-        # current guest UI no longer calls this (per-photo capped download
-        # instead); kept only for old links / defence in depth.
-        photos = photos[:FACE_DOWNLOAD_CAP]
+        albums = await db.gallery_albums.find(
+            {"profile_id": profile["id"]}, {"_id": 0}
+        ).sort("sort_order", 1).to_list(50)
+        
+        # Calculate photo counts for each album
+        res = []
+        for alb in albums:
+            count = await db.gallery_photos.count_documents(
+                {"profile_id": profile["id"], "album_id": alb["id"]}
+            )
+            cover_url = None
+            if alb.get("cover_photo_id"):
+                c_photo = await db.gallery_photos.find_one(
+                    {"profile_id": profile["id"], "id": alb["cover_photo_id"]}, {"_id": 0}
+                )
+                if c_photo:
+                    cover_url = generate_signed_url(c_photo.get("thumb_s3_key"), 3600)
+            res.append({
+                "id": alb["id"],
+                "name": alb.get("name", "Untitled Album"),
+                "photo_count": count,
+                "cover_url": cover_url,
+                "sort_order": alb.get("sort_order", 0),
+            })
+        total_photos = await db.gallery_photos.count_documents({"profile_id": profile["id"]})
+        return {"albums": res, "total_photos": total_photos}
 
-        files = [{"name": f"photo_{i+1:03d}.jpg",
-                  "url": aws_service.generate_signed_url(
-                      p.get("original_s3_key") or p["s3_key"], 3600)}
-                 for i, p in enumerate(photos)]
-        await record_usage("download_manifest", profile["id"])
-        return {"files": files}
-
-    # --------------------------------------------------------
-    #  Public — whole-album browse (QR "all photos") + capped downloads
-    # --------------------------------------------------------
     @router.get("/public/gallery/{slug}/all-photos")
     async def public_all_photos(slug: str, request: Request = None,
+                                 album_id: Optional[str] = None,
                                  limit: int = 200, offset: int = 0):
-        """Every event photo, thumbnails only (PIN-gated). Full-res is never
-        handed out here — a guest downloads through public_download_grant, which
-        enforces the per-device cap. That is what makes the cap real."""
+        """Every event photo, thumbnails and watermarked display derivatives only.
+        Anyone holding the shared link can view without a PIN."""
         profile = await _get_profile(db, slug)
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
-        from gallery_privacy import enforce_gallery_access
-        await enforce_gallery_access(profile, request)
         gc = profile.get("gallery_config") or {}
         if not gc.get("enabled"):
             raise HTTPException(status_code=400, detail="Gallery not available")
-        # Respect the photographer's "whole album" toggle: when the full gallery
-        # is switched off, the QR all-photos view is closed and guests use face
-        # match instead (same rule the live wall applies).
-        privacy = profile.get("gallery_privacy") or {}
-        if privacy.get("enabled") and not privacy.get("private_full_gallery_enabled", True):
-            raise HTTPException(status_code=403, detail={
-                "code": "ALBUM_DISABLED",
-                "message": "The full album isn't shared for this event — try Find my photos."})
+
         limit = max(1, min(int(limit or 200), 500))
         offset = max(0, int(offset or 0))
-        total = await db.gallery_photos.count_documents({"profile_id": profile["id"]})
+
+        filter_q: Dict[str, Any] = {"profile_id": profile["id"]}
+        if album_id and album_id != "all":
+            filter_q["album_id"] = album_id
+
+        total = await db.gallery_photos.count_documents(filter_q)
         out: List[dict] = []
         cursor = db.gallery_photos.find(
-            {"profile_id": profile["id"]}, {"_id": 0}
+            filter_q, {"_id": 0}
         ).sort("created_at", -1).skip(offset).limit(limit)
+
         async for p in cursor:
-            out.append({"id": p["id"],
-                        "thumb_url": generate_signed_url(p["thumb_s3_key"], 3600),
-                        "created_at": p.get("created_at")})
-        return {"photos": out, "total": total,
-                "download_cap": ALL_PHOTOS_DOWNLOAD_CAP}
+            disp_key = p.get("display_s3_key") or p.get("thumb_s3_key")
+            out.append({
+                "id": p["id"],
+                "album_id": p.get("album_id"),
+                "thumb_url": generate_signed_url(p["thumb_s3_key"], 3600),
+                "display_url": generate_signed_url(disp_key, 3600),
+                "created_at": p.get("created_at"),
+            })
+        return {"photos": out, "total": total}
 
     @router.post("/public/gallery/{slug}/download")
     async def public_download_grant(slug: str, body: DownloadGrantIn,
                                      request: Request = None):
-        """Grant ONE full-res download, counting it against the guest's cap.
-        Re-downloading a photo the guest already got does not spend the cap
-        again (the count is over distinct photos). Returns the remaining count
-        so the UI can show and stop at the limit."""
-        profile = await _get_profile(db, slug)
-        if not profile:
-            raise HTTPException(status_code=404, detail="Profile not found")
-        privacy = profile.get("gallery_privacy") or {}
-        if privacy.get("enabled") and not privacy.get("allow_downloads", True):
-            raise HTTPException(status_code=403, detail="Downloads are disabled for this gallery")
+        """Guest downloads are disabled. Original photos remain private to the studio."""
+        raise HTTPException(
+            status_code=403,
+            detail="Guest downloads are disabled. Original photos remain private and secure."
+        )
 
         scope = "face" if body.scope == "face" else "all"
         if scope == "face":
@@ -1800,24 +2526,73 @@ def build_gallery_router(db, get_current_admin, archive_fn=None):
 #  failures are reported in the return dict and written to the DB row/session
 #  so face_ops / face-results can surface them.
 # ============================================================
-async def resolve_face_photo_limit(db, profile_id: str) -> Optional[int]:
-    """Docs §9 item 5 / Phase 8: the photo-indexing cap for one wedding.
-
-    Resolution rule: MAX `face_photo_limit` across this wedding's PAID orders
-    (`invitation_orders.profile_id` is the order->wedding link, stamped when the
-    studio delivers/builds the invitation). Returns None (unlimited) when no
-    order links here, or none of them purchased a numbered face-match SKU —
-    that includes every legacy flat `ai_face_match` order, which never had a
-    `face_photo_limit` stamped (store_features.py only stamps it for the
-    face_match_2000/3000/5000 SKUs) and so must keep working exactly as before,
-    with no cap."""
+async def has_ai_face_entitlement(db, profile_id: str) -> bool:
+    """Authoritative check whether this event/profile has a server-verified paid AI face match entitlement."""
     if not profile_id:
-        return None
+        return False
+    # Check paid invitation_orders for this profile
     orders = await db.invitation_orders.find(
         {"profile_id": profile_id, "status": "paid"},
-        {"_id": 0, "face_photo_limit": 1}).to_list(1000)
+        {"_id": 0, "face_photo_limit": 1, "features": 1, "addons": 1}).to_list(100)
+    for o in orders:
+        if isinstance(o.get("face_photo_limit"), int) and o["face_photo_limit"] > 0:
+            return True
+        feats = (o.get("features") or []) + (o.get("addons") or [])
+        if any(k in feats for k in ("ai_face_match", "selfie_search", "face_match")):
+            return True
+    # Check orders collection
+    paid_store_order = await db.orders.find_one({
+        "profile_id": profile_id,
+        "status": "paid",
+        "kind": {"$in": ["ai_addon", "ai_face_match", "face_match"]},
+    }, {"_id": 0, "id": 1})
+    if paid_store_order:
+        return True
+    # Check profile document
+    prof = await db.profiles.find_one({"id": profile_id}, {"_id": 0, "has_ai_addon": 1, "ai_face_match_enabled": 1})
+    if prof and prof.get("has_ai_addon") is True:
+        return True
+    return False
+
+
+async def resolve_face_photo_limit(db, profile_id: str) -> Optional[int]:
+    """Docs §9 item 5 / Phase 8 / Agreed Transformation:
+    The photo-indexing cap for one wedding.
+    Strict fail-closed: returns 0 if unpurchased. Returns None if uncapped legacy.
+    """
+    if not profile_id:
+        return 0
+    orders = await db.invitation_orders.find(
+        {"profile_id": profile_id, "status": "paid"},
+        {"_id": 0, "face_photo_limit": 1, "features": 1, "addons": 1}).to_list(1000)
+
+    if not orders:
+        # Check orders table
+        so = await db.orders.find_one({
+            "profile_id": profile_id, "status": "paid",
+            "kind": {"$in": ["ai_addon", "ai_face_match", "face_match"]}
+        }, {"_id": 0, "photo_limit": 1})
+        if so:
+            return so.get("photo_limit") or 2000
+        # Check profile document
+        prof = await db.profiles.find_one({"id": profile_id}, {"_id": 0, "has_ai_addon": 1, "ai_photo_limit": 1})
+        if prof and prof.get("has_ai_addon") is True:
+            return prof.get("ai_photo_limit") or 2000
+        # FAIL CLOSED: 0 slots for unpurchased AI add-on
+        return 0
+
     limits = [o["face_photo_limit"] for o in orders if isinstance(o.get("face_photo_limit"), int)]
-    return max(limits) if limits else None
+    if limits:
+        return max(limits)
+
+    # Check legacy uncapped flat ai_face_match orders
+    has_legacy = any(
+        any(k in ((o.get("features") or []) + (o.get("addons") or [])) for k in ("ai_face_match", "selfie_search"))
+        for o in orders
+    )
+    if has_legacy:
+        return None
+    return 0
 
 
 async def index_photo_job(db, photo_id: str) -> Dict[str, Any]:
@@ -1832,15 +2607,19 @@ async def index_photo_job(db, photo_id: str) -> Dict[str, Any]:
         await db.gallery_photos.update_one(
             {"id": photo_id}, {"$set": {"index_error": "no_profile"}})
         return {"ok": False, "error": "no_profile"}
+
+    # Strict server-side face-photo-limit enforcement. Fail-closed if not purchased.
+    limit = await resolve_face_photo_limit(db, photo["profile_id"])
+    if limit == 0:
+        logger.info("[face_index] profile=%s photo=%s refused: AI add-on not purchased",
+                    photo["profile_id"], photo_id)
+        await db.gallery_photos.update_one(
+            {"id": photo_id}, {"$set": {"index_error": "ai_addon_not_purchased"}})
+        return {"ok": False, "error": "ai_addon_not_purchased"}
+
     gc = profile.get("gallery_config") or {}
     collection_id = gc.get("aws_collection_id")
     if not collection_id:
-        # Lazy create: an index job can be queued (upload committed) before the
-        # admin flips gallery-enable, which is what actually minted the
-        # collection id. Derive the deterministic per-event id and create it
-        # (idempotent) so the job completes rather than dying as "no_collection".
-        # This does NOT enable the gallery — it only ensures the collection the
-        # index needs exists, then persists the id so later reads find it.
         collection_id = _profile_collection_id(photo["profile_id"])
         try:
             await asyncio.to_thread(get_face_provider().create_collection, collection_id)
@@ -1922,6 +2701,63 @@ async def index_photo_job(db, photo_id: str) -> Dict[str, Any]:
         await db.gallery_photos.update_one(
             {"id": photo_id}, {"$set": {"index_error": str(e)[:300]}})
         return {"ok": False, "error": str(e)[:300]}
+
+
+async def trigger_backlog_face_indexing(db, profile_id: str, batch_size: int = 200) -> Dict[str, Any]:
+    """Process unindexed gallery photos in batch once AI add-on payment/entitlement is verified."""
+    if not profile_id:
+        return {"ok": False, "error": "missing_profile_id"}
+
+    limit = await resolve_face_photo_limit(db, profile_id)
+    if limit == 0:
+        logger.info("[backlog_face_index] profile=%s refused: AI add-on not purchased", profile_id)
+        return {"ok": False, "error": "ai_addon_not_purchased", "indexed_count": 0, "limit": 0}
+
+    indexed_count = await db.gallery_photos.count_documents({"profile_id": profile_id, "indexed": True})
+    if limit is not None and indexed_count >= limit:
+        return {
+            "ok": True,
+            "enqueued": 0,
+            "indexed_count": indexed_count,
+            "limit": limit,
+            "message": "AI face photo limit reached"
+        }
+
+    remaining_slots = (limit - indexed_count) if limit is not None else batch_size
+    slots_to_fetch = min(remaining_slots, batch_size)
+
+    q = {
+        "profile_id": profile_id,
+        "$or": [
+            {"indexed": {"$ne": True}},
+            {"index_error": "ai_addon_not_purchased"}
+        ]
+    }
+    unindexed = await db.gallery_photos.find(q, {"_id": 0, "id": 1}).limit(slots_to_fetch).to_list(slots_to_fetch)
+
+    enqueued = 0
+    for p in unindexed:
+        pid = p["id"]
+        await db.gallery_photos.update_one(
+            {"id": pid, "index_error": "ai_addon_not_purchased"},
+            {"$unset": {"index_error": ""}}
+        )
+        queued = await face_queue.enqueue({
+            "type": "FACE_INDEX",
+            "photo_id": pid,
+            "profile_id": profile_id,
+            "attempt": 0
+        })
+        if not queued:
+            await index_photo_job(db, pid)
+        enqueued += 1
+
+    return {
+        "ok": True,
+        "enqueued": enqueued,
+        "indexed_count": indexed_count,
+        "limit": limit,
+    }
 
 
 async def run_search_job(db, session_id: str) -> Dict[str, Any]:
@@ -2024,9 +2860,11 @@ async def _photos_for_ids(db, profile_id: str, ids: List[str],
     cursor = db.gallery_photos.find(
         {"profile_id": profile_id, "id": {"$in": ids}}, {"_id": 0})
     async for p in cursor:
+        disp_key = p.get("display_s3_key") or p.get("thumb_s3_key")
         photos.append({
             "id": p["id"],
             "thumb_url": generate_signed_url(p["thumb_s3_key"], 3600),
+            "display_url": generate_signed_url(disp_key, 3600),
             "similarity": round(similarity_map.get(p["id"], 0.0), 1),
             "created_at": p.get("created_at"),
         })
@@ -2085,7 +2923,8 @@ async def _ingest_photo(db, profile: dict, gc: dict, upload_file: UploadFile,
                          method: str, uploader: str,
                          event_invitation_id: Optional[str] = None,
                          archive_fn=None, studio_id: Optional[str] = None,
-                         folder_name: Optional[str] = None) -> Dict[str, Any]:
+                         folder_name: Optional[str] = None,
+                         album_id: Optional[str] = None) -> Dict[str, Any]:
     """Multipart entry point (bulk-upload, live-upload): read the UploadFile,
     then hand off to the shared core pipeline. commit_upload (L1 presign flow)
     calls that core directly -- its bytes already came from S3, not a request
@@ -2100,7 +2939,7 @@ async def _ingest_photo(db, profile: dict, gc: dict, upload_file: UploadFile,
         db, profile, gc, data, upload_file.filename or "", upload_file.content_type or "",
         method, uploader, max_bytes=MAX_UPLOAD_BYTES,
         event_invitation_id=event_invitation_id, archive_fn=archive_fn,
-        studio_id=studio_id, folder_name=folder_name)
+        studio_id=studio_id, folder_name=folder_name, album_id=album_id)
 
 
 async def _ingest_photo_bytes(db, profile: dict, gc: dict, data: bytes,
@@ -2110,7 +2949,8 @@ async def _ingest_photo_bytes(db, profile: dict, gc: dict, data: bytes,
                                event_invitation_id: Optional[str] = None,
                                archive_fn=None, studio_id: Optional[str] = None,
                                folder_name: Optional[str] = None,
-                               store_original_fn: Optional[Callable[[str, str, Dict[str, str]], None]] = None
+                               store_original_fn: Optional[Callable[[str, str, Dict[str, str]], None]] = None,
+                               album_id: Optional[str] = None
                                ) -> Dict[str, Any]:
     """Core ingest pipeline -- validate, dedup, derive preview/thumb, store the
     original, insert the row, queue face indexing, best-effort archive mirror.
@@ -2179,35 +3019,37 @@ async def _ingest_photo_bytes(db, profile: dict, gc: dict, data: bytes,
         # preview/thumb from one shared decode.
         # ------------------------------------------------------------------
         def _process_blocking():
-            derivatives = media_derivatives.make_standard_set(data)
+            wm_label = (profile.get("studio_branding") or {}).get("watermark_text") or "MAJA INVITES"
+            derivatives = media_derivatives.make_standard_set(data, watermark_text=wm_label)
             _preview, pw, ph = derivatives["preview"]
             _thumb, _tw, _th = derivatives["thumb"]
+            _display, _dw, _dh = derivatives.get("display_watermarked", (_preview, pw, ph))
             if store_original_fn:
                 store_original_fn(original_key, original_mime, tags)
             else:
                 upload_bytes(original_key, derivatives["original"], original_mime, tags=tags)
             upload_bytes(keys["preview"], _preview, "image/jpeg", tags=tags)
             upload_bytes(keys["thumb"], _thumb, "image/webp", tags=tags)
-            return _preview, _thumb, pw, ph
+            upload_bytes(keys["display"], _display, "image/webp", tags=tags)
+            return _preview, _thumb, _display, pw, ph
 
-        preview_jpeg, thumb_webp, width, height = await asyncio.to_thread(_process_blocking)
+        preview_jpeg, thumb_webp, display_webp, width, height = await asyncio.to_thread(_process_blocking)
 
         doc = {
             "id": photo_id,
             "profile_id": profile["id"],
             "event_invitation_id": event_invitation_id,
-            # Legacy aliases — every existing reader (listing, downloads,
-            # delete, indexing) keeps working unmodified: s3_key/thumb_s3_key
-            # now point at the preview/thumb derivatives, not a re-encoded
-            # "original".
-            "s3_key": keys["preview"],
+            "album_id": album_id,
+            # Derivatives only: display_s3_key is watermarked WebP for all public guests
+            "s3_key": keys["display"],
+            "display_s3_key": keys["display"],
             "thumb_s3_key": keys["thumb"],
             "original_s3_key": original_key,
             "preview_s3_key": keys["preview"],
             "checksum": checksum,
             "upload_method": method,
             "uploaded_by": uploader,
-            "file_size": len(preview_jpeg),
+            "file_size": len(display_webp),
             "original_bytes": len(data),
             "preview_bytes": len(preview_jpeg),
             "thumb_bytes": len(thumb_webp),
@@ -2219,7 +3061,16 @@ async def _ingest_photo_bytes(db, profile: dict, gc: dict, data: bytes,
             "created_at": _now().isoformat(),
             "expires_at": auto_del,
         }
-        await db.gallery_photos.insert_one(doc)
+        try:
+            await db.gallery_photos.insert_one(doc)
+        except Exception as e:
+            if "UniqueViolation" in type(e).__name__ or "unique" in str(e).lower():
+                existing = await db.gallery_photos.find_one(
+                    {"profile_id": profile["id"], "checksum": checksum}, {"_id": 0})
+                if existing:
+                    await record_usage("duplicate_skipped", profile["id"])
+                    return {**existing, "ok": True, "duplicate": True, "filename": filename}
+            raise
         await record_usage("photo_uploaded", profile["id"])
         await record_usage("photo_bytes", profile["id"], amount=len(data))
         # Bump counter
@@ -2229,17 +3080,18 @@ async def _ingest_photo_bytes(db, profile: dict, gc: dict, data: bytes,
              "$set": {"gallery_config.last_upload_at": _now().isoformat()}}
         )
 
-        # T3: queue the Rekognition indexing job; no Redis -> run it inline now
-        # (unchanged behaviour for dev machines with no queue).
+        # Requirement 7: Do not run face indexing unless the gallery has an active, verified AI add-on.
         face_count = 0
         indexed_now = False
-        queued = await face_queue.enqueue({"type": "FACE_INDEX", "photo_id": photo_id,
-                                            "profile_id": profile["id"], "attempt": 0})
-        if not queued:
-            idx = await index_photo_job(db, photo_id)
-            if idx.get("ok"):
-                face_count = int(idx.get("face_count") or 0)
-                indexed_now = True
+        has_ai = await has_ai_face_entitlement(db, profile["id"])
+        if has_ai:
+            queued = await face_queue.enqueue({"type": "FACE_INDEX", "photo_id": photo_id,
+                                                "profile_id": profile["id"], "attempt": 0})
+            if not queued:
+                idx = await index_photo_job(db, photo_id)
+                if idx.get("ok"):
+                    face_count = int(idx.get("face_count") or 0)
+                    indexed_now = True
 
         # "Also keep a copy in storage" — best-effort mirror into the studio's
         # Cloud Backup. Never fails the upload; reports status for the UI.
@@ -2281,17 +3133,19 @@ def _redact(gc: dict) -> dict:
 # ============================================================
 #  Cleanup scheduler (called from server.py startup)
 # ============================================================
-async def cleanup_expired_galleries(db):
-    """Daily 3am job — deletes everything for weddings past auto_delete_at."""
+async def cleanup_expired_galleries(db, dry_run: bool = False):
+    """Daily job — deletes everything for galleries past auto_delete_at grace period."""
     now_iso = _now().isoformat()
-    # Bounded batch: cap the tick so a big backlog (missed cron / shared
-    # auto_delete_at) can't run unbounded — the rest still qualify next run.
     cursor = db.profiles.find({
         "gallery_config.enabled": True,
         "gallery_config.auto_delete_at": {"$lt": now_iso},
     }, {"_id": 0, "id": 1, "gallery_config": 1, "slug": 1}).limit(500)
+    candidate_weddings = 0
     deleted_weddings = 0
     async for p in cursor:
+        candidate_weddings += 1
+        if dry_run:
+            continue
         try:
             gc = p.get("gallery_config") or {}
             # S3 prefix — boto3 is sync; to_thread so it can't stall the event loop.
@@ -2315,6 +3169,9 @@ async def cleanup_expired_galleries(db):
             deleted_weddings += 1
         except Exception as e:
             logger.exception("gallery cleanup loop failed for %s: %s", p.get("id"), e)
+    if dry_run:
+        logger.info("[cleanup] dry-run found %d expired galleries", candidate_weddings)
+        return candidate_weddings
     if deleted_weddings:
         logger.info("[cleanup] purged %d expired wedding galleries", deleted_weddings)
     return deleted_weddings

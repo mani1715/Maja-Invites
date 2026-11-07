@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import AdminModule, { Panel, Segmented, Empty, useFlash } from '@/components/AdminModule';
+import AdminModule, { Panel, Segmented, Empty, useFlash, ErrorPanel } from '@/components/AdminModule';
 import { Toast, InlineError } from '@/components/WeddingModule';
 import ConfirmModal from '@/components/adminpricing/ConfirmModal';
 import * as api from '@/api/adminPlatform';
@@ -102,7 +102,7 @@ function SettingsTab({ flash }) {
     });
   };
 
-  if (!form) return <p className="wmod-hint">Loading…</p>;
+  if (!form) return error ? <ErrorPanel message={typeof error === 'string' ? error : 'Could not load these settings.'} onRetry={load} /> : <p className="wmod-hint" role="status">Loading…</p>;
 
   return (
     <>
@@ -218,7 +218,7 @@ function CmsTab({ flash }) {
     });
   };
 
-  if (!form) return <p className="wmod-hint">Loading…</p>;
+  if (!form) return error ? <ErrorPanel message={typeof error === 'string' ? error : 'Could not load these settings.'} onRetry={load} /> : <p className="wmod-hint" role="status">Loading…</p>;
 
   return (
     <>

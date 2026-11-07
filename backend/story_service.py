@@ -18,7 +18,7 @@ class StoryService:
         self.enabled = bool(self.api_key)
         
         if not self.enabled:
-            print("⚠️  GEMINI_API_KEY not found. Story generation will use fallback content.")
+            print("[WARN] GEMINI_API_KEY not found. Story generation will use fallback content.")
     
     async def generate_love_story(
         self,

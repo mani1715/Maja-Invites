@@ -1,0 +1,72 @@
+/* Route-scoped product system. Never override published customer designs. */
+.px-experience:not(.px-experience--customer):not(.px-experience--home) {
+  --mj-ink:#292333;--mj-ink-deep:#24182f;--mj-muted:#655e70;
+  --mj-primary:#6638a0;--mj-primary-hover:#4c257d;--mj-bg:#faf8fc;
+  --mj-card:#fff;--mj-section:#f3eef9;--mj-border:#e5dfeb;
+  --mj-border-accent:#ddd0ed;--mj-radius-card:18px;--mj-radius-card-inner:10px;
+  --mj-radius-button:10px;--mj-shadow-card-rest:0 3px 16px #36204706;
+  --mj-shadow-button-rest:0 3px 8px #36204710;--mj-shadow-glass:none;
+  color:var(--mj-ink); background:var(--mj-bg); min-height:100dvh;
+}
+.px-experience :is(a,button,input,select,textarea):focus-visible {outline:3px solid #8b5cbb;outline-offset:3px}
+.px-experience :is(button,a,input,select,textarea) { -webkit-tap-highlight-color:transparent }
+.px-experience--studio .wmod-shell,.px-experience--admin .wmod-shell {background:#faf8fc}
+.px-experience--studio .wmod-main,.px-experience--admin .wmod-main {width:100%;max-width:1600px;margin-inline:auto}
+.px-experience .wmod-main>header {border-bottom:1px solid var(--mj-border);padding-bottom:24px}
+.px-experience .wmod-panel {box-shadow:0 3px 16px #36204704}
+.px-experience .wmod-panel-head {background:#fff;padding-block:22px}
+.px-experience .wmod-stat {background:#fff;border:1px solid var(--mj-border);border-radius:14px}
+.px-experience .wmod-stat-label {letter-spacing:.07em;color:#655e70;font-size:11px}
+.px-experience .wmod-stat-value {font-variant-numeric:tabular-nums;font-size:30px}
+.px-experience .wmod-seg {box-shadow:none;border-radius:12px;background:#f0ebf5}
+.px-experience .wmod-seg-btn--on {background:#fff;color:#4c257d;box-shadow:0 1px 4px #36204712}
+.px-experience :is(.wmod-table-wrap,.wmod-table-scroll) {overscroll-behavior-inline:contain;scrollbar-width:thin}
+.px-experience :is(.wmod-panel-title,.wmod-stat-value) {text-wrap:balance}
+.px-experience--public :is(.mjf-hero,.mjp-hero,.mjh-hero,.mjq-hero,.mjc-hero) {
+  background:linear-gradient(90deg,#faf7fdeb,#faf7fdc9),url('/home/wisteria-world.webp') center 44%/cover;
+  animation:none;border-bottom:1px solid #e7ddef;
+}
+.px-experience--public .px-petal {display:none}
+.px-experience--public :is(h1,h2) {text-wrap:balance;letter-spacing:-.025em}
+.px-experience--public :is(.mjf-item-card,.mjf-comp,.mjf-cta) {box-shadow:none}
+.px-experience--public .mjf-item-card {background:#fff;border-color:#e5dfeb}
+.px-experience .mjmnav {background:#fffefbf5;backdrop-filter:blur(12px);box-shadow:none;border-bottom:1px solid #e5dfeb}
+.px-experience .mjmnav-logo {background:#6638a0;color:#fff;border:0;border-radius:9px;font-weight:700}
+.px-experience .mjmnav-name {font-family:Georgia,serif;font-size:21px;letter-spacing:-.04em}
+.px-experience--auth .mj-auth-panel {background:linear-gradient(180deg,#27113944,#271139a3),url('/home/wisteria-world.webp') center/cover;animation:none;padding:clamp(36px,5vw,80px)}
+.px-experience--auth .mj-auth-panel .px-ripple {display:none}
+.px-experience--auth .mj-auth-quote {font-size:clamp(36px,4.1vw,64px);font-style:normal;line-height:1.08;letter-spacing:-.04em;max-width:12ch;animation:none}
+.px-experience--auth .mj-auth-card {max-width:460px;background:#fff;box-shadow:none;border:1px solid #e5dfeb;animation:none}
+.px-experience--auth .mj-auth-form-col {background:#faf8fc}
+.px-experience--auth .mj-auth-h1 {font-size:38px}
+.px-auth-caption {font-size:13px;line-height:1.6;max-width:32ch;color:#fff}
+.px-recovery {max-width:900px;margin:0 auto;min-height:78dvh;padding:clamp(64px,12vw,160px) 24px;background:radial-gradient(ellipse at 75% 20%,#eee2fb,transparent 65%)}
+.px-kicker {font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#6638a0;font-weight:600}
+.px-recovery h1 {font:400 clamp(38px,6vw,72px)/1.08 Georgia,serif;letter-spacing:-.04em;max-width:14ch;margin:24px 0}
+.px-recovery>p:not(.px-kicker) {font-size:17px;line-height:1.7;color:#655e70;max-width:52ch}
+.px-recovery>div {display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.px-recovery :is(a,button) {display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;border:1px solid #d9cce7;border-radius:10px;background:#fff;color:#4c257d;text-decoration:none;font:inherit;cursor:pointer}
+.px-recovery :is(a,button):first-child {background:#6638a0;color:#fff;border-color:#6638a0}
+@media(max-width:600px){
+  .px-experience .wmod-panel-head,.px-experience .wmod-panel-body {padding:18px 16px}
+  .px-experience .wmod-stats {grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .px-experience .wmod-stat {padding:16px 12px;min-width:0}
+  .px-experience .wmod-stat-value {font-size:26px;overflow-wrap:anywhere}
+  .px-experience--auth .mj-auth-card {padding:28px 20px;border-radius:16px}
+  .px-experience--auth .mj-auth-field {font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){
+  .px-experience:not(.px-experience--customer) *, .px-experience:not(.px-experience--customer) *::before,.px-experience:not(.px-experience--customer) *::after {animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+
+/* Discovery pages lead with content; portraits and landscapes stay intact. */
+.px-experience--community :is(.pxc-hero,.mjd-hero,.brw-hero) {background:linear-gradient(105deg,#f9f5fded,#f2e8f8d9),url('/home/wisteria-world.webp') center 38%/cover;animation:none;border-bottom:1px solid #e5dfeb}
+.px-experience--community :is(.pxc-h1,.mjd-h1,.brw-h1) {font-family:Georgia,serif;font-size:clamp(36px,4.5vw,64px);letter-spacing:-.045em;font-weight:400;text-wrap:balance}
+.px-experience--community .pxc-petal {display:none}
+.px-experience--community :is(.pxc-media,.pxc-carousel img) {object-fit:contain;max-height:640px;background:#f5f1f7}
+.px-experience--community .pxc-card:hover {box-shadow:0 3px 18px #36204709;transform:none}
+.px-experience--community .pxc-tabs {border-radius:12px;background:#f6f2fa}
+.px-experience--community .pxc-tabs button {border-radius:8px;min-height:44px}
+.px-experience--community .pxc-tabs button.is-on {background:#fff;color:#542785;box-shadow:0 1px 4px #36204715}
+.px-experience--public :is(.mjp-h1,.mjf-h1,.mjq-h1,.mjc-h1,.mjh-h1) {font-family:Georgia,serif;font-weight:400;font-size:clamp(36px,5vw,66px);line-height:1.08}
+@media(max-width:600px){.px-experience--community .mjd-search {min-width:0;width:100%}.px-experience--community :is(.pxc-media,.pxc-carousel img) {max-height:560px}}

@@ -180,7 +180,7 @@ def bucket() -> str:
     return (os.environ.get("AWS_S3_BUCKET")
             or os.environ.get("AWS_S3_EVENT_BUCKET")
             or os.environ.get("S3_BUCKET_EVENT")
-            or "")
+            or "maja-invites-dev-storage")
 
 
 def cloudfront_domain() -> str:

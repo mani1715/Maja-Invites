@@ -47,7 +47,7 @@ export default function AdminApprovals() {
 
   const { data, error, loading, reload } = useAsync(
     () => Promise.all([
-      api.adminVerifications().then((r) => r.data).catch(() => null),
+      api.adminVerifications().then((r) => r.data),
       api.adminTalent().then((r) => r.data).catch(() => null),
       api.adminVendors().then((r) => r.data).catch(() => null),
       api.adminBuildRequests().then((r) => r.data).catch(() => null),
@@ -72,10 +72,10 @@ export default function AdminApprovals() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Verification', value: loading ? '—' : n(pending(verifications)), hint: 'awaiting review' },
-        { label: 'Talent', value: loading ? '—' : n(pending(talent)), hint: 'awaiting review' },
-        { label: 'Vendors', value: loading ? '—' : n(pending(vendors)), hint: 'awaiting review' },
-        { label: 'Portfolio builds', value: loading ? '—' : n(pending(builds)), hint: 'awaiting build' },
+        { label: 'Verification', value: loading || error ? '—' : n(pending(verifications)), hint: 'awaiting review' },
+        { label: 'Talent', value: loading || error ? '—' : n(pending(talent)), hint: 'awaiting review' },
+        { label: 'Vendors', value: loading || error ? '—' : n(pending(vendors)), hint: 'awaiting review' },
+        { label: 'Portfolio builds', value: loading || error ? '—' : n(pending(builds)), hint: 'awaiting build' },
       ]}
       />
 

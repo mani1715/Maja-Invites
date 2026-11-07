@@ -1,0 +1,1297 @@
+[
+  {
+    "path": "/",
+    "component": "Landing",
+    "source": "pages/Landing",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/pricing",
+    "component": "Pricing",
+    "source": "pages/Pricing",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/features",
+    "component": "Features",
+    "source": "pages/Features",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/how-it-works",
+    "component": "HowItWorks",
+    "source": "pages/HowItWorks",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/faq",
+    "component": "Faq",
+    "source": "pages/Faq",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/contact",
+    "component": "Contact",
+    "source": "pages/Contact",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/auth",
+    "component": "SignIn",
+    "source": "pages/SignIn",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/auth/signup",
+    "component": "SignUp",
+    "source": "pages/SignUp",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/auth/callback",
+    "component": "AuthCallback",
+    "source": "pages/AuthCallback",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/auth/reset",
+    "component": "ResetPassword",
+    "source": "pages/ResetPassword",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/reset-password",
+    "component": "ResetPassword",
+    "source": "pages/ResetPassword",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/invite/:slug",
+    "component": "GuestInvitation",
+    "source": "pages/GuestInvitation",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/invite/:slug/live-gallery",
+    "component": "LiveGallery",
+    "source": "pages/LiveGallery",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/invite/:slug/find-my-photos",
+    "component": "FaceMatchPage",
+    "source": "pages/FaceMatchPage",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/invite/:slug/photos",
+    "component": "ToFindMyPhotos",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/invite/:slug/arrival",
+    "component": "GuestArrival",
+    "source": "pages/GuestArrival",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/invite/:slug/:eventType",
+    "component": "InviteEventOrNumber",
+    "source": null,
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/gallery/:slug",
+    "component": "PublicStandaloneGallery",
+    "source": "pages/PublicStandaloneGallery",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/save-the-date/:slug",
+    "component": "SaveTheDate",
+    "source": "pages/SaveTheDate",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/cart",
+    "component": "Cart",
+    "source": "pages/Cart",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/checkout",
+    "component": "Checkout",
+    "source": "pages/Checkout",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/order/:orderId/details",
+    "component": "OrderDetails",
+    "source": "pages/OrderDetails",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/admin/dashboard",
+    "component": "AdminDashboard",
+    "source": "pages/AdminDashboard",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/studio/dashboard",
+    "component": "StudioDashboard",
+    "source": "pages/StudioDashboard",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/profile/:profileId/gallery",
+    "component": "StudioProfileGallery",
+    "source": "pages/StudioProfileGallery",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/new",
+    "component": "StudioWeddingWizard",
+    "source": "pages/StudioWeddingWizard",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/:profileId/edit",
+    "component": "StudioWeddingWizard",
+    "source": "pages/StudioWeddingWizard",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/:id",
+    "component": "StudioWeddingDetail",
+    "source": "pages/StudioWeddingDetail",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/:weddingId/guests",
+    "component": "WeddingGuests",
+    "source": "pages/WeddingGuests",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/:weddingId/messages",
+    "component": "WeddingMessages",
+    "source": "pages/WeddingMessages",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/:weddingId/gifts",
+    "component": "WeddingGifts",
+    "source": "pages/WeddingGifts",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/:weddingId/analytics",
+    "component": "WeddingAnalytics",
+    "source": "pages/WeddingAnalytics",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/:weddingId/client",
+    "component": "WeddingClient",
+    "source": "pages/WeddingClient",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/:weddingId/setup",
+    "component": "WeddingSetup",
+    "source": "pages/WeddingSetup",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/wedding/:weddingId/album",
+    "component": "WeddingAlbum",
+    "source": "pages/WeddingAlbum",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/profile/new",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/edit",
+    "component": "LegacyProfileEditRedirect",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/guests",
+    "component": "ToGuests",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/rsvps",
+    "component": "ToRsvps",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/wishes",
+    "component": "ToWishes",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/greetings",
+    "component": "ToGreetings",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/gifts",
+    "component": "ToGifts",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/shagun",
+    "component": "ToShagun",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/analytics",
+    "component": "ToAnalytics",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/client",
+    "component": "ToClient",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/invitations",
+    "component": "ToClient",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/event-links",
+    "component": "ToEventLinks",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/whatsapp",
+    "component": "ToWhatsApp",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/live-gallery",
+    "component": "ToLiveGallery",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/theme-settings",
+    "component": "ToThemeSettings",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/referrals",
+    "component": "ToReferrals",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/profile/:profileId/post-wedding",
+    "component": "ToClient",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/wedding/:weddingId/live-gallery",
+    "component": "WeddingLiveGallery",
+    "source": "pages/WeddingLiveGallery",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/profile/:profileId/qr-codes",
+    "component": "StudioProfileQrCodes",
+    "source": "pages/StudioProfileQrCodes",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/portfolio",
+    "component": "StudioPortfolio",
+    "source": "pages/StudioPortfolio",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/portfolio/build",
+    "component": "StudioPortfolioBuild",
+    "source": "pages/StudioPortfolioBuild",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/plans",
+    "component": "StudioPlans",
+    "source": "pages/StudioPlans",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/designs",
+    "component": "StudioDesigns",
+    "source": "pages/StudioDesigns",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/orders",
+    "component": "StudioOrders",
+    "source": "pages/StudioOrders",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/order/invitation-suite",
+    "component": "StudioSuiteCheckout",
+    "source": "pages/StudioSuiteCheckout",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/community",
+    "component": "StudioCommunity",
+    "source": "pages/StudioCommunity",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/pixora",
+    "component": "PixoraHub",
+    "source": "pages/PixoraHub",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/earnings",
+    "component": "StudioEarnings",
+    "source": "pages/StudioEarnings",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/insights",
+    "component": "StudioInsights",
+    "source": "pages/StudioInsights",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/staff",
+    "component": "StudioStaff",
+    "source": "pages/StudioStaff",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/security",
+    "component": "StudioSecurity",
+    "source": "pages/StudioSecurity",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/ai-tools",
+    "component": "StudioAiTools",
+    "source": "pages/StudioAiTools",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/backup",
+    "component": "StudioBackup",
+    "source": "pages/StudioBackup",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/directory",
+    "component": "StudioDirectory",
+    "source": "pages/StudioDirectory",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/audit-logs",
+    "component": "StudioAuditLogs",
+    "source": "pages/StudioAuditLogs",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/white-label",
+    "component": "StudioWhiteLabel",
+    "source": "pages/StudioWhiteLabel",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/calendar",
+    "component": "StudioCalendar",
+    "source": "pages/StudioCalendar",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/storage",
+    "component": "StudioStorage",
+    "source": "pages/StudioStorage",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/studio-storage",
+    "component": "StudioStorage",
+    "source": "pages/StudioStorage",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/invitations",
+    "component": "StudioInvitations",
+    "source": "pages/StudioInvitations",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/galleries/new",
+    "component": "StudioGalleryNew",
+    "source": "pages/StudioGalleryNew",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/clients",
+    "component": "StudioClients",
+    "source": "pages/StudioClients",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/notifications",
+    "component": "StudioNotifications",
+    "source": "pages/StudioNotifications",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/messages",
+    "component": "StudioMessages",
+    "source": "pages/StudioMessages",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/client-work",
+    "component": "StudioClients",
+    "source": "pages/StudioClients",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/client",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/client/login",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/dashboard/trash",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/themes",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/photographer-profile",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/portfolio/premium",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/build-queue",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/category-selector",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/celebration/new",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/staff/accept",
+    "component": "StudioStaff",
+    "source": "pages/StudioStaff",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/cloud-backup",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/cloud-backup/legacy",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/pixora-analytics",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/login",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/signup",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio/auth/callback",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/forgot-password",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/login",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/signin",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/sign-in",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/admin/login",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/signup",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/register",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/admin",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/studio",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/admin/pricing",
+    "component": "AdminPricing",
+    "source": "pages/AdminPricing",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/pricing-hub",
+    "component": "AdminPricingHub",
+    "source": "pages/AdminPricingHub",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/founding",
+    "component": "AdminFounding",
+    "source": "pages/AdminFounding",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/platform",
+    "component": "AdminPlatform",
+    "source": "pages/AdminPlatform",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/fulfillment",
+    "component": "AdminFulfillment",
+    "source": "pages/AdminFulfillment",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/build-queue",
+    "component": "AdminBuildQueue",
+    "source": "pages/AdminBuildQueue",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/support",
+    "component": "AdminSupport",
+    "source": "pages/AdminSupport",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/disputes",
+    "component": "AdminDisputes",
+    "source": "pages/AdminDisputes",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/moderation",
+    "component": "AdminModeration",
+    "source": "pages/AdminModeration",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/face-ops",
+    "component": "AdminFaceOps",
+    "source": "pages/AdminFaceOps",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/system-health",
+    "component": "AdminSystemHealth",
+    "source": "pages/AdminSystemHealth",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/feature-flags",
+    "component": "AdminFeatureFlags",
+    "source": "pages/AdminFeatureFlags",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/bi",
+    "component": "AdminBI",
+    "source": "pages/AdminBI",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/profitability",
+    "component": "AdminProfitability",
+    "source": "pages/AdminProfitability",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/storage",
+    "component": "AdminStorage",
+    "source": "pages/AdminStorage",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/delivery",
+    "component": "AdminDelivery",
+    "source": "pages/AdminDelivery",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/investigation",
+    "component": "AdminInvestigation",
+    "source": "pages/AdminInvestigation",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/qr-analytics",
+    "component": "AdminQrAnalytics",
+    "source": "pages/AdminQrAnalytics",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/feature-wishes",
+    "component": "AdminFeatureWishes",
+    "source": "pages/AdminFeatureWishes",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/marketplace",
+    "component": "AdminMarketplace",
+    "source": "pages/AdminMarketplace",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/storage-pool",
+    "component": "AdminStoragePool",
+    "source": "pages/AdminStoragePool",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/cameras",
+    "component": "AdminCameras",
+    "source": "pages/AdminCameras",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/events",
+    "component": "AdminEvents",
+    "source": "pages/AdminEvents",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/food-donation",
+    "component": "AdminFoodDonation",
+    "source": "pages/AdminFoodDonation",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/access-control",
+    "component": "AdminAccessControl",
+    "source": "pages/AdminAccessControl",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/approvals",
+    "component": "AdminApprovals",
+    "source": "pages/AdminApprovals",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/admin/custom-requests",
+    "component": "AdminCustomRequests",
+    "source": "pages/AdminCustomRequests",
+    "guard": "admin",
+    "redirect": false
+  },
+  {
+    "path": "/super-admin/photographers/:adminId",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/community/reels",
+    "component": "Reels",
+    "source": "pages/Reels",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/community",
+    "component": "Community",
+    "source": "pages/Community",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/photographers",
+    "component": "PhotographerDirectory",
+    "source": "pages/PhotographerDirectory",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/photographer/:slug",
+    "component": "PhotographerPublic",
+    "source": "pages/PhotographerPublic",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/photographer/:slug/portfolio",
+    "component": "LegacyPortfolioRedirect",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/p/:username",
+    "component": "PixoraProfile",
+    "source": "pages/PixoraProfile",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/couple/access",
+    "component": "CoupleAccess",
+    "source": "pages/CoupleAccess",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/couple/access/:slug",
+    "component": "CoupleAccess",
+    "source": "pages/CoupleAccess",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/food-donation",
+    "component": "FoodDonation",
+    "source": "pages/FoodDonation",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/terms",
+    "component": "Terms",
+    "source": "pages/legal/Terms",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/privacy",
+    "component": "Privacy",
+    "source": "pages/legal/Privacy",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/browse",
+    "component": "BrowseDesigns",
+    "source": "pages/BrowseDesigns",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/browse/*",
+    "component": "BrowseDesigns",
+    "source": "pages/BrowseDesigns",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/themes",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/themes/:themeId",
+    "component": "BrowseDesigns",
+    "source": "pages/BrowseDesigns",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/themes/:themeId/events",
+    "component": "BrowseDesigns",
+    "source": "pages/BrowseDesigns",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/themes/:themeId/events/:event",
+    "component": "BrowseDesigns",
+    "source": "pages/BrowseDesigns",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/themes/:themeId/gallery",
+    "component": "BrowseDesigns",
+    "source": "pages/BrowseDesigns",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/designs",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/events",
+    "component": "EventsDashboard",
+    "source": "pages/EventsDashboard",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/events/:eventId/builder",
+    "component": "EventBuilder",
+    "source": "pages/EventBuilder",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/events/preview/:eventType",
+    "component": "EventDesignPreview",
+    "source": "pages/EventDesignPreview",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/events/preview/:eventType/:templateId",
+    "component": "EventDesignPreview",
+    "source": "pages/EventDesignPreview",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/create/ganesh",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/e/:slug",
+    "component": "EventPublic",
+    "source": "pages/EventPublic",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/e/:slug/money",
+    "component": "EventPublic",
+    "source": "pages/EventPublic",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/themes/:themeId/events/:event/design/:designIndex",
+    "component": "BrowseDesigns",
+    "source": "pages/BrowseDesigns",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/preview/design/:code",
+    "component": "DesignPreview",
+    "source": "pages/DesignPreview",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/preview/theme/:themeId",
+    "component": "BrowseDesigns",
+    "source": "pages/BrowseDesigns",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/preview/luxe",
+    "component": "SampleInvitation",
+    "source": "pages/SampleInvitation",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/preview/celebration/:category",
+    "component": "SampleInvitation",
+    "source": "pages/SampleInvitation",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/preview/celebration/:category/:designId",
+    "component": "SampleInvitation",
+    "source": "pages/SampleInvitation",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/experience/demo",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/live/:weddingId",
+    "component": "WeddingLiveGallery",
+    "source": "pages/WeddingLiveGallery",
+    "guard": "studio",
+    "redirect": false
+  },
+  {
+    "path": "/studio/celebration/:profileId/edit",
+    "component": "LegacyProfileEditRedirect",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/story",
+    "component": "Story",
+    "source": "pages/Story",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/support",
+    "component": "Support",
+    "source": "pages/Support",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/vendors",
+    "component": "Vendors",
+    "source": "pages/Vendors",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/community/tag/:tag",
+    "component": "HashtagPage",
+    "source": "pages/HashtagPage",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/community/about",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/photographers/:a",
+    "component": "PhotographerDiscovery",
+    "source": "pages/PhotographerDiscovery",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/photographers/:a/:b",
+    "component": "PhotographerDiscovery",
+    "source": "pages/PhotographerDiscovery",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/plans",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/purchase",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/portfolio-plans",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/portfolio-samples",
+    "component": "PortfolioSamples",
+    "source": "pages/PortfolioSamples",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/order/pending",
+    "component": "Navigate",
+    "source": null,
+    "guard": "public",
+    "redirect": true
+  },
+  {
+    "path": "/refund",
+    "component": "RefundPolicy",
+    "source": "pages/legal/RefundPolicy",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/cookies",
+    "component": "Cookies",
+    "source": "pages/legal/Cookies",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/data-retention",
+    "component": "DataRetention",
+    "source": "pages/legal/DataRetention",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "/soon",
+    "component": "ComingSoon",
+    "source": "pages/ComingSoon",
+    "guard": "public",
+    "redirect": false
+  },
+  {
+    "path": "*",
+    "component": "NotFound",
+    "source": "pages/NotFound",
+    "guard": "public",
+    "redirect": false
+  }
+]

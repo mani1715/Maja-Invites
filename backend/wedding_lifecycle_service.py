@@ -383,9 +383,27 @@ class WeddingLifecycleService:
 
             is_super_admin = admin.get('role') == 'super_admin'
 
-            # Phase 1d: credits removed. Publishing is no longer gated by a credit
-            # wallet — access is governed by the studio's subscription (enforced at
-            # the marketplace/checkout layer). No deduction, no credit ledger.
+            # Enforce Invitation Subscription entitlement on publish
+            if not is_super_admin:
+                now_iso = datetime.now(timezone.utc).isoformat()
+                sub = await self.db.subscriptions.find_one({
+                    "studio_id": admin_id,
+                    "product": "invitation",
+                    "status": "active",
+                    "$or": [
+                        {"current_period_end": {"$gte": now_iso}},
+                        {"current_period_end": None},
+                    ]
+                })
+                # Check admin record flag or test studio bypass in non-production environments
+                adm_flag = (admin.get("invitation_subscription") or {}).get("status") == "active" or admin.get("has_invitation_subscription") is True
+                env = os.environ.get("ENVIRONMENT", "development").lower()
+                is_test_env = env not in ("production", "prod") and admin.get("is_test") is True
+
+                if not (sub or adm_flag or is_test_env):
+                    raise ValueError("An active Annual Invitation Subscription is required to publish invitations.")
+
+            # Phase 1d: credits removed. Publishing is governed by subscription entitlement.
             total_cost = 0
             cost_breakdown['total'] = 0
             cost_breakdown['note'] = (

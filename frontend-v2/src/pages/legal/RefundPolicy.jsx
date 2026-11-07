@@ -138,7 +138,7 @@ export default function RefundPolicy() {
           <Link to={LINK.privacy}>Privacy Policy</Link>
           <Link to="/contact">Contact</Link>
         </div>
-        <p>&copy; 2026 MAJA Creations</p>
+        <p>&copy; 2026 MAJA Creations &middot; Powered by metechq</p>
       </footer>
     </div>
   );

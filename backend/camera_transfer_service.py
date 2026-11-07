@@ -33,8 +33,10 @@ import camera_profiles
 from auth import get_password_hash, verify_password
 
 # Connection config the camera is handed (host/port are display-only here; the
-# SFTP server binds the port). Host defaults to the public SFTP hostname.
-SFTP_HOST = os.environ.get("CAMERA_SFTP_HOST", "ftp.majainvites.com")
+# SFTP server binds the port). Defaults to ftp.<DOMAIN> or ftp.majainvites.com.
+_domain = os.environ.get("DOMAIN", "").strip()
+_default_host = f"ftp.{_domain}" if _domain else "ftp.majainvites.com"
+SFTP_HOST = os.environ.get("CAMERA_SFTP_HOST", _default_host).strip() or _default_host
 # Default 2222 = the port the overlay publishes on the host (2222->22 in the
 # container). The camera connects to the published port, never 22 (that's the
 # VM's own sshd). Override with CAMERA_SFTP_PORT only if you republish elsewhere.
@@ -142,6 +144,7 @@ def public_view(row: dict) -> Dict[str, Any]:
         "username": row.get("username"),
         "status": row.get("status"),
         "remote_dir": row.get("remote_dir"),
+        "target_album_id": row.get("target_album_id"),
         "created_at": row.get("created_at"),
         "updated_at": row.get("updated_at"),
         "expires_at": row.get("expires_at"),
@@ -165,7 +168,8 @@ async def _unique_username(db) -> str:
 
 async def enable_transfer(db, profile: dict, admin_id: str, camera_key: str,
                           username: Optional[str] = None,
-                          password: Optional[str] = None) -> Dict[str, Any]:
+                          password: Optional[str] = None,
+                          target_album_id: Optional[str] = None) -> Dict[str, Any]:
     """Create the transfer for an event (or re-activate + rotate an existing
     one). Optionally with a photographer-chosen `username`/`password` (else both
     are auto-generated). Returns the public view PLUS the one-time plaintext
@@ -195,6 +199,7 @@ async def enable_transfer(db, profile: dict, admin_id: str, camera_key: str,
             "status": STATUS_ACTIVE,
             "camera_key": camera_key,
             "password_hash": pw_hash,     # rotate the secret on every enable
+            "target_album_id": target_album_id or existing.get("target_album_id"),
             "updated_at": now,
             "expires_at": expires,
         }
@@ -212,6 +217,7 @@ async def enable_transfer(db, profile: dict, admin_id: str, camera_key: str,
             "password_hash": pw_hash,
             "status": STATUS_ACTIVE,
             "remote_dir": "/",           # chroot root; event comes from identity
+            "target_album_id": target_album_id,
             "created_at": now,
             "updated_at": now,
             "expires_at": expires,
@@ -223,6 +229,17 @@ async def enable_transfer(db, profile: dict, admin_id: str, camera_key: str,
     view = public_view(row)
     view["password"] = password          # shown ONCE, never stored in the clear
     return view
+
+
+async def set_target_album(db, profile_id: str, target_album_id: Optional[str]) -> Optional[dict]:
+    row = await get_transfer(db, profile_id)
+    if not row:
+        return None
+    await db.camera_transfers.update_one(
+        {"id": row["id"]},
+        {"$set": {"target_album_id": target_album_id, "updated_at": _now().isoformat()}}
+    )
+    return public_view({**row, "target_album_id": target_album_id})
 
 
 async def rotate_password(db, profile_id: str) -> Optional[Dict[str, Any]]:
@@ -274,6 +291,7 @@ async def authenticate(db, username: str, password: str) -> Optional[Dict[str, A
         "profile_id": row["profile_id"],
         "admin_id": row["admin_id"],
         "remote_dir": row.get("remote_dir") or "/",
+        "target_album_id": row.get("target_album_id"),
     }
 
 
@@ -311,6 +329,12 @@ async def status(db, profile: dict) -> Dict[str, Any]:
     """Panel status for one event — connection + counts, all from real state."""
     prof_id = profile["id"]
     row = await get_transfer(db, prof_id)
+    target_album_id = (row or {}).get("target_album_id")
+    target_album_name = None
+    if target_album_id:
+        alb = await db.gallery_albums.find_one({"id": target_album_id, "profile_id": prof_id}, {"_id": 0, "name": 1})
+        if alb:
+            target_album_name = alb.get("name")
     q = {"profile_id": prof_id, "upload_method": UPLOAD_METHOD}
     stored = await db.gallery_photos.count_documents(q)
     indexed = await db.gallery_photos.count_documents({**q, "indexed": True})
@@ -330,6 +354,8 @@ async def status(db, profile: dict) -> Dict[str, Any]:
         "enabled": bool(row and row.get("status") == STATUS_ACTIVE and not is_expired(row)),
         "transfer": public_view(row) if row else None,
         "connected": connected,
+        "target_album_id": target_album_id,
+        "target_album_name": target_album_name,
         "received": stored + rejected,
         "stored": stored,
         "processing": processing,

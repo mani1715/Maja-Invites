@@ -32,7 +32,7 @@ export default function AdminStoragePool() {
   const [err, setErr] = useState(null);
 
   const { data, error, loading, reload } = useAsync(() => Promise.all([
-    api.poolDashboard().then((r) => r.data).catch(() => null),
+    api.poolDashboard().then((r) => r.data),
     api.poolAccounts().then((r) => r.data).catch(() => null),
     api.poolDeletedEvents().then((r) => r.data).catch(() => null),
     api.poolFailures({ limit: 50 }).then((r) => r.data).catch(() => null),
@@ -66,10 +66,10 @@ export default function AdminStoragePool() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Capacity', value: loading ? '—' : bytes(dash?.total_bytes ?? dash?.total) },
-        { label: 'Used', value: loading ? '—' : bytes(dash?.used_bytes ?? dash?.used) },
-        { label: 'Accounts', value: loading ? '—' : numberFmt.format(accounts.length) },
-        { label: 'Open alerts', value: loading ? '—' : numberFmt.format(alerts.length) },
+        { label: 'Capacity', value: loading || error ? '—' : bytes(dash?.total_bytes ?? dash?.total) },
+        { label: 'Used', value: loading || error ? '—' : bytes(dash?.used_bytes ?? dash?.used) },
+        { label: 'Accounts', value: loading || error ? '—' : numberFmt.format(accounts.length) },
+        { label: 'Open alerts', value: loading || error ? '—' : numberFmt.format(alerts.length) },
       ]}
       />
 

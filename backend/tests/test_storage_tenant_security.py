@@ -253,9 +253,35 @@ async def test_valid_direct_presigned_upload_commit():
     assert sub_a_updated["used_bytes"] == len(VALID_JPEG_BYTES)
 
 
+async def test_dev_plan_selection_and_capacity_enforcement():
+    db, s3, client = await _setup_test_env()
+    plan_500gb = "plan_500gb_test"
+    await db.studio_storage_plans.insert_one({
+        "id": plan_500gb,
+        "name": "Pro 500GB",
+        "gb_limit": 500,
+        "duration_days": 30,
+        "grace_days": 30,
+        "price_inr": 899,
+        "is_active": True
+    })
+
+    # Test dev plan selection
+    res_sub = client.post("/api/admin/studio-storage/subscribe", json={"plan_id": plan_500gb})
+    assert res_sub.status_code == 200
+    assert res_sub.json().get("dev_activated") is True
+
+    # Check that dashboard reports 500 GB total_bytes
+    res_dash = client.get("/api/admin/studio-storage/dashboard")
+    assert res_dash.status_code == 200
+    dash_data = res_dash.json()
+    assert dash_data["total_bytes"] == 500 * 1024 * 1024 * 1024
+
+
 if __name__ == "__main__":
     asyncio.run(test_photographer_tenant_isolation())
     asyncio.run(test_binary_magic_byte_validation())
     asyncio.run(test_valid_direct_presigned_upload_commit())
+    asyncio.run(test_dev_plan_selection_and_capacity_enforcement())
     print("ALL PHASE 1 SECURITY CHECKS PASSED")
 

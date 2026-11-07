@@ -1215,6 +1215,14 @@ class Profile(BaseModel):
     # design for EVERY invitation. Defaults to {} so existing profiles are
     # unaffected and keep resolving exactly as before.
     design_selections: Dict[str, str] = Field(default_factory=dict)
+    frame_transforms: Dict[str, Any] = Field(default_factory=dict)
+    background_settings: Dict[str, Any] = Field(default_factory=dict)
+    invitation_expires_at: Optional[datetime] = None
+    gallery_expires_at: Optional[datetime] = None
+    archived_at: Optional[datetime] = None
+    version: int = 1
+    is_gallery_only: bool = False
+    has_ai_addon: bool = False
 
     @field_validator('invitation_message')
     def validate_invitation_message(cls, v):
@@ -1373,6 +1381,15 @@ class ProfileCreate(BaseModel):
     # 2026 — Universal Invitation Categories
     invitation_category: str = "wedding"
     celebrant_info: Optional[Dict[str, Any]] = None
+    frame_transforms: Optional[Dict[str, Any]] = None
+    background_settings: Optional[Dict[str, Any]] = None
+    invitation_expires_at: Optional[datetime] = None
+    gallery_expires_at: Optional[datetime] = None
+    version: Optional[int] = 1
+    status: Optional[str] = "DRAFT"
+    selected_design_key: Optional[str] = None
+    is_gallery_only: Optional[bool] = False
+    has_ai_addon: Optional[bool] = False
     
     @field_validator('events')
     def validate_events(cls, v):
@@ -1514,6 +1531,16 @@ class ProfileUpdate(BaseModel):
     # 2026 — Universal Invitation Categories
     invitation_category: Optional[str] = None
     celebrant_info: Optional[Dict[str, Any]] = None
+    frame_transforms: Optional[Dict[str, Any]] = None
+    background_settings: Optional[Dict[str, Any]] = None
+    invitation_expires_at: Optional[datetime] = None
+    gallery_expires_at: Optional[datetime] = None
+    archived_at: Optional[datetime] = None
+    version: Optional[int] = None
+    status: Optional[str] = None
+    selected_design_key: Optional[str] = None
+    is_gallery_only: Optional[bool] = None
+    has_ai_addon: Optional[bool] = None
     
     @field_validator('events')
     def validate_events(cls, v):
@@ -1663,6 +1690,17 @@ class ProfileResponse(BaseModel):
     event_links: Optional[Any] = None
     invitation_category: str = "wedding"
     celebrant_info: Optional[Dict[str, Any]] = None
+    admin_id: Optional[str] = None
+    status: str = "DRAFT"
+    selected_design_key: Optional[str] = None
+    frame_transforms: Dict[str, Any] = Field(default_factory=dict)
+    background_settings: Dict[str, Any] = Field(default_factory=dict)
+    invitation_expires_at: Optional[datetime] = None
+    gallery_expires_at: Optional[datetime] = None
+    archived_at: Optional[datetime] = None
+    version: int = 1
+    is_gallery_only: bool = False
+    has_ai_addon: bool = False
 
 
 class ProfileMedia(BaseModel):

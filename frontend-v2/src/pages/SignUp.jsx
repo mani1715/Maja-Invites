@@ -177,9 +177,9 @@ export default function SignUp() {
     <div className="mjWash mj-auth-grid mj-auth-grid--signup">
       <div className="mj-auth-panel">
         <div className="px-ripple" aria-hidden="true" />
-        <Link to="/" className="mj-auth-brand" data-mj-link>MAJA Invites</Link>
+        <Link to="/" className="mj-auth-brand" data-mj-link>Pixora / MAJA Invites</Link>
         <div style={{ position: 'relative' }}>
-          <p className="mj-auth-quote" style={{ fontSize: 'clamp(24px,3vw,32px)' }}>
+          <p className="mj-auth-quote" style={{ fontSize: 'clamp(32px,3.5vw,52px)', maxWidth: '18ch' }}>
             Your studio, your bookings, your community — in one place.
           </p>
           <div className="mj-auth-perks">

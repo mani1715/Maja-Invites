@@ -29,7 +29,7 @@ export default function StudioClients() {
   });
 
   const { data, error, loading, reload } = useAsync(() =>
-    studioApi.getWeddings ? studioApi.getWeddings().then(r => r.data).catch(() => []) : Promise.resolve([])
+    studioApi.getWeddings().then(r => r.data)
   );
 
   const weddingsList = Array.isArray(data) ? data : (data?.weddings || data?.items || []);
@@ -39,7 +39,7 @@ export default function StudioClients() {
     const bride = (w.bride_name || '').toLowerCase();
     const groom = (w.groom_name || '').toLowerCase();
     const title = (w.title || '').toLowerCase();
-    const phone = (w.contact_phone || w.phone || '').toLowerCase();
+    const phone = String(w.contact_phone || w.phone || '').toLowerCase();
     return bride.includes(q) || groom.includes(q) || title.includes(q) || phone.includes(q);
   });
 
@@ -73,23 +73,18 @@ export default function StudioClients() {
     e.preventDefault();
     setSaving(true);
     try {
-      if (editingClient && studioApi.updateWedding) {
+      if (editingClient) {
         await studioApi.updateWedding(editingClient.id, editForm);
         flash('Client details updated successfully.');
-      } else if (studioApi.createWedding) {
+      } else {
         await studioApi.createWedding(editForm);
         flash('New client profile created successfully.');
-      } else {
-        flash('Client details saved.');
       }
       setEditingClient(null);
       setNewClientModal(false);
       reload();
     } catch {
-      flash('Client details saved successfully.');
-      setEditingClient(null);
-      setNewClientModal(false);
-      reload();
+      flash('Could not save the client. Your changes are still here; please try again.');
     } finally {
       setSaving(false);
     }
@@ -121,10 +116,10 @@ export default function StudioClients() {
     >
       <StatRow
         items={[
-          { label: 'Total Clients', value: loading ? '—' : weddingsList.length },
-          { label: 'Active Events', value: loading ? '—' : weddingsList.length },
-          { label: 'Photo Selections', value: 'Synced' },
-          { label: 'Pending Access Links', value: '0' },
+          { label: 'Total Clients', value: loading || error ? '—' : weddingsList.length },
+          { label: 'Active Events', value: loading || error ? '—' : weddingsList.length },
+          
+          
         ]}
       />
 

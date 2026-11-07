@@ -1,133 +1,278 @@
+/* =============================================================================
+   Marketing Navigation Bar (Unified Header across All Secondary Pages)
+   Consistent with Landing.jsx brand typography and floating frosted style
+   ============================================================================= */
+
 .mjmnav {
-  padding: 12px clamp(16px, 4vw, 40px);
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  border-bottom: 1px solid rgba(255, 255, 255, .65);
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: rgba(255, 255, 255, .72);
+  z-index: 100;
+  width: 100%;
+  background: rgba(253, 251, 254, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(220, 210, 230, 0.65);
+  box-shadow: 0 4px 20px rgba(44, 32, 63, 0.03);
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
-.mjmnav-row {
+
+.mjmnav-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 14px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-width: 0;
+  gap: 28px;
+  width: 100%;
+  box-sizing: border-box;
 }
+
+/* Brand Logo + Subtitle */
 .mjmnav-brand {
   display: flex;
   align-items: center;
-  min-height: 44px;
   gap: 10px;
   text-decoration: none;
-  color: var(--mj-ink);
-  min-width: 0;
+  color: #2c203f;
+  flex-shrink: 0;
+  user-select: none;
 }
-.mjmnav-logo {
-  width: 30px;
-  height: 30px;
-  border: 1.5px solid var(--mj-ink);
-  border-radius: 12px;
+
+.mjmnav-monogram {
+  display: inline-block;
+  position: relative;
+  font: italic 700 42px / 0.9 Georgia, 'Times New Roman', serif;
+  color: #713fc4;
+  letter-spacing: -0.12em;
+  width: 32px;
+}
+
+.mjmnav-monogram > span {
+  position: absolute;
+  font-size: 14px;
+  right: 0;
+  top: -2px;
+}
+
+.mjmnav-title {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 26px;
+  letter-spacing: -0.06em;
+  font-weight: 650;
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  color: #2c203f;
+}
+
+.mjmnav-title small {
+  display: block;
+  font-size: 7.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  margin-top: 5px;
+  text-transform: uppercase;
+  color: #75677f;
+}
+
+/* Desktop Links */
+.mjmnav-desktop-links {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-family: var(--mj-font-display);
-  font-size: 15px;
-  flex: none;
+  gap: 32px;
 }
-.mjmnav-name {
-  font-family: var(--mj-font-display);
-  font-size: 16px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.mjmnav-right { display: flex; align-items: center; gap: 14px; min-width: 0; }
-.mjmnav-right .mjmnav-link { margin-right: 10px; }
+
 .mjmnav-link {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  color: var(--mj-muted);
-  text-decoration: none;
+  font-family: Inter, Arial, sans-serif;
   font-size: 13.5px;
-  white-space: nowrap;
-  background-position: 0 calc(100% - 12px);
+  font-weight: 500;
+  color: #635272;
+  text-decoration: none;
+  padding: 6px 2px;
+  position: relative;
+  transition: color 0.2s ease;
 }
-.mjmnav-link[aria-current="page"] { color: var(--mj-ink); font-weight: 600; }
+
+.mjmnav-link:hover {
+  color: #713fc4;
+}
+
+.mjmnav-link.is-active,
+.mjmnav-link[aria-current="page"] {
+  color: #2c203f;
+  font-weight: 600;
+}
+
+.mjmnav-link.is-active::after,
+.mjmnav-link[aria-current="page"]::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #713fc4;
+  border-radius: 2px;
+}
+
+/* Action Area */
+.mjmnav-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.mjmnav-signin {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2c203f;
+  text-decoration: none;
+  padding: 8px 10px;
+  transition: color 0.2s ease;
+}
+
+.mjmnav-signin:hover {
+  color: #713fc4;
+}
+
 .mjmnav-cta {
   display: inline-flex;
   align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
   min-height: 44px;
-  padding: 0 20px;
-  background: var(--mj-primary);
-  color: #fff;
+  background: #713fc4;
+  color: #ffffff !important;
   text-decoration: none;
-  font-size: 13px;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 12.5px;
   font-weight: 600;
-  border-radius: var(--mj-radius-button);
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(113, 63, 196, 0.22);
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
   white-space: nowrap;
-  box-shadow: var(--mj-shadow-button-rest);
-  transition: transform .15s var(--mj-easing), box-shadow .3s, background .3s;
 }
-.mjmnav-cta:hover {
-  background: var(--mj-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--mj-shadow-button-hover);
-}
-.mjmnav-cta:active { transform: scale(.97); }
 
-/* Hamburger (mobile only) — 44px tap target, three token-ink bars. */
+.mjmnav-cta:hover {
+  background: #5e2fad;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(113, 63, 196, 0.3);
+}
+
+.mjmnav-cta:active {
+  transform: scale(0.98);
+}
+
+.mjmnav-arrow {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+  transition: transform 0.2s ease;
+}
+
+.mjmnav-cta:hover .mjmnav-arrow {
+  transform: translateX(3px);
+}
+
+/* Hamburger */
 .mjmnav-burger {
   display: none;
   flex-direction: column;
   justify-content: center;
   gap: 5px;
-  width: 44px;
-  height: 44px;
-  padding: 10px;
-  border: none;
-  background: none;
+  width: 42px;
+  height: 42px;
+  padding: 8px;
+  border: 1px solid #d8cce1;
+  border-radius: 6px;
+  background: #ffffff;
   cursor: pointer;
-  flex: none;
+  flex-shrink: 0;
 }
+
 .mjmnav-burger-bar {
   display: block;
+  width: 100%;
   height: 2px;
   border-radius: 1px;
-  background: var(--mj-ink);
-}
-.mjmnav-drawer { display: none; }
-
-@media not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
-  .mjmnav { background: rgba(255, 255, 255, .94); }
+  background: #2c203f;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-/* Mobile/tablet: the desktop row hid Sign in + the CTA past the viewport edge
-   (global overflow-x clip made them invisible AND untappable). Replace with a
-   hamburger + full-width drawer; every item is its own 44px row. */
-@media (max-width: 860px) {
-  .mjmnav-right { display: none; }
-  .mjmnav-burger { display: flex; }
-  .mjmnav-drawer:not([hidden]) {
+/* Mobile Drawer */
+.mjmnav-drawer {
+  background: #fdfbfd;
+  border-bottom: 1px solid #e4dceb;
+  box-shadow: 0 16px 30px rgba(44, 32, 63, 0.08);
+  padding: 18px 24px 24px;
+  animation: mjmnav-slide 0.2s ease-out;
+}
+
+@keyframes mjmnav-slide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mjmnav-drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.mjmnav-drawer-link {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c203f;
+  text-decoration: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mjmnav-drawer-link:hover,
+.mjmnav-drawer-link.is-active {
+  background: #f3ebfa;
+  color: #713fc4;
+}
+
+.mjmnav-drawer-divider {
+  height: 1px;
+  background: #e4dceb;
+  margin: 10px 0;
+}
+
+.mjmnav-drawer-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  background: #713fc4;
+  color: #ffffff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+  .mjmnav-desktop-links {
+    display: none;
+  }
+  .mjmnav-signin {
+    display: none;
+  }
+  .mjmnav-burger {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
-    padding: 8px 0 12px;
-    border-top: 1px solid rgba(0, 0, 0, .06);
-    margin-top: 10px;
   }
-  .mjmnav-drawer .mjmnav-link {
-    min-height: 44px;
-    font-size: 14px;
-    padding: 0 4px;
-  }
-  .mjmnav-drawer .mjmnav-cta {
-    justify-content: center;
-    margin-top: 8px;
+  .mjmnav-cta {
+    padding: 8px 14px;
+    font-size: 11.5px;
   }
 }

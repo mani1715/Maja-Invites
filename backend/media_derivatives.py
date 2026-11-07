@@ -116,13 +116,94 @@ def make_variant(img_bytes: bytes, width: Optional[int],
     return out_bytes, out_w, out_h
 
 
-def make_standard_set(img_bytes: bytes) -> Dict[str, Any]:
-    """Standard upload derivative set: original passthrough + preview + thumb."""
-    img = normalize(img_bytes)  # one decode, shared by both derivatives
-    preview_bytes = encode(img, width=2048, fmt="JPEG", quality=85)
-    thumb_bytes = encode(img, width=480, fmt="WEBP", quality=80)
+def apply_watermark(
+    img: "Image.Image",
+    text: str = "MAJA INVITES",
+    position: str = "bottom-right",
+    opacity: float = 0.35,
+    size: str = "medium"
+) -> "Image.Image":
+    """Apply an elegant translucent watermark pattern/branding across the image."""
+    from PIL import ImageDraw, ImageFont
+    
+    # Work on RGBA copy for transparent text blending
+    base = img.convert("RGBA")
+    txt_layer = Image.new("RGBA", base.size, (255, 255, 255, 0))
+    draw = ImageDraw.Draw(txt_layer)
+    
+    w, h = base.size
+    # Size multiplier
+    size_mult = 0.035 if size == "small" else 0.065 if size == "large" else 0.048
+    font_size = max(16, int(min(w, h) * size_mult))
+    try:
+        font = ImageFont.load_default()
+    except Exception:
+        font = None
+    
+    watermark_text = (text or "MAJA INVITES").upper()
+    alpha_val = max(20, min(220, int(255 * (opacity or 0.35))))
+    shadow_val = max(10, min(180, int(alpha_val * 0.75)))
+    alpha_color = (255, 255, 255, alpha_val)
+    shadow_color = (0, 0, 0, shadow_val)
+    
+    margin = int(font_size * 0.9)
+    text_w_est = int(len(watermark_text) * font_size * 0.6)
+    
+    # Position handling
+    pos = (position or "bottom-right").lower()
+    if pos in ("bottom-right", "br"):
+        pos_x = max(margin, w - text_w_est - margin)
+        pos_y = max(margin, h - font_size - margin)
+    elif pos in ("bottom-left", "bl"):
+        pos_x = margin
+        pos_y = max(margin, h - font_size - margin)
+    elif pos in ("top-right", "tr"):
+        pos_x = max(margin, w - text_w_est - margin)
+        pos_y = margin
+    elif pos in ("top-left", "tl"):
+        pos_x = margin
+        pos_y = margin
+    else:  # center / diagonal
+        pos_x = max(margin, (w - text_w_est) // 2)
+        pos_y = max(margin, (h - font_size) // 2)
+        
+    draw.text((pos_x + 1, pos_y + 1), watermark_text, fill=shadow_color, font=font)
+    draw.text((pos_x, pos_y), watermark_text, fill=alpha_color, font=font)
+    
+    # Always include subtle center branding for protective coverage unless already center
+    if pos != "center":
+        cx = max(10, (w - text_w_est) // 2)
+        cy = max(10, (h - font_size) // 2)
+        center_alpha = (255, 255, 255, int(alpha_val * 0.4))
+        center_shadow = (0, 0, 0, int(shadow_val * 0.4))
+        draw.text((cx + 1, cy + 1), watermark_text, fill=center_shadow, font=font)
+        draw.text((cx, cy), watermark_text, fill=center_alpha, font=font)
+    
+    composed = Image.alpha_composite(base, txt_layer).convert("RGB")
+    return composed
+
+
+def make_standard_set(
+    img_bytes: bytes,
+    watermark_text: Optional[str] = None,
+    watermark_position: str = "bottom-right",
+    watermark_opacity: float = 0.35,
+    watermark_size: str = "medium"
+) -> Dict[str, Any]:
+    """Standard upload derivative set: original passthrough + preview + thumb + watermarked variants."""
+    img = normalize(img_bytes)  # one decode, shared by all derivatives
+    
+    wm_label = watermark_text or "MAJA INVITES"
+    wm_img = apply_watermark(img, text=wm_label, position=watermark_position, opacity=watermark_opacity, size=watermark_size)
+    
+    preview_bytes = encode(wm_img, width=2048, fmt="JPEG", quality=85)
+    thumb_bytes = encode(wm_img, width=480, fmt="WEBP", quality=80)
+    display_bytes = encode(wm_img, width=1920, fmt="WEBP", quality=82)
+    
     return {
-        "original": img_bytes,  # untouched - identity, never re-encoded
+        "original": img_bytes,  # untouched - identity, never re-encoded, private
         "preview": (preview_bytes,) + image_dimensions(preview_bytes),
         "thumb": (thumb_bytes,) + image_dimensions(thumb_bytes),
+        "display_watermarked": (display_bytes,) + image_dimensions(display_bytes),
     }
+

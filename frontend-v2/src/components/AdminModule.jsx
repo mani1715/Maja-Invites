@@ -63,14 +63,14 @@ export function useAsync(fetcher, deps = []) {
     let dead = false;
     setLoading(true);
     setError(null);
-    Promise.resolve(fetcher())
+    Promise.resolve().then(fetcher)
       .then((d) => { if (!dead) setData(d); })
       .catch((e) => {
         if (dead) return;
         const s = e?.response?.status;
         setError(
-          s === 403 ? 'This console needs a super-admin account.'
-            : e?.response?.data?.detail || 'Could not load this data.',
+          s === 403 ? 'Your account does not have access to this data.'
+            : typeof e?.response?.data?.detail === 'string' ? e.response.data.detail : 'Could not load this data. Please try again.',
         );
       })
       .finally(() => { if (!dead) setLoading(false); });

@@ -1,0 +1,580 @@
+/* Studio Invitations CSS - Refined 5-Section Architecture */
+
+/* Section Navigation & Header */
+.si-tabs-container {
+  margin-bottom: 24px;
+}
+
+/* Dashboard Styles */
+.si-dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.si-dashboard-hero {
+  background: linear-gradient(135deg, #f8f6ff 0%, #f3eeff 100%);
+  border: 1px solid #e9d5ff;
+  border-radius: 14px;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.si-hero-info h2 {
+  margin: 0 0 6px;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: #2e1065;
+}
+
+.si-hero-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b21a8;
+  max-width: 580px;
+  line-height: 1.5;
+}
+
+.si-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Subscription Status Banner */
+.si-sub-banner {
+  border-radius: 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--mj-border, #e5e7eb);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.si-sub-banner--active {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.si-sub-banner--unsubscribed {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.si-sub-banner--loading {
+  background: #f9fafb;
+}
+
+.si-sub-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.si-sub-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.si-sub-meta h4 {
+  margin: 0 0 2px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.si-sub-meta p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #4b5563;
+}
+
+/* Pending Assistance Alert */
+.si-pending-alert {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.si-pending-alert-text {
+  font-size: 0.875rem;
+  color: #1e40af;
+  font-weight: 500;
+}
+
+/* What's Included Expandable Accordion */
+.si-included-accordion {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.si-included-header {
+  padding: 14px 20px;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.si-included-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.si-included-body {
+  padding: 20px;
+  border-top: 1px solid #f3f4f6;
+  background: #ffffff;
+}
+
+.si-commercial-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.si-included-box {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.si-included-box--featured {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+.si-included-box h4 {
+  margin: 0 0 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.si-included-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: #4b5563;
+}
+
+/* Designs Catalogue Toolbar & Grid */
+.si-catalogue-toolbar {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid var(--mj-border, #e5e7eb);
+}
+
+.si-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.si-filter-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--mj-dim, #4b5563);
+}
+
+.si-search-input {
+  margin-left: auto;
+  min-width: 220px;
+}
+
+.si-designs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.si-design-card {
+  border: 1px solid var(--mj-border, #e5e7eb);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.si-design-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+
+.si-card-thumb {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  cursor: pointer;
+  background: #f3f4f6;
+}
+
+.si-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.si-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.si-card-thumb:hover .si-card-overlay {
+  opacity: 1;
+}
+
+.si-card-info {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.si-card-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--mj-fg, #111827);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.si-card-code {
+  font-size: 0.75rem;
+  color: var(--mj-dim, #6b7280);
+  margin-top: 2px;
+  font-family: monospace;
+}
+
+.si-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.si-card-actions button {
+  flex: 1;
+}
+
+/* My Invitations Combined View */
+.si-invitations-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.si-pill-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.si-pill-btn {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid var(--mj-border, #e5e7eb);
+  background: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.si-pill-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.si-pill-btn--active {
+  background: #2e1065;
+  color: #ffffff;
+  border-color: #2e1065;
+}
+
+.si-pill-btn--active:hover {
+  background: #3b147d;
+}
+
+.si-pill-count {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.si-pill-btn--active .si-pill-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.si-invitations-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Badges & Tags */
+.si-status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.si-status-badge--published,
+.si-status-badge--active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.si-status-badge--draft {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.si-status-badge--expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.si-status-badge--archived {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.si-type-tag {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Dropdown More Menu */
+.si-more-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.si-more-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  min-width: 160px;
+  z-index: 50;
+  padding: 4px;
+}
+
+.si-menu-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.si-menu-item:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.si-menu-item--danger {
+  color: #dc2626;
+}
+
+.si-menu-item--danger:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* Gallery Section */
+.si-gallery-banner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.si-gallery-banner h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.si-gallery-banner p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+  max-width: 600px;
+}
+
+/* Custom Design & Help Cards */
+.si-help-intro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.si-help-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  background: #ffffff;
+}
+
+.si-help-card h4 {
+  margin: 0 0 6px;
+  font-size: 0.9375rem;
+  color: #111827;
+}
+
+.si-help-card p {
+  margin: 0 0 14px;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .si-dashboard-hero {
+    padding: 18px;
+  }
+  .si-search-input {
+    min-width: 100%;
+    margin-left: 0;
+  }
+  .si-invitations-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .si-invitations-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Modals & Backdrops */
+.wmod-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 9999;
+  overflow-y: auto;
+}
+
+.wmod-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 640px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: wmod-modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes wmod-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

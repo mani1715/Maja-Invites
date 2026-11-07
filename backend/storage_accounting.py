@@ -220,6 +220,14 @@ async def release_media(db, sid: str, url: str) -> None:
     multi-drive-pool cleanup is attempted if a delete hook exists (none yet → skipped)."""
     if not url:
         return
+    # Only opted-in portfolios have immutable versions that pin media.
+    publication = await db.portfolio_publications.find_one({'id': sid})
+    if publication:
+        await db.ensure_table('portfolio_versions')
+        async with db.pool.acquire() as conn:
+            pinned = await conn.fetchval("SELECT EXISTS(SELECT 1 FROM portfolio_versions WHERE data->>'studio_id'=$1 AND position($2 in data::text)>0) OR EXISTS(SELECT 1 FROM portfolio_publications WHERE id=$1 AND position($2 in data::text)>0)", sid, url)
+        if pinned:
+            return
     rec = await db.uploaded_media.find_one({"studio_id": sid, "url": url}, {"_id": 0})
     disk = _safe_disk_path((rec or {}).get("disk_path")) or _disk_from_url(sid, url)
     if disk is not None:
@@ -280,6 +288,8 @@ async def purge_orphan_uploads(db, older_than_hours: int = 24) -> int:
     except Exception:
         return 0
     for r in rows:
+        if r.get("area") in ("portfolio_private", "portfolio_private_legacy"):
+            continue  # Draft/version reservations remain until explicit media retirement.
         if (r.get("created_at") or "") > cutoff:
             continue
         disk = _safe_disk_path(r.get("disk_path"))

@@ -24,9 +24,9 @@ export default function AdminBI() {
 
   const { data, error, loading, reload } = useAsync(
     () => Promise.all([
-      api.revenueSummary({ days }).then((r) => r.data).catch(() => null),
-      api.revenueTimeseries({ days }).then((r) => r.data).catch(() => null),
-      api.photographerLeaderboard({ days, limit: 20 }).then((r) => r.data).catch(() => null),
+      api.revenueSummary({ days }).then((r) => r.data),
+      api.revenueTimeseries({ days }).then((r) => r.data),
+      api.photographerLeaderboard({ days, limit: 20 }).then((r) => r.data),
     ]).then(([summary, series, leaders]) => ({ summary, series, leaders })),
     [days],
   );
@@ -45,10 +45,10 @@ export default function AdminBI() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Revenue', value: loading ? '—' : rupees.format(s.total_revenue ?? s.revenue ?? 0), hint: `last ${days} days` },
-        { label: 'Orders', value: loading ? '—' : numberFmt.format(s.order_count ?? s.orders ?? 0) },
-        { label: 'Average order', value: loading ? '—' : rupees.format(s.average_order_value ?? s.aov ?? 0) },
-        { label: 'Paying studios', value: loading ? '—' : numberFmt.format(s.active_studios ?? s.paying_studios ?? leaders.length) },
+        { label: 'Revenue', value: loading || error ? '—' : rupees.format(s.total_revenue ?? s.revenue ?? 0), hint: `last ${days} days` },
+        { label: 'Orders', value: loading || error ? '—' : numberFmt.format(s.order_count ?? s.orders ?? 0) },
+        { label: 'Average order', value: loading || error ? '—' : rupees.format(s.average_order_value ?? s.aov ?? 0) },
+        { label: 'Paying studios', value: loading || error ? '—' : numberFmt.format(s.active_studios ?? s.paying_studios ?? leaders.length) },
       ]}
       />
 
@@ -137,8 +137,8 @@ export default function AdminBI() {
 // geography and 30-day growth).
 function Activity() {
   const { data, error, loading, reload } = useAsync(() => Promise.all([
-    api.analyticsOverview().then((r) => r.data).catch(() => null),
-    api.analyticsGlobal().then((r) => r.data).catch(() => null),
+    api.analyticsOverview().then((r) => r.data),
+    api.analyticsGlobal().then((r) => r.data),
   ]).then(([overview, global]) => ({ overview, global })));
 
   if (loading) return <Loading />;

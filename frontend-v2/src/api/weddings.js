@@ -127,3 +127,10 @@ export const uploadThankYouVideo = (profileId, file) => {
     timeout: 300000,
   });
 };
+
+export const updateGalleryConfig = (profileId, payload) =>
+  client.patch(`/api/admin/profiles/${profileId}/gallery/config`, payload);
+
+export const triggerAiBacklog = (profileId) =>
+  client.post(`/api/admin/profiles/${profileId}/gallery/ai-index-backlog`);
+

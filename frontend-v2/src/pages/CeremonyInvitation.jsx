@@ -189,7 +189,7 @@ function CeremonyDetail({ slug, event, venues, coupleStr, rsvpEnabled }) {
       {rsvpEnabled && <CeremonyRsvp slug={slug} shortName={label} />}
 
       <footer className="ci-footer">
-        <Link to="/" style={{ fontSize: 12.5, color: '#c4b5fd', textDecoration: 'none' }}>Made with MAJA Invites</Link>
+        <Link to="/" style={{ fontSize: 12.5, color: '#c4b5fd', textDecoration: 'none' }}>Made with MAJA Invites &middot; Powered by metechq</Link>
       </footer>
     </div>
   );

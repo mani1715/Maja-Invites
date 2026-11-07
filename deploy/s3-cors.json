@@ -4,7 +4,6 @@
       "AllowedOrigins": [
         "http://localhost:8127",
         "http://127.0.0.1:8127",
-        "http://34.67.38.190",
         "https://majainvites.com",
         "https://app.majainvites.com"
       ],

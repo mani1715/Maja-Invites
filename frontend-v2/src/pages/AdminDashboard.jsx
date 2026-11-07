@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AdminNav from '@/components/nav/AdminNav';
+import MobileNav from '@/components/nav/MobileNav';
 import * as adminApi from '@/api/admin';
 import { CreateStudioPanel, StudioStatusSelect } from '@/components/admin/StudioLifecycle';
 import AuditLogPanel from '@/components/admin/AuditLogPanel';
@@ -59,6 +60,7 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ fontFamily: 'var(--mj-font-body)' }}>
+      <MobileNav panel="admin" active="Console" />
       <div style={{ background: 'var(--mj-bg)', color: 'var(--mj-ink)', minHeight: '100dvh', display: 'grid', gridTemplateColumns: shellCols }}>
         {!isMobile && <AdminNav active="Console" />}
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 // Shared sidebar-rail mechanics behind StudioNav / AdminNav / PixoraNav — the three
 // M12 rail navs share one collapse/rail/wide breakpoint ladder and hover math.
@@ -26,6 +26,9 @@ export function useRailLayout() {
 
 export default function RailNav({ className, brandHref, brandGlyph, brandLabel, brandColor, groups, footer, theme }) {
   const { rail, wide, shown } = useRailLayout();
+  const location = useLocation();
+  const [query, setQuery] = useState('');
+  const filtered = groups.map(g => ({...g, items:g.items.filter(i => i.label.toLowerCase().includes(query.toLowerCase()))})).filter(g => g.items.length);
   if (!shown) return null;
 
   const nudge = rail ? 'scale(1.06)' : 'translateX(2px)';
@@ -49,18 +52,22 @@ export default function RailNav({ className, brandHref, brandGlyph, brandLabel, 
         {labelShow && <span style={{ fontFamily: "'Spectral',serif", fontSize: 15.5, fontWeight: 500, whiteSpace: 'nowrap' }}>{brandLabel}</span>}
       </Link>
 
-      {groups.map((g) => (
+      {!rail && <label className="px-nav-search">Find a tool<input type="search" placeholder="Search navigation" value={query} onChange={e => setQuery(e.target.value)} /></label>}
+      {!filtered.length && <p>No matching tools.</p>}
+      {filtered.map((g) => (
         <div key={g.title} style={{ marginBottom: rail ? 14 : wide ? 20 : 18, width: '100%', display: 'flex', flexDirection: 'column', alignItems: align }}>
           {labelShow && g.title && <p style={{ fontSize: 11.5, letterSpacing: '.09em', textTransform: 'uppercase', color: theme.label, margin: '0 0 6px', padding: '0 12px' }}>{g.title}</p>}
           {rail && <span style={{ display: 'block', width: 20, height: 1, background: theme.border, margin: '0 0 8px' }} />}
           <div style={{ display: 'flex', flexDirection: 'column', gap: rail ? 6 : 3, width: '100%', alignItems: align }}>
             {g.items.map((i) => {
-              const on = i.label === g.active;
+              const on = i.href.includes('?') ? location.pathname + location.search === i.href : location.pathname === i.href;
               return (
                 <Link
                   key={i.href}
                   to={i.href}
                   title={i.label}
+                  aria-label={i.label}
+                  aria-current={on ? 'page' : undefined}
                   className="mj-rail-item"
                   style={{
                     minHeight: 44, width: itemW, display: 'flex', alignItems: 'center', justifyContent: itemJustify,

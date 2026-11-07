@@ -144,6 +144,13 @@ PLAN_CATALOG: List[Dict[str, Any]] = [
     {"product": "backup", "tier": "Plus",  "base_monthly": 499, "sort_order": 2, "popular": True, "storage_gb": 500,
      "features": ["automatic_backup", "manual_backup", "restore", "restore_points", "version_history",
                   "encryption", "scheduled_backup"]},
+    # ---- Invitation + Gallery Bundle (Annual) ----
+    {"product": "bundle_invitation_gallery", "tier": "Annual Pro Bundle", "base_monthly": 1499,
+     "sort_order": 1, "popular": True, "storage_gb": 1024,
+     "features": ["invitation_website", "rsvp", "gallery", "live_streaming", "music", "countdown",
+                  "maps", "gift_registry", "accommodation", "travel", "guest_management", "ai_story",
+                  "qr_checkin", "whatsapp_integration", "email_notifications", "analytics",
+                  "standalone_galleries", "unlimited_albums", "watermarked_delivery", "priority_support"]},
 ]
 
 # One-off storage add-ons (extra capacity without changing the plan). GB -> INR/mo.
@@ -156,7 +163,7 @@ STORAGE_ADDONS: List[Dict[str, Any]] = [
     {"key": "addon_5tb",   "gb": 5120, "price_monthly": 1499},
 ]
 
-VALID_PRODUCTS = {"invitation", "portfolio", "storage", "backup"}
+VALID_PRODUCTS = {"invitation", "portfolio", "storage", "backup", "bundle_invitation_gallery"}
 
 
 # ---------------------------------------------------------------------------
@@ -626,6 +633,109 @@ async def _settle_subscription(db, sub: Dict[str, Any], *, payment_id: Optional[
             logger.warning("[subscriptions] portfolio folder reserve failed for %s",
                            studio_id, exc_info=True)
         await _activate_portfolio_presence(db, studio_id)
+    elif sub.get("product") == "invitation":
+        try:
+            await db.admins.update_one(
+                {"id": studio_id},
+                {"$set": {
+                    "has_invitation_subscription": True,
+                    "invitation_subscription": {
+                        "status": "active",
+                        "tier": sub.get("tier"),
+                        "cycle": sub.get("cycle"),
+                        "current_period_end": end.isoformat(),
+                        "activated_at": now.isoformat(),
+                    }
+                }}
+            )
+        except Exception:
+            logger.warning("[subscriptions] admin invitation flag update failed for %s",
+                           studio_id, exc_info=True)
+    elif sub.get("product") == "storage":
+        try:
+            await db.admins.update_one(
+                {"id": studio_id},
+                {"$set": {
+                    "has_storage_subscription": True,
+                    "storage_subscription": {
+                        "status": "active",
+                        "tier": sub.get("tier"),
+                        "cycle": sub.get("cycle"),
+                        "storage_gb": sub.get("storage_gb") or 1024,
+                        "current_period_end": end.isoformat(),
+                        "activated_at": now.isoformat(),
+                    }
+                }}
+            )
+        except Exception:
+            logger.warning("[subscriptions] admin storage flag update failed for %s",
+                           studio_id, exc_info=True)
+    elif sub.get("product") == "bundle_invitation_gallery":
+        try:
+            # Update studio flags for both invitation and gallery storage
+            await db.admins.update_one(
+                {"id": studio_id},
+                {"$set": {
+                    "has_invitation_subscription": True,
+                    "has_storage_subscription": True,
+                    "invitation_subscription": {
+                        "status": "active",
+                        "tier": "Bundle Pro",
+                        "cycle": sub.get("cycle"),
+                        "current_period_end": end.isoformat(),
+                        "activated_at": now.isoformat(),
+                    },
+                    "storage_subscription": {
+                        "status": "active",
+                        "tier": "Bundle Storage 1TB",
+                        "cycle": sub.get("cycle"),
+                        "storage_gb": 1024,
+                        "current_period_end": end.isoformat(),
+                        "activated_at": now.isoformat(),
+                    }
+                }}
+            )
+            # Idempotently activate separate component records
+            for comp_product, comp_tier, comp_gb in [
+                ("invitation", "Bundle Pro", None),
+                ("storage", "Bundle Storage 1TB", 1024),
+            ]:
+                existing_comp = await db.subscriptions.find_one({
+                    "studio_id": studio_id,
+                    "product": comp_product,
+                    "bundle_id": sub["id"],
+                })
+                if not existing_comp:
+                    comp_doc = {
+                        "id": f"sub_bundle_{comp_product}_{uuid.uuid4().hex[:8]}",
+                        "studio_id": studio_id,
+                        "product": comp_product,
+                        "tier": comp_tier,
+                        "cycle": sub.get("cycle"),
+                        "status": "active",
+                        "is_bundle_component": True,
+                        "bundle_id": sub["id"],
+                        "current_period_start": start.isoformat(),
+                        "current_period_end": end.isoformat(),
+                        "activated_at": now.isoformat(),
+                        "created_at": now.isoformat(),
+                    }
+                    if comp_gb:
+                        comp_doc["storage_gb"] = comp_gb
+                    await db.subscriptions.insert_one(comp_doc)
+                else:
+                    await db.subscriptions.update_one(
+                        {"id": existing_comp["id"]},
+                        {"$set": {
+                            "status": "active",
+                            "current_period_start": start.isoformat(),
+                            "current_period_end": end.isoformat(),
+                            "activated_at": now.isoformat(),
+                        }}
+                    )
+        except Exception:
+            logger.warning("[subscriptions] admin bundle components activation failed for %s",
+                           studio_id, exc_info=True)
 
     return {"subscription_id": sub["id"], "status": "active",
             "current_period_end": end.isoformat()}
@@ -1329,6 +1439,33 @@ def build_subscription_router(db, razorpay_client, require_admin, require_super_
         )
         return {"saved": True, "count": len(clean), "cycles": clean}
 
+    # ---- super-admin: refund & revoke subscription entitlement ------------
+    @router.post("/api/admin/subscriptions/{subscription_id}/revoke")
+    async def admin_revoke_subscription(subscription_id: str, _super=Depends(require_super_admin)):
+        sub = await db.subscriptions.find_one({"id": subscription_id}, {"_id": 0})
+        if not sub:
+            raise HTTPException(404, "Subscription not found")
+        now_iso = _now_iso()
+        await db.subscriptions.update_one(
+            {"id": subscription_id},
+            {"$set": {"status": "revoked", "revoked_at": now_iso, "current_period_end": now_iso}}
+        )
+        # If invitation product, immediately revoke active flag on admin doc
+        if sub.get("product") == "invitation":
+            await db.admins.update_one(
+                {"id": sub["studio_id"]},
+                {"$set": {
+                    "has_invitation_subscription": False,
+                    "invitation_subscription.status": "revoked",
+                    "invitation_subscription.revoked_at": now_iso,
+                }}
+            )
+        await db.audit_logs.insert_one({
+            "id": f"aud_{uuid.uuid4().hex[:16]}", "actor_id": "super_admin",
+            "action": "subscription.revoked", "target": subscription_id, "created_at": now_iso,
+        })
+        return {"subscription_id": subscription_id, "status": "revoked", "revoked_at": now_iso}
+
     # ---- studio: Subscription Center (Phase 8) ----------------------------
     # Central dashboard: current plan per product, billing cycle, renewal dates,
     # auto-renew, invoices + payment history — one call.
@@ -1351,7 +1488,7 @@ def build_subscription_router(db, razorpay_client, require_admin, require_super_
         pays = await db.payments.find({"studio_id": studio_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
         invs = await db.invoices.find({"studio_id": studio_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
         return {
-            "products": {p: by_product.get(p) for p in ["invitation", "portfolio", "storage", "backup"]},
+            "products": {p: by_product.get(p) for p in ["invitation", "portfolio", "storage", "backup", "bundle_invitation_gallery"]},
             "active_count": len(active),
             "payment_history": [
                 {"amount_inr": round((p.get("amount_paise") or 0) / 100, 2),
@@ -1366,4 +1503,166 @@ def build_subscription_router(db, razorpay_client, require_admin, require_super_
             ],
         }
 
+    # ---- Commercial Options (3 choices: Invitation Only, Gallery Only, Bundle) --
+    @router.get("/api/subscriptions/commercial-options")
+    async def commercial_options():
+        """Returns the three canonical commercial paths:
+        1. Invitation Only (Annual Plan)
+        2. Gallery Only (Storage Plan)
+        3. Invitation + Gallery Bundle (Combined Suite)
+        Data-driven from db.subscription_plans.
+        """
+        inv_plans = await db.subscription_plans.find(
+            {"product": "invitation", "is_active": True}, {"_id": 0}
+        ).sort("sort_order", 1).to_list(10)
+        storage_plans = await db.subscription_plans.find(
+            {"product": "storage", "is_active": True}, {"_id": 0}
+        ).sort("sort_order", 1).to_list(10)
+        bundle_plans = await db.subscription_plans.find(
+            {"product": "bundle_invitation_gallery", "is_active": True}, {"_id": 0}
+        ).sort("sort_order", 1).to_list(10)
+
+        cycles = await _resolve_cycles(db)
+
+        return {
+            "options": [
+                {
+                    "id": "invitation_only",
+                    "product": "invitation",
+                    "title": "Invitation Only",
+                    "badge": "Annual Plan",
+                    "tagline": "Unlimited Luxury Invitations",
+                    "description": "Unlimited luxury wedding and event invitation websites with all standard designs and interactive features included.",
+                    "benefits": [
+                        "Unlimited event invitation publishing",
+                        "All standard catalogue themes and designs",
+                        "Interactive RSVP, Wishes, Music & Schedules",
+                        "Custom URLs, QR codes, and WhatsApp sharing",
+                        "Independent of gallery storage"
+                    ],
+                    "storage_allowance": None,
+                    "plans": inv_plans,
+                    "default_tier": "Enterprise" if any(p.get("tier") == "Enterprise" for p in inv_plans) else (inv_plans[0]["tier"] if inv_plans else "Starter"),
+                },
+                {
+                    "id": "gallery_only",
+                    "product": "storage",
+                    "title": "Gallery Only",
+                    "badge": "Standalone Access",
+                    "tagline": "High-Capacity Client Photo Delivery",
+                    "description": "Standalone gallery access and client delivery without purchasing or creating an invitation.",
+                    "benefits": [
+                        "Create standalone client galleries",
+                        "Multiple named albums (Haldi, Wedding, Reception)",
+                        "High-speed direct-to-S3 parallel uploads",
+                        "Elegant two-column watermarked delivery",
+                        "Independent gallery expiry and retention",
+                        "No invitation subscription needed"
+                    ],
+                    "storage_allowance": "500 GB - 5 TB",
+                    "plans": storage_plans,
+                    "default_tier": "Professional" if any(p.get("tier") == "Professional" for p in storage_plans) else (storage_plans[0]["tier"] if storage_plans else "Starter"),
+                },
+                {
+                    "id": "invitation_and_gallery",
+                    "product": "bundle_invitation_gallery",
+                    "title": "Invitation + Gallery Bundle",
+                    "badge": "Best Value (Save 30%)",
+                    "tagline": "Complete Studio Suite",
+                    "description": "One transactional purchase that unlocks both unlimited invitation publishing and 1 TB high-speed gallery delivery.",
+                    "benefits": [
+                        "Everything in the Annual Invitation Plan",
+                        "1 TB high-speed gallery storage included",
+                        "Named albums and custom watermarked delivery",
+                        "Single unified transaction & renewal",
+                        "Best value for active wedding studios",
+                        "Optional event AI selfie matching supported"
+                    ],
+                    "storage_allowance": "1 TB Storage",
+                    "plans": bundle_plans,
+                    "default_tier": bundle_plans[0]["tier"] if bundle_plans else "Annual Pro Bundle",
+                }
+            ],
+            "ai_addon_info": {
+                "title": "AI Selfie Matching Add-on",
+                "description": "Optional paid per-event add-on. Not bundled by default; can be activated for specific events with verified allowances.",
+            },
+            "cycles": cycles,
+        }
+
     return router
+
+
+# ---------------------------------------------------------------------------
+# Entitlement Verification Helpers (Authoritative Server-side Rules)
+# ---------------------------------------------------------------------------
+async def is_studio_invitation_entitled(database, admin_dict: dict) -> bool:
+    """Check if studio is entitled to create/publish invitations.
+    Super-admin is always entitled.
+    Test account bypass strictly in dev/test/staging environments.
+    Active invitation subscription or bundle entitles photographers.
+    """
+    if admin_dict.get('role') == 'super_admin':
+        return True
+
+    env = os.environ.get("ENVIRONMENT", "development").lower()
+    if env not in ("production", "prod"):
+        if admin_dict.get('is_test') is True and admin_dict.get('role') in ('photographer', 'admin'):
+            return True
+
+    studio_id = admin_dict.get('admin_id') or admin_dict.get('id')
+    if not studio_id:
+        return False
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    sub = await database.subscriptions.find_one({
+        "studio_id": studio_id,
+        "product": {"$in": ["invitation", "bundle_invitation_gallery"]},
+        "status": "active",
+        "$or": [
+            {"current_period_end": {"$gte": now_iso}},
+            {"current_period_end": None},
+        ]
+    })
+    if sub:
+        return True
+    adm = await database.admins.find_one({"id": studio_id}, {"_id": 0, "invitation_subscription": 1, "has_invitation_subscription": 1})
+    if adm and (adm.get("has_invitation_subscription") or (adm.get("invitation_subscription") or {}).get("status") == "active"):
+        return True
+    return False
+
+
+async def is_studio_gallery_entitled(database, admin_dict: dict) -> bool:
+    """Check if studio is entitled to create/manage standalone galleries.
+    Super-admin is always entitled.
+    Test account bypass strictly in dev/test/staging environments.
+    Active storage or bundle subscription entitles photographers.
+    """
+    if admin_dict.get('role') == 'super_admin':
+        return True
+
+    env = os.environ.get("ENVIRONMENT", "development").lower()
+    if env not in ("production", "prod"):
+        if admin_dict.get('is_test') is True and admin_dict.get('role') in ('photographer', 'admin'):
+            return True
+
+    studio_id = admin_dict.get('admin_id') or admin_dict.get('id')
+    if not studio_id:
+        return False
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    sub = await database.subscriptions.find_one({
+        "studio_id": studio_id,
+        "product": {"$in": ["storage", "bundle_invitation_gallery"]},
+        "status": "active",
+        "$or": [
+            {"current_period_end": {"$gte": now_iso}},
+            {"current_period_end": None},
+        ]
+    })
+    if sub:
+        return True
+    adm = await database.admins.find_one({"id": studio_id}, {"_id": 0, "storage_subscription": 1, "has_storage_subscription": 1})
+    if adm and (adm.get("has_storage_subscription") or (adm.get("storage_subscription") or {}).get("status") == "active"):
+        return True
+    return False

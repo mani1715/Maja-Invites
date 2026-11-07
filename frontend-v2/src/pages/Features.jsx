@@ -5,9 +5,7 @@ import { LINK } from '@/lib/marketingLinks';
 import './Features.css';
 import useSeo from '@/lib/useSeo';
 
-// Ported from "MAJA Features.dc.html". The feature copy and comparison table
-// are editorial marketing content (same in the DC source's own hardcoded
-// renderVals()) — there's no backend endpoint for it, so it stays static here.
+// Feature descriptions are editorial; current plans and limits belong to Pricing.
 const COUPLE_BLOCKS = [
   { title: 'The invitation', tag: 'Every plan', blurb: 'Built for you by a designer, not assembled by you from parts. You describe the wedding, we build the pages.', items: [
     { name: 'A page for each event', body: 'Mehendi, sangeet, muhurtham, reception — each with its own timing, venue, dress code and share link.', plan: 'Royal and up' },
@@ -62,21 +60,6 @@ const STUDIO_BLOCKS = [
   ] },
 ];
 
-const COUPLE_COMP = { heads: ['Classic', 'Royal', 'Bespoke'], rows: [
-  ['Designed-for-you invitation', 1, 1, 1], ['A page per event', 0, 1, 1],
-  ['Guests', '150', 'Unlimited', 'Unlimited'], ['Languages', '1', '3', 'Unlimited'],
-  ['RSVP and guest list', 1, 1, 1], ['WhatsApp reminders', 0, 1, 1],
-  ['Live photo gallery', 0, 1, 1], ['Digital shagun and registry', 0, 1, 1],
-  ['Video greeting reel', 0, 0, 1], ['Original artwork', 0, 0, 1], ['Designer on WhatsApp', 0, 0, 1],
-] };
-const STUDIO_COMP = { heads: ['Solo', 'Studio', 'Atelier'], rows: [
-  ['Portfolio and listing', 1, 1, 1], ['Weddings a year', '5', 'Unlimited', 'Unlimited'],
-  ['Cloud storage', '100 GB', '500 GB', '2 TB'], ['Staff logins', '1', '5', '15'],
-  ['Client galleries and portal', 1, 1, 1], ['White-label domain', 0, 1, 1],
-  ['Google Drive backup', 0, 1, 1], ['Face search', 0, 1, 1],
-  ['Pixora premium tools', 0, 1, 1], ['Account manager', 0, 0, 1], ['API access', 0, 0, 1],
-] };
-
 const TAG_COLOR = { 'Every plan': ['var(--mj-section-deep)', 'var(--mj-primary)'], 'Royal and up': ['var(--mj-border-accent)', 'var(--mj-primary-hover)'] };
 const planColor = (p) => (p === 'All plans' ? '#047857' : p === 'Bespoke only' ? 'var(--mj-muted)' : 'var(--mj-primary)');
 
@@ -84,7 +67,6 @@ export default function Features() {
   useSeo({ title: 'Features', description: 'RSVP, wishes wall, digital shagun, live photo wall, AI face match, QR galleries and multi-language invitations.' });
   const [audience, setAudience] = useState('couple');
   const blocks = audience === 'couple' ? COUPLE_BLOCKS : STUDIO_BLOCKS;
-  const comp = audience === 'couple' ? COUPLE_COMP : STUDIO_COMP;
 
   return (
     <div className="mjf-page">
@@ -113,7 +95,7 @@ export default function Features() {
           <section key={b.title} className="mjf-block">
             <div data-reveal className="mjf-block-head">
               <h2>{b.title}</h2>
-              <span className="mjf-tag" style={{ background: (TAG_COLOR[b.tag] || ['var(--mj-section-deep)', 'var(--mj-muted)'])[0], color: (TAG_COLOR[b.tag] || ['', 'var(--mj-muted)'])[1] }}>{b.tag}</span>
+              <span className="mjf-tag" style={{ background: (TAG_COLOR[b.tag] || ['var(--mj-section-deep)', 'var(--mj-muted)'])[0], color: (TAG_COLOR[b.tag] || ['', 'var(--mj-muted)'])[1] }}>{audience === 'studio' ? 'Studio tools' : 'Celebrations'}</span>
             </div>
             <p data-reveal className="mjf-block-blurb">{b.blurb}</p>
             <div data-mj-stagger className="mjf-card-grid">
@@ -121,32 +103,17 @@ export default function Features() {
                 <div data-reveal="blur" key={i.name} className="mjf-item-card">
                   <h3>{i.name}</h3>
                   <p>{i.body}</p>
-                  <p className="mjf-item-plan" style={{ color: planColor(i.plan) }}>{i.plan}</p>
+                  <p className="mjf-item-plan" style={{ color: planColor(i.plan) }}><Link to="/pricing">Check plan availability ↗</Link></p>
                 </div>
               ))}
             </div>
           </section>
         ))}
 
-        <section data-reveal="scale" className="mjf-comp">
-          <h2>What comes with which plan</h2>
-          <p className="mjf-comp-sub">{audience === 'couple' ? 'One payment per wedding. Nothing here renews.' : 'Per studio, per cycle.'}</p>
-          <div className="mjf-comp-scroll">
-            <div className="mjf-comp-table" style={{ minWidth: 560 }}>
-              <div className="mjf-comp-row mjf-comp-head">
-                <span />
-                {comp.heads.map((h) => <span key={h}>{h}</span>)}
-              </div>
-              {comp.rows.map(([label, ...cells]) => (
-                <div className="mjf-comp-row" key={label}>
-                  <span className="mjf-comp-label">{label}</span>
-                  {cells.map((v, idx) => (
-                    <span key={idx} className={v === 1 ? 'mjf-yes' : v === 0 ? 'mjf-no' : 'mjf-val'}>{v === 1 ? '✓' : v === 0 ? '—' : v}</span>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
+        <section className="mjf-comp">
+          <h2>Find the right fit for your studio</h2>
+          <p className="mjf-comp-sub">Features and limits vary by plan. Check current pricing before choosing.</p>
+          <Link to="/pricing" className="mjf-btn-primary">Compare current plans</Link>
         </section>
 
         <section data-reveal="scale" className="mjf-cta">
@@ -163,7 +130,7 @@ export default function Features() {
       </div>
 
       <footer className="mjf-footer">
-        <p>&copy; 2026 MAJA Invites</p>
+        <p>&copy; 2026 MAJA Invites &middot; Powered by metechq</p>
         <div className="mjf-footer-links">
           <Link to="/#story" data-mj-link>Our story</Link>
           <Link to={LINK.terms} data-mj-link>Terms</Link>

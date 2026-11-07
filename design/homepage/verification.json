@@ -1,0 +1,95 @@
+{
+  "responsive_cases": [
+    {
+      "width": 320,
+      "content": "empty API",
+      "pass": true
+    },
+    {
+      "width": 320,
+      "content": "populated API fixture",
+      "pass": true
+    },
+    {
+      "width": 360,
+      "content": "empty API",
+      "pass": true
+    },
+    {
+      "width": 360,
+      "content": "populated API fixture",
+      "pass": true
+    },
+    {
+      "width": 390,
+      "content": "empty API",
+      "pass": true
+    },
+    {
+      "width": 390,
+      "content": "populated API fixture",
+      "pass": true
+    },
+    {
+      "width": 600,
+      "content": "empty API",
+      "pass": true
+    },
+    {
+      "width": 600,
+      "content": "populated API fixture",
+      "pass": true
+    },
+    {
+      "width": 768,
+      "content": "empty API",
+      "pass": true
+    },
+    {
+      "width": 768,
+      "content": "populated API fixture",
+      "pass": true
+    },
+    {
+      "width": 1024,
+      "content": "empty API",
+      "pass": true
+    },
+    {
+      "width": 1024,
+      "content": "populated API fixture",
+      "pass": true
+    },
+    {
+      "width": 1440,
+      "content": "empty API",
+      "pass": true
+    },
+    {
+      "width": 1440,
+      "content": "populated API fixture",
+      "pass": true
+    },
+    {
+      "width": 1920,
+      "content": "empty API",
+      "pass": true
+    },
+    {
+      "width": 1920,
+      "content": "populated API fixture",
+      "pass": true
+    }
+  ],
+  "page_errors": [],
+  "interactions": [
+    "motion change/pause/persistence",
+    "reduced motion",
+    "FAQ",
+    "catalogue and live preview",
+    "mobile menu/Escape/focus",
+    "signup route",
+    "live-price fixture",
+    "empty/unavailable API"
+  ]
+}

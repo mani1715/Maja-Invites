@@ -69,15 +69,23 @@ class NotAPhoto(ValueError):
     """Raised with a message meant to be shown to the person uploading."""
 
 
-def _describe_non_photo(data: bytes) -> Optional[str]:
+RAW_EXTENSIONS = {".arw", ".cr2", ".cr3", ".nef", ".dng", ".raw", ".orf", ".rw2", ".pef", ".raf"}
+
+
+def _describe_non_photo(data: bytes, filename: str = "") -> Optional[str]:
+    ext = Path(filename or "").suffix.lower()
+    if ext in RAW_EXTENSIONS:
+        return "a RAW camera file (RAW is unsupported; please configure camera to transfer JPEGs)"
+
     head = data[:64]
     for sig, label in _KNOWN_NON_PHOTO:
         if head.startswith(sig):
             return label
-    # ISO-BMFF (mp4 / mov / 3gp / HEIF all share this container). HEIF is a photo;
-    # the rest are video. The brand at bytes 8..12 tells them apart.
+    # Canon CR3 is ISO-BMFF with brand crx
     if len(data) > 12 and data[4:8] == b"ftyp":
         brand = data[8:12]
+        if brand.startswith(b"crx"):
+            return "a RAW camera file (Canon CR3; configure camera to transfer JPEGs)"
         if brand[:3] in (b"hei", b"mif", b"msf"):   # heic/heix/mif1/msf1 → photo
             return None
         return "a video (MP4 / MOV)"
@@ -103,7 +111,7 @@ def sniff_photo(data: bytes, filename: str = "", content_type: str = "",
         return False, f"{label} is larger than {mb} MB. Please upload a smaller photo.", ""
 
     # 1) Name it early where we recognise it, so the message is useful.
-    what = _describe_non_photo(data)
+    what = _describe_non_photo(data, filename)
     if what:
         return False, f"{label} looks like {what}. Only photos can be uploaded here.", ""
 

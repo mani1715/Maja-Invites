@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "/studio/clients shows retry on failure",
+    "/studio/notifications shows retry on failure",
+    "/studio/messages shows retry on failure",
+    "/admin/face-ops shows retry on failure",
+    "/admin/bi shows retry on failure",
+    "/admin/platform shows retry on failure",
+    "failed create retains form and never reports success",
+    "successful retry sends retained payload and closes form",
+    "numeric contact phone searchable without crash"
+  ],
+  "page_errors": []
+}

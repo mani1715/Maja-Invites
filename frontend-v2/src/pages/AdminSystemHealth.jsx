@@ -14,7 +14,7 @@ function tone(ok) {
 export default function AdminSystemHealth() {
   const { data, error, loading, reload } = useAsync(
     () => Promise.all([
-      api.systemHealth().then((r) => r.data).catch(() => null),
+      api.systemHealth().then((r) => r.data),
       api.systemMetrics().then((r) => r.data).catch(() => null),
     ]).then(([health, metrics]) => ({ health, metrics })),
   );
@@ -32,10 +32,10 @@ export default function AdminSystemHealth() {
       actions={<button type="button" className="wmod-btn wmod-btn--ghost wmod-btn--sm" onClick={reload}>Refresh</button>}
     >
       <StatRow items={[
-        { label: 'Status', value: loading ? '—' : (health.status || (health.ok ? 'healthy' : 'unknown')) },
-        { label: 'Requests seen', value: loading ? '—' : numberFmt.format(metrics.total_requests ?? 0) },
-        { label: 'p95 latency', value: loading ? '—' : (metrics.p95_ms != null ? `${Math.round(metrics.p95_ms)} ms` : '—') },
-        { label: 'Errors (5xx)', value: loading ? '—' : numberFmt.format(metrics.error_count ?? metrics.errors ?? 0) },
+        { label: 'Status', value: loading || error ? '—' : (health.status || (health.ok ? 'healthy' : 'unknown')) },
+        { label: 'Requests seen', value: loading || error ? '—' : numberFmt.format(metrics.total_requests ?? 0) },
+        { label: 'p95 latency', value: loading || error ? '—' : (metrics.p95_ms != null ? `${Math.round(metrics.p95_ms)} ms` : '—') },
+        { label: 'Errors (5xx)', value: loading || error ? '—' : numberFmt.format(metrics.error_count ?? metrics.errors ?? 0) },
       ]}
       />
 

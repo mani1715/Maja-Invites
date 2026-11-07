@@ -245,7 +245,7 @@ export default function Terms() {
           <Link to={LINK.refund}>Refund Policy</Link>
           <Link to="/contact">Contact</Link>
         </div>
-        <p>&copy; 2026 MAJA Creations</p>
+        <p>&copy; 2026 MAJA Creations &middot; Powered by metechq</p>
       </footer>
     </div>
   );

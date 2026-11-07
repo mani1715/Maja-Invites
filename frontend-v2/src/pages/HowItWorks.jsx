@@ -151,7 +151,7 @@ export default function HowItWorks() {
       </section>
 
       <footer className="mjh-footer">
-        <p>&copy; 2026 MAJA Invites</p>
+        <p>&copy; 2026 MAJA Invites &middot; Powered by metechq</p>
         <div className="mjh-footer-links">
           <Link to="/#story" data-mj-link>Story</Link>
           <Link to="/faq" data-mj-link>FAQ</Link>

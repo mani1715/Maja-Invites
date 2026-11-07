@@ -54,8 +54,9 @@ deploy/deploy.sh — deploy and manage MAJA Invites on THIS VM.
   ./deploy.sh --help
 
 Modifiers:
-  --no-pull    deploy the working tree, skip git fetch
-  --aws-write  let the AWS integration check exercise the write path too
+  --with-camera include camera ingestion services (SFTP :2222 + FTPS :21/:30000-30009)
+  --no-pull     deploy the working tree, skip git fetch
+  --aws-write   let the AWS integration check exercise the write path too
 
 Idempotent and safe to rerun: it never deletes a volume, never drops a
 database, and never writes deploy/.env. Postgres and Redis are never
@@ -211,6 +212,44 @@ setup_compose_files() {
     COMPOSE_FILES+=(-f "$COMPOSE_DIR/docker-compose.review.yml")
     warn "--review: plain HTTP on the VM's IP, in ADDITION to the domain. Do not leave this on for a public launch."
   fi
+  if [ "$WITH_CAMERA" -eq 1 ] || [ "$(envval ENABLE_CAMERA)" = "1" ]; then
+    [ -f "$COMPOSE_DIR/docker-compose.camera.yml" ] \
+      || die "--with-camera needs deploy/docker-compose.camera.yml"
+    COMPOSE_FILES+=(-f "$COMPOSE_DIR/docker-compose.camera.yml")
+    ok "camera overlay enabled (SFTP :2222 + FTPS :21/:30000-30009)"
+  fi
+}
+
+stage_camera_prereqs() {
+  if [ "$WITH_CAMERA" -ne 1 ] && [ "$(envval ENABLE_CAMERA)" != "1" ]; then
+    return 0
+  fi
+  step "Preparing camera prerequisites"
+  mkdir -p "$REPO_ROOT/backend/.camera_tmp" "$REPO_ROOT/backend/.camera_ftps_tmp"
+  chmod 700 "$REPO_ROOT/backend/.camera_tmp" "$REPO_ROOT/backend/.camera_ftps_tmp" 2>/dev/null || true
+
+  # Ensure persistent SFTP host key exists
+  local host_key="$REPO_ROOT/backend/.camera_sftp_host_key"
+  if [ ! -f "$host_key" ]; then
+    ssh-keygen -t ed25519 -N "" -f "$host_key" -C "camera-sftp@majainvites" >/dev/null 2>&1 \
+      || ssh-keygen -t rsa -b 2048 -N "" -f "$host_key" -C "camera-sftp@majainvites" >/dev/null 2>&1 \
+      || true
+    [ -f "$host_key" ] && chmod 600 "$host_key"
+    ok "generated persistent SFTP host key: $host_key"
+  else
+    ok "existing persistent SFTP host key found: $host_key"
+  fi
+
+  # Auto-detect public external IP for FTPS masquerade if not set
+  if [ -z "$(envval CAMERA_FTPS_MASQUERADE_ADDRESS)" ]; then
+    local detected_ip
+    detected_ip="$(curl -s -m 4 -H 'Metadata-Flavor: Google' \
+      http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip 2>/dev/null || true)"
+    [ -n "$detected_ip" ] || detected_ip="$(curl -s -m 4 https://api.ipify.org 2>/dev/null || true)"
+    if [ -n "$detected_ip" ]; then
+      warn "CAMERA_FTPS_MASQUERADE_ADDRESS not set in deploy/.env; auto-detected VM external IP: $detected_ip"
+    fi
+  fi
 }
 
 # ----------------------------------------------------------- 5/10 frontend
@@ -323,6 +362,23 @@ stage_health() {
       || fail_with_logs caddy "caddy is not serving the frontend"
   fi
   ok "caddy serving frontend-v2/dist"
+
+  if [ "$WITH_CAMERA" -eq 1 ] || [ "$(envval ENABLE_CAMERA)" = "1" ]; then
+    local sftp_id ftps_id
+    sftp_id="$("${DC[@]}" "${COMPOSE_FILES[@]}" ps -q camera-sftp 2>/dev/null | head -n1)"
+    if [ -n "$sftp_id" ] && [ "$(docker inspect -f '{{.State.Running}}' "$sftp_id" 2>/dev/null)" = "true" ]; then
+      ok "camera-sftp running on :2222"
+    else
+      fail_with_logs camera-sftp "camera-sftp container is not running"
+    fi
+
+    ftps_id="$("${DC[@]}" "${COMPOSE_FILES[@]}" ps -q camera-ftps 2>/dev/null | head -n1)"
+    if [ -n "$ftps_id" ] && [ "$(docker inspect -f '{{.State.Running}}' "$ftps_id" 2>/dev/null)" = "true" ]; then
+      ok "camera-ftps running on :21 (passive ports: 30000-30009)"
+    else
+      fail_with_logs camera-ftps "camera-ftps container is not running"
+    fi
+  fi
 }
 
 # ----------------------------------------------------- 9/10 aws integration
@@ -424,6 +480,12 @@ stage_summary() {
     printf '  VM external IP: %s  (rerun with --review to serve plain HTTP on it)\n' "$VM_IP"
   fi
 
+  if [ "$WITH_CAMERA" -eq 1 ] || [ "$(envval ENABLE_CAMERA)" = "1" ]; then
+    printf '\n  Camera Ingestion Services:\n'
+    printf '    SFTP:      sftp://%s:2222\n' "${DOMAIN_VALUE:-$VM_IP}"
+    printf '    FTPS:      ftps://%s:21 (passive ports: 30000-30009)\n' "${DOMAIN_VALUE:-$VM_IP}"
+  fi
+
   printf '\n  Postgres and Redis are NOT published to the host — only 80/443 are.\n'
   printf '  Logs:     ./deploy.sh --logs\n'
   printf '  Status:   ./deploy.sh --status\n'
@@ -462,6 +524,7 @@ run_deploy() {
     exit 0
   fi
   setup_compose_files
+  stage_camera_prereqs
   stage_frontend
   stage_build_images
   stage_start
@@ -474,6 +537,9 @@ run_deploy() {
 do_status() {
   detect_compose
   COMPOSE_FILES=(-f "$COMPOSE_DIR/docker-compose.yml")
+  if [ "$WITH_CAMERA" -eq 1 ] || [ "$(envval ENABLE_CAMERA)" = "1" ]; then
+    [ -f "$COMPOSE_DIR/docker-compose.camera.yml" ] && COMPOSE_FILES+=(-f "$COMPOSE_DIR/docker-compose.camera.yml")
+  fi
   "${DC[@]}" "${COMPOSE_FILES[@]}" ps
 
   local healthy=1
@@ -551,14 +617,16 @@ REVIEW=0
 CHECK_ONLY=0
 AWS_WRITE=0
 ROLLBACK=0
+WITH_CAMERA=0
 LOG_SERVICES=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --deploy)    MODE="deploy" ;;
-    --check)     MODE="deploy"; CHECK_ONLY=1 ;;
-    --review)    MODE="deploy"; REVIEW=1 ;;
-    --status)    MODE="status" ;;
+    --deploy)       MODE="deploy" ;;
+    --check)        MODE="deploy"; CHECK_ONLY=1 ;;
+    --review)       MODE="deploy"; REVIEW=1 ;;
+    --status)       MODE="status" ;;
+    --with-camera)  WITH_CAMERA=1 ;;
     --logs)
       MODE="logs"
       shift
