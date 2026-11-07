@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { getBackendUrl } from './backendUrl';
+import { isDemoMode } from '../demo/appMode';
+import { createDemoAdapter } from '../demo/demoAdapter';
 
 /**
  * clientAuth.js — auth for a "photographer's client" (the couple/family given
@@ -11,9 +14,14 @@ import axios from 'axios';
  *   - its own axios instance always sends the CURRENT client token, and never
  *     touches the admin Authorization header or the admin refresh flow.
  */
-const API_URL = import.meta.env.VITE_BACKEND_URL || '';
+const API_URL = getBackendUrl();
 
 export const clientApi = axios.create({ baseURL: API_URL, timeout: 10000 });
+
+if (isDemoMode()) {
+  clientApi.defaults.adapter = createDemoAdapter(clientApi.defaults.adapter);
+}
+
 
 clientApi.interceptors.request.use((config) => {
   let t = null;

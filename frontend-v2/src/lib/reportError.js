@@ -6,7 +6,9 @@
 // Install once from main.jsx. Everything here is best-effort: a reporting
 // failure must never surface to the user or throw inside an error handler.
 
-const ENDPOINT = '/api/client-error';
+import { getBackendUrl } from './backendUrl';
+
+const ENDPOINT = `${getBackendUrl()}/api/client-error`;
 const MAX_PER_SESSION = 10;
 const DEDUPE_MS = 5000;
 

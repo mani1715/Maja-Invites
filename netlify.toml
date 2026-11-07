@@ -1,0 +1,69 @@
+# =============================================================================
+# Netlify Configuration for Pixora / MAJA Invites (Frontend-v2)
+# =============================================================================
+
+[build]
+  base = "frontend-v2"
+  command = "yarn build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20.18.0"
+  YARN_VERSION = "1.22.22"
+
+# Security & Permissions Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+
+# Static Fingerprinted Assets (Vite Rollup output) - Cache 1 Year Immutable
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Static Design Catalog Artwork - Cache 1 Day
+[[headers]]
+  for = "/designs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# Public Home and Reference Media - Cache 1 Day
+[[headers]]
+  for = "/home/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/portfolio-reference/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# -----------------------------------------------------------------------------
+# Redirects and Rewrites (Order Matters: specific proxy/guard rules come FIRST)
+# -----------------------------------------------------------------------------
+
+# Guard against API requests accidentally hitting the SPA fallback:
+# If an API request is made against the static frontend origin without a backend,
+# return HTTP 404 instead of returning index.html (which causes JSON parse errors).
+[[redirects]]
+  from = "/api/*"
+  to = "/404.html"
+  status = 404
+  force = false
+
+[[redirects]]
+  from = "/uploads/*"
+  to = "/404.html"
+  status = 404
+  force = false
+
+# SPA Fallback: all non-asset client routes route to /index.html with HTTP 200
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

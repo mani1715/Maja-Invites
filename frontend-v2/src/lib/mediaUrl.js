@@ -1,37 +1,51 @@
 /**
- * mediaUrl.js — Frontend URL helper for backend-served media.
- * Ported verbatim from legacy frontend/src/utils/mediaUrl.js, plus the data:-URI
- * guard noted in docs/recon/recon-frontend-logic.md §2 (the legacy resolver had
- * no guard and would prepend BACKEND_URL to a data: URI, breaking inline images).
+ * mediaUrl.js — Frontend URL helper for backend-served media and local assets.
  *
  * Background:
- *   The backend exposes static files at BOTH `/uploads/...` and `/api/uploads/...`.
- *   In production the ingress only routes `/api/*` to FastAPI — everything else
- *   falls through to the SPA (index.html), so a bare `/uploads/x.jpg` renders as
- *   a broken image. This helper normalises any URL the backend ever wrote into
- *   the database into one that always lands on the backend through the ingress.
- *
- * Usage:
- *   import { resolveMediaUrl } from '@/lib/mediaUrl';
- *   <img src={resolveMediaUrl(value)} />
+ *   - data: and blob: URIs must NEVER be prefixed with BACKEND_URL.
+ *   - Pre-existing absolute URLs (signed S3 URLs, CDNs, external images) must be preserved.
+ *   - Bundled static assets (/designs/*, /assets/*, /home/*, /portfolio-reference/*)
+ *     resolve from the frontend origin (or VITE_DESIGN_CDN for designs if set).
+ *   - Uploaded backend media (/uploads/* or /api/uploads/*) resolves with BACKEND_URL.
  */
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+import { getBackendUrl } from './backendUrl';
 
 export function resolveMediaUrl(value) {
   if (!value) return '';
-  // data: URIs (inline/base64 images) must never be prefixed with BACKEND_URL.
-  if (/^data:/i.test(value)) return value;
-  // Already absolute? leave it alone.
-  if (/^https?:\/\//i.test(value)) {
-    // Catch absolute URLs that still embed the bad `/uploads/` path.
-    return value.replace(/(https?:\/\/[^/]+)\/uploads\//i, `$1/api/uploads/`);
+  const str = String(value).trim();
+  if (!str) return '';
+
+  // 1. Guard inline data: and client blob: URLs
+  if (/^(data:|blob:)/i.test(str)) return str;
+
+  // 2. Already absolute HTTP/HTTPS URL
+  if (/^https?:\/\//i.test(str)) {
+    // Normalise any internal backend URLs that embed unproxied /uploads/
+    return str.replace(/(https?:\/\/[^/]+)\/uploads\//i, '$1/api/uploads/');
   }
-  // Make sure we always use the /api/uploads/... path so the ingress
-  // routes it to the backend instead of the SPA fallback.
-  let path = value;
-  if (path.startsWith('/uploads/')) path = '/api' + path;
-  if (!path.startsWith('/')) path = '/' + path;
-  return `${BACKEND_URL}${path}`;
+
+  // 3. Ensure leading slash for path matching
+  let path = str.startsWith('/') ? str : `/${str}`;
+
+  // 4. Bundled frontend static assets (served directly by Vite/Netlify)
+  if (
+    path.startsWith('/designs/') ||
+    path.startsWith('/assets/') ||
+    path.startsWith('/home/') ||
+    path.startsWith('/portfolio-reference/')
+  ) {
+    const cdn = (import.meta.env.VITE_DESIGN_CDN || '').replace(/\/+$/, '');
+    if (cdn && path.startsWith('/designs/')) {
+      return `${cdn}${path}`;
+    }
+    return path;
+  }
+
+  // 5. Uploaded backend media: ensure /api/uploads/ path
+  if (path.startsWith('/uploads/')) path = `/api${path}`;
+
+  const backend = getBackendUrl();
+  return backend ? `${backend}${path}` : path;
 }
 
 export default resolveMediaUrl;

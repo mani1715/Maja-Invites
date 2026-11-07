@@ -4,10 +4,11 @@ import { getSaveTheDate } from '@/api/invitations';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { useCountdown } from '@/lib/useCountdown';
 import { formatEventDate, formatVenueLine } from '@/lib/inviteFormat';
+import { getBackendUrl } from '@/lib/backendUrl';
 import '@/styles/inviteShared.css';
 import './SaveTheDate.css';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || '';
+const API_URL = getBackendUrl();
 
 export default function SaveTheDate() {
   const { slug } = useParams();

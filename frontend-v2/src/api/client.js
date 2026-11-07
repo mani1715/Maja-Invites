@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { getBackendUrl } from '@/lib/backendUrl';
+import { isDemoMode } from '@/demo/appMode';
+import { createDemoAdapter } from '@/demo/demoAdapter';
 
 // Single shared axios instance for the whole app. Ports the legacy auth
 // contract faithfully — see frontend/src/context/AuthContext.js and
@@ -12,13 +15,18 @@ import axios from 'axios';
 //  - single-flight refresh on 401 with a `hadBearer` guard, retried once via
 //    `_majaRetried`; on refresh failure the token is cleared and a
 //    `maja:logout` event is emitted for AuthContext to react to.
-const API_URL = import.meta.env.VITE_BACKEND_URL || '';
+const API_URL = getBackendUrl();
 
 export const client = axios.create({
   baseURL: API_URL,
   timeout: 10000,
   withCredentials: true,
 });
+
+if (isDemoMode()) {
+  client.defaults.adapter = createDemoAdapter(client.defaults.adapter);
+}
+
 
 // Every read of localStorage is try/catch-wrapped — it THROWS in Safari
 // private mode, and an unguarded read here would take the whole app down.

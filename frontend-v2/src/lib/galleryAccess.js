@@ -1,11 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-
-// Ported from legacy hooks/useGalleryAccess.js. The legacy source already carries
-// the fail-CLOSED fix (see its own "ponytail:" comment) — recon-frontend-logic.md
-// §8 describes an older fail-open default that predates it; this port keeps the
-// fail-closed behavior as-is.
-const API_URL = import.meta.env.VITE_BACKEND_URL || '';
+import client from '@/api/client';
 
 const lsKey = (slug) => `gallery_device_token_${slug}`;
 const lsExpKey = (slug) => `gallery_device_exp_${slug}`;
@@ -42,7 +36,7 @@ export function useGalleryAccess(slug) {
     setLoading(true);
     setError('');
     try {
-      const r = await axios.get(`${API_URL}/api/public/gallery/${slug}/privacy`, { timeout: 10000 });
+      const r = await client.get(`/api/public/gallery/${slug}/privacy`);
       setPrivacy(r.data);
       setPrivacyFetchFailed(false);
       loadStored();
@@ -74,10 +68,9 @@ export function useGalleryAccess(slug) {
   const unlock = useCallback(async (code, remember = true) => {
     setError('');
     try {
-      const r = await axios.post(
-        `${API_URL}/api/public/gallery/${slug}/unlock`,
+      const r = await client.post(
+        `/api/public/gallery/${slug}/unlock`,
         { code, remember },
-        { timeout: 10000 },
       );
       const token = r.data?.device_token;
       const exp = r.data?.expires_at;

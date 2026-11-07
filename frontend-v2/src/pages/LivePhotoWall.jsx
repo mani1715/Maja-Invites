@@ -7,9 +7,10 @@ import { getBySlug } from '@/api/invitations';
 import { scanPing } from '@/api/qr';
 import FindMyPhotos from '@/components/FindMyPhotos';
 import { getProfile } from '@/lib/performanceProfile';
+import { getBackendUrl } from '@/lib/backendUrl';
 import './LivePhotoWall.css';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || '';
+const API_URL = getBackendUrl();
 const POLL_MS = 20000;
 const MAX_WS_RETRIES = 3;
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;

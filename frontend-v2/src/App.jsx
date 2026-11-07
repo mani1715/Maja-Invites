@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { RequireStudio, RequireSuperAdmin } from '@/components/RouteGuards';
 import CookieConsent from '@/components/CookieConsent';
 import PageExperience, { SkipContent } from '@/components/PageExperience';
+import DemoBanner from '@/demo/DemoBanner';
 
 const Landing = lazy(() => import('@/pages/Landing'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
@@ -232,6 +233,7 @@ export default function App() {
             the page's own <main id="main-content">. Visible only on focus. */}
         <SkipContent />
         <ScrollManager />
+        <DemoBanner />
         <PageExperience><Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/" element={<Landing />} />

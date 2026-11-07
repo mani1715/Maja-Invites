@@ -1,0 +1,155 @@
+/* demo-banner.css — Clean styling for frontend-only Demo Mode banner */
+
+.maja-demo-banner {
+  position: sticky;
+  top: 0;
+  z-index: 99999;
+  background: linear-gradient(90deg, #1f2937 0%, #111827 100%);
+  color: #f3f4f6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid #374151;
+  transition: all 0.2s ease-in-out;
+}
+
+.maja-demo-inner {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.maja-demo-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.maja-demo-badge {
+  background: #f59e0b;
+  color: #78350f;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.maja-demo-notice {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.maja-demo-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.maja-demo-btn {
+  background: #374151;
+  color: #f9fafb;
+  border: 1px solid #4b5563;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.maja-demo-btn:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+  color: #ffffff;
+}
+
+.maja-demo-btn-active {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.maja-demo-btn-active:hover {
+  background: #1d4ed8;
+}
+
+.maja-demo-btn-warn {
+  background: transparent;
+  color: #f87171;
+  border-color: #7f1d1d;
+}
+
+.maja-demo-btn-warn:hover {
+  background: #7f1d1d;
+  color: #fee2e2;
+}
+
+.maja-demo-btn-icon {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  padding: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.maja-demo-btn-icon:hover {
+  background: #374151;
+  color: #f3f4f6;
+}
+
+/* Floating minimized trigger */
+.maja-demo-minimized {
+  position: fixed;
+  bottom: 18px;
+  left: 18px;
+  z-index: 99999;
+  background: #111827;
+  color: #f9fafb;
+  border: 1px solid #374151;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s ease, background 0.15s;
+}
+
+.maja-demo-minimized:hover {
+  transform: translateY(-2px);
+  background: #1f2937;
+}
+
+@media (max-width: 768px) {
+  .maja-demo-notice {
+    display: none;
+  }
+  .maja-demo-inner {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+}

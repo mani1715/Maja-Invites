@@ -1,51 +1,42 @@
-// Design artwork resolution — the settled answer to the audit's asset question.
+// Design artwork resolution.
 //
-// THE PROBLEM: the legacy app carried 1,395 design images in git and addressed
-// them through frontend/src/themes/image-manifest.json (1,143 entries). That
-// tree was dropped from this repo, so every one of those paths 404s, and it is
-// also what made the old repo 2,411 files.
-//
-// THE DECISION (approved 2026-08-13): artwork is NOT restored to git. It is
-// served from S3/CloudFront and addressed by URL. Nothing in the bundle grows
-// as the catalogue grows, and adding a design needs no deploy.
-//
-// Resolution order for any design image reference:
-//   1. Already absolute (http/https/data) -> use as-is. This is what the API
-//      returns once artwork is uploaded through the normal media pipeline.
-//   2. VITE_DESIGN_CDN is set -> join it with the path. This is production.
-//   3. Neither -> fall back to the backend origin, which serves /uploads/*.
-//      Local dev and any design whose artwork lives in uploads/ still work.
-//
-// A missing image is never a broken <img>: use `designImage()` with the
-// placeholder fallback, which renders a themed gradient tile instead.
+// Resolution order for design artwork references:
+//   1. Already absolute (http/https/data/blob) -> use as-is.
+//   2. VITE_DESIGN_CDN is set -> join with CDN origin.
+//   3. Bundled frontend static assets (/designs/*, /assets/*) -> resolve from frontend origin.
+//   4. Backend uploads (/uploads/*) -> resolve from normalized backend origin.
+
+import { getBackendUrl } from './backendUrl';
 
 const CDN = (import.meta.env.VITE_DESIGN_CDN || '').replace(/\/+$/, '');
-const BACKEND = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '');
 
 /** Resolve one design-artwork reference to a loadable URL, or '' if absent. */
 export function designAsset(ref) {
   if (!ref) return '';
-  if (/^(https?:|data:|blob:)/i.test(ref)) return ref;
+  const str = String(ref).trim();
+  if (/^(https?:|data:|blob:)/i.test(str)) return str;
 
-  let path = String(ref).trim();
-  if (!path.startsWith('/')) path = `/${path}`;
+  let path = str.startsWith('/') ? str : `/${str}`;
 
-  // Legacy manifest paths (/designs/...) only ever exist on the CDN now.
+  // If explicit CDN is configured, use it for all design paths
   if (CDN) return `${CDN}${path}`;
 
-  // Backend fallback: /uploads/* must go through /api/uploads/* so the edge
-  // routes it to FastAPI rather than the SPA shell (same rule as mediaUrl.js).
+  // Bundled frontend static artwork in public/designs or public/assets
+  if (path.startsWith('/designs/') || path.startsWith('/assets/')) {
+    return path;
+  }
+
+  // Backend uploads
   if (path.startsWith('/uploads/')) path = `/api${path}`;
-  return `${BACKEND}${path}`;
+  const backend = getBackendUrl();
+  return backend ? `${backend}${path}` : path;
 }
 
-/** True when artwork is actually configured. Lets a caller choose a real
- *  layout instead of rendering a grid of broken frames. */
-export const hasDesignArtwork = Boolean(CDN || BACKEND);
+/** True when artwork is available (bundled locally or via CDN/backend). */
+export const hasDesignArtwork = true;
 
 /** Deterministic gradient for a theme id — the placeholder used wherever a
- *  design has no artwork yet. Same palette as the wizard swatches, so the two
- *  screens agree about what a theme looks like. */
+ *  design has no artwork yet. */
 const SWATCHES = {
   royal_heritage: ['#7f1d1d', '#b45309'],
   south_indian_temple: ['#b45309', '#fbbf24'],
@@ -73,11 +64,16 @@ export function themeGradient(themeId) {
   return `linear-gradient(135deg, ${a}, ${b})`;
 }
 
-/** Pick the best artwork reference off an API design/theme object. The backend
- *  is not consistent about which key carries it, so try them in order. */
+/** Pick the best artwork reference off an API design/theme object. */
 export function designImage(obj) {
   if (!obj) return '';
-  const ref = obj.preview_image || obj.preview || obj.thumbnail
-    || obj.image_url || obj.background_image || obj.cover_image || '';
+  const ref =
+    obj.preview_image ||
+    obj.preview ||
+    obj.thumbnail ||
+    obj.image_url ||
+    obj.background_image ||
+    obj.cover_image ||
+    '';
   return designAsset(ref);
 }

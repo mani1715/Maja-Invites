@@ -1,0 +1,4 @@
+# SPA routing and API protection redirects for Netlify
+/api/*     /404.html   404
+/uploads/* /404.html   404
+/*         /index.html 200
